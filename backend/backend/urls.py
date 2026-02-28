@@ -16,11 +16,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+def debug_urls(request):
+    from django.urls import get_resolver
+    resolver = get_resolver()
+    urls = []
+    for url in resolver.url_patterns:
+        urls.append(str(url.pattern))
+    return JsonResponse({"loaded_urls": urls})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/employees/', include('users.urls')),  # CORRECT - with trailing slash
     path('api/ml/', include('ml_apps.urls')),
     path('api/', include('livevc.urls')),  # This gives /api/login/, /api/register/, etc.
+    path('debug/', debug_urls),  # Add this temporarily
+
 
 ]
