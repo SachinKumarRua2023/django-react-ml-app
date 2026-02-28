@@ -4,7 +4,7 @@ import axios from 'axios';
 import { TOKEN_KEY } from '../App'; // Import the token key
 
 // API base URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = 'https://django-react-ml-app.onrender.com' || 'http://localhost:8000/api';
 
 // Create axios instance
 const api = axios.create({

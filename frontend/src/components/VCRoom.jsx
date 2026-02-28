@@ -55,7 +55,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL)
     ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
-    : "http://127.0.0.1:8000";
+    : "'https://django-react-ml-app.onrender.com'";
 
 const MAX_PANELS   = 10;
 const MAX_COHOSTS  = 2;
