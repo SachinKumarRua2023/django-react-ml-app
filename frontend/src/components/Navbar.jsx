@@ -22,6 +22,8 @@ const Navbar = () => {
     { name: 'ML Predictor', path: '/ml', icon: '◆', color: '#00ff88' },
     { name: 'Employees', path: '/employees', icon: '◊', color: '#ffaa00' },
     { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' }, // PUBLIC - No auth required
+    { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' }, // COGNITIVE AUGMENTATION
+    { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' }, // BODHI MONK AI ← ONLY LINE ADDED
   ];
 
   // Check auth status immediately on mount
@@ -118,6 +120,44 @@ const Navbar = () => {
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // Inject responsive + lightning navbar styles (no logic change)
+  useEffect(() => {
+    const styleId = 'navbar-responsive-styles';
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .navbar { padding: 0 !important; min-height: 52px !important; }
+      .nav-container { padding: 0 16px !important; height: 52px !important; min-height: 52px !important; }
+      .logo { gap: 8px !important; }
+      .logo-orbit { width: 32px !important; height: 32px !important; }
+      .logo-main { font-size: 13px !important; }
+      .logo-sub { font-size: 9px !important; }
+      .nav-link { padding: 4px 8px !important; font-size: 11px !important; }
+      .nav-icon { font-size: 11px !important; }
+      @media (max-width: 1100px) {
+        .desktop-nav { display: none !important; }
+        .hamburger { display: flex !important; }
+        .ai-status { display: none !important; }
+      }
+      @media (min-width: 1101px) {
+        .hamburger { display: none !important; }
+        .desktop-nav { display: flex !important; }
+      }
+      .navbar {
+        border-bottom: 1px solid rgba(0,217,255,0.15) !important;
+        box-shadow: 0 1px 0 rgba(0,217,255,0.08), 0 2px 20px rgba(0,217,255,0.04), inset 0 -1px 0 rgba(157,78,221,0.1) !important;
+      }
+      .navbar.scrolled {
+        box-shadow: 0 0 8px rgba(0,217,255,0.2), 0 0 30px rgba(157,78,221,0.1), 0 1px 0 rgba(0,217,255,0.3) !important;
+        border-bottom-color: rgba(0,217,255,0.35) !important;
+      }
+      .mobile-menu { top: 52px !important; }
+    `;
+    document.head.appendChild(style);
+    return () => { const el = document.getElementById(styleId); if (el) el.remove(); };
+  }, []);
 
   // Don't render auth buttons until initial auth check is complete (prevents flash)
   if (!authChecked) {

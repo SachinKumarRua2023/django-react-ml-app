@@ -9,17 +9,16 @@ import SyllabusPage from "./pages/SyllabusPage";
 import TrainerDashboard from "./components/TrainerDashboard";
 import LoginSignupLogout from "./components/Login_Signup_Logout";
 import VCRoom from "./components/VCRoom";
+import MnemonicSystem from "./components/MnemonicSystem";
+import TalkWithRua from "./components/TalkWithRua";
 
-// ── Auth key used everywhere in this app ─────────────────────────────────────
 export const TOKEN_KEY = "cosmos_token";
 
-// Protected Route — redirects to /login if no token
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route — redirects to /live-voice if already logged in (for login page)
 const PublicOnlyRoute = ({ children }) => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? <Navigate to="/live-voice" replace /> : children;
@@ -39,7 +38,6 @@ function App() {
         setUser(null);
       }
     };
-
     checkAuth();
     const interval = setInterval(checkAuth, 1000);
     return () => clearInterval(interval);
@@ -50,36 +48,18 @@ function App() {
       <Navbar user={user} />
       <div className="main-wrapper">
         <Routes>
-          {/* Auth - redirect to live-voice if already logged in */}
-          <Route 
-            path="/login" 
-            element={
-              <PublicOnlyRoute>
-                <LoginSignupLogout />
-              </PublicOnlyRoute>
-            } 
-          />
+          <Route path="/login" element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
+          <Route path="/live-voice" element={<ProtectedRoute><VCRoom /></ProtectedRoute>} />
 
-          {/* Live Voice — protected */}
-          <Route
-            path="/live-voice"
-            element={
-              <ProtectedRoute>
-                <VCRoom />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/"                  element={<MasterRua />} />
+          <Route path="/employees"         element={<Employees />} />
+          <Route path="/ml"                element={<MLPredictor />} />
+          <Route path="/syllabus"          element={<SyllabusPage />} />
+          <Route path="/trainer-kpi"       element={<TrainerDashboard />} />
+          <Route path="/mnemonic-system"   element={<MnemonicSystem />} />
+          <Route path="/talk-with-rua"     element={<TalkWithRua />} />
+          <Route path="/talk-with-rua"     element={<TalkWithRua />} /> {/* ← ADDED */}
 
-          {/* Public pages - NO LOGIN REQUIRED */}
-          <Route path="/"           element={<MasterRua />} />
-          <Route path="/employees"  element={<Employees />} />
-          <Route path="/ml"         element={<MLPredictor />} />
-          <Route path="/syllabus"   element={<SyllabusPage />} />
-          
-          {/* FIXED: Trainer KPI is now PUBLIC - no ProtectedRoute wrapper */}
-          <Route path="/trainer-kpi" element={<TrainerDashboard />} />
-
-          {/* Catch all - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

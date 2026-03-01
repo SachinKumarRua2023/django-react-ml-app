@@ -3509,3 +3509,117 @@ body {
   transform: scale(1.1);
   box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
 }
+/* ============================================================
+   FULLSCREEN FIX — appended at bottom of App.css
+   Fixes: quiz half-screen, course layout full height
+   ============================================================ */
+
+/* ── Navbar height fix: reduce main-wrapper padding ── */
+.main-wrapper {
+  padding-top: 52px !important;
+}
+
+/* ── Courses page: remove forced padding-top overrides ── */
+.courses-page {
+  padding-top: 0 !important;
+  height: calc(100vh - 52px) !important;
+  min-height: unset !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* ── Subject tabs: stop being fixed, be sticky inside courses-page ── */
+.subject-tabs {
+  position: sticky !important;
+  top: 0 !important;
+  flex-shrink: 0 !important;
+  padding: 6px 1rem !important;
+  z-index: 100 !important;
+}
+
+.subject-tab {
+  padding: 0.6rem 1rem !important;
+  font-size: 0.85rem !important;
+}
+
+/* ── Progress bar: stop being fixed ── */
+.course-progress-bar {
+  position: relative !important;
+  top: unset !important;
+  flex-shrink: 0 !important;
+  height: 3px !important;
+}
+
+/* ── Mode tabs (inside SyllabusPage): thinner ── */
+.mode-tabs {
+  flex-shrink: 0 !important;
+  padding: 5px 16px !important;
+  gap: 6px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 99 !important;
+}
+.mode-tab {
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.mode-tab-icon { font-size: 13px !important; }
+
+/* ── Quiz platform: flex column, fills remaining height ── */
+.quiz-platform {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.quiz-header   { flex-shrink: 0 !important; }
+.level-tabs    { flex-shrink: 0 !important; overflow-x: auto !important; }
+.quiz-layout {
+  flex: 1 !important;
+  display: grid !important;
+  grid-template-columns: 260px 1fr !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.quiz-sidebar {
+  height: 100% !important;
+  overflow-y: auto !important;
+}
+.quiz-main {
+  height: 100% !important;
+  overflow-y: auto !important;
+  padding: 16px !important;
+  background: rgba(0,0,0,0.1) !important;
+}
+
+/* ── Course layout: fills remaining height ── */
+.course-layout {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+}
+.course-sidebar {
+  height: 100% !important;
+  overflow-y: auto !important;
+}
+.content-viewer {
+  height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .courses-page { height: auto !important; overflow: auto !important; }
+  .quiz-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 180px 1fr !important;
+  }
+  .quiz-sidebar { height: 180px !important; }
+  .quiz-platform { height: auto !important; min-height: calc(100vh - 52px) !important; }
+}
