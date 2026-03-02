@@ -252,7 +252,7 @@ function BodhiMonk() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
         body: JSON.stringify({
-          model: 'llama3-70b-8192',
+          model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history, { role: 'user', content: userText.trim() }],
           max_tokens: 600, temperature: 0.82,
         }),
