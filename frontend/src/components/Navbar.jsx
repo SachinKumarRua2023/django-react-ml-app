@@ -5,15 +5,45 @@ import axios from 'axios';
 const API_URL = 'https://django-react-ml-app.onrender.com  ';
 axios.defaults.baseURL = API_URL;
 
+// ── Theme hook (exported so other components can use it) ──────────────────────
+const THEME_KEY = "rua_theme";
+export function useAppTheme() {
+  const [dark, setDark] = useState(() => localStorage.getItem(THEME_KEY) !== "light");
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dark) {
+      root.setAttribute("data-theme", "dark");
+      root.style.setProperty("--bg-primary",   "#080c18");
+      root.style.setProperty("--bg-secondary",  "rgba(15,20,35,0.95)");
+      root.style.setProperty("--text-primary",  "rgba(220,235,255,0.92)");
+      root.style.setProperty("--text-muted",    "rgba(140,160,190,0.75)");
+      root.style.setProperty("--border-color",  "rgba(80,140,255,0.18)");
+    } else {
+      root.setAttribute("data-theme", "light");
+      root.style.setProperty("--bg-primary",   "#ffffff");
+      root.style.setProperty("--bg-secondary",  "rgba(248,250,252,0.97)");
+      root.style.setProperty("--text-primary",  "rgba(15,23,42,0.92)");
+      root.style.setProperty("--text-muted",    "rgba(71,85,105,0.8)");
+      root.style.setProperty("--border-color",  "rgba(99,102,241,0.2)");
+    }
+    localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
+    window.dispatchEvent(new CustomEvent("theme-change", { detail: { dark } }));
+  }, [dark]);
+  return [dark, setDark];
+}
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeGlow, setActiveGlow] = useState(0);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false); // NEW: Track if auth check completed
+  const [authChecked, setAuthChecked] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // ── ONLY ADDITION: theme state ────────────────────────────────────────────
+  const [dark, setDark] = useAppTheme();
 
   // ALL PUBLIC NAV ITEMS - Trainer KPI is public
   const navItems = [
@@ -21,9 +51,9 @@ const Navbar = () => {
     { name: 'Courses', path: '/syllabus', icon: '◉', color: '#ff00ff' },
     { name: 'ML Predictor', path: '/ml', icon: '◆', color: '#00ff88' },
     { name: 'Employees', path: '/employees', icon: '◊', color: '#ffaa00' },
-    { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' }, // PUBLIC - No auth required
-    { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' }, // COGNITIVE AUGMENTATION
-    { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' }, // BODHI MONK AI ← ONLY LINE ADDED
+    { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' },
+    { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
+    { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
   ];
 
   // Check auth status immediately on mount
@@ -32,38 +62,34 @@ const Navbar = () => {
       try {
         const token = localStorage.getItem('auth_token');
         const savedUser = localStorage.getItem('user');
-        
-        console.log('Auth check - Token exists:', !!token); // DEBUG
-        
+        console.log('Auth check - Token exists:', !!token);
         if (token && savedUser) {
           axios.defaults.headers.common['Authorization'] = `Token ${token}`;
           setUser(JSON.parse(savedUser));
           setIsAuthenticated(true);
-          console.log('User authenticated:', JSON.parse(savedUser).email); // DEBUG
+          console.log('User authenticated:', JSON.parse(savedUser).email);
         } else {
           setUser(null);
           setIsAuthenticated(false);
-          console.log('User not authenticated'); // DEBUG
+          console.log('User not authenticated');
         }
       } catch (err) {
         console.error('Auth check error:', err);
         setUser(null);
         setIsAuthenticated(false);
       } finally {
-        setAuthChecked(true); // Mark auth check as complete
+        setAuthChecked(true);
       }
     };
-    
     checkAuth();
   }, []);
 
   // Listen for auth changes from LoginSignupLogout component
   useEffect(() => {
     const handleStorageChange = () => {
-      console.log('Storage changed, rechecking auth...'); // DEBUG
+      console.log('Storage changed, rechecking auth...');
       const token = localStorage.getItem('auth_token');
       const savedUser = localStorage.getItem('user');
-      
       if (token && savedUser) {
         axios.defaults.headers.common['Authorization'] = `Token ${token}`;
         setUser(JSON.parse(savedUser));
@@ -73,11 +99,8 @@ const Navbar = () => {
         setIsAuthenticated(false);
       }
     };
-
-    // Listen for both storage events and custom events
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('auth-change', handleStorageChange); // Custom event
-    
+    window.addEventListener('auth-change', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth-change', handleStorageChange);
@@ -154,12 +177,132 @@ const Navbar = () => {
         border-bottom-color: rgba(0,217,255,0.35) !important;
       }
       .mobile-menu { top: 52px !important; }
+
+      /* ── Theme toggle button ── */
+      .rua-theme-toggle {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(0,217,255,0.3);
+        background: rgba(0,217,255,0.06);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.22s;
+        flex-shrink: 0;
+      }
+      .rua-theme-toggle:hover {
+        background: rgba(0,217,255,0.15);
+        border-color: rgba(0,217,255,0.6);
+        box-shadow: 0 0 12px rgba(0,217,255,0.3);
+        transform: scale(1.1);
+      }
+      [data-theme="light"] .rua-theme-toggle {
+        border-color: rgba(99,102,241,0.35);
+        background: rgba(99,102,241,0.07);
+      }
+      [data-theme="light"] .rua-theme-toggle:hover {
+        border-color: rgba(99,102,241,0.65);
+        background: rgba(99,102,241,0.15);
+        box-shadow: 0 0 12px rgba(99,102,241,0.3);
+      }
+      .rua-theme-toggle.spinning {
+        animation: themeSpin 0.38s ease-out;
+      }
+      @keyframes themeSpin {
+        0%  { transform: scale(1)   rotate(0deg);   }
+        50% { transform: scale(1.3) rotate(190deg); }
+        100%{ transform: scale(1)   rotate(360deg); }
+      }
+
+      /* ── Logo orbit: spinning rings + pulsing glow ── */
+      @keyframes ruaOrbitSpin    { from{transform:rotate(0deg)}   to{transform:rotate(360deg)}  }
+      @keyframes ruaOrbitSpinRev { from{transform:rotate(0deg)}   to{transform:rotate(-360deg)} }
+      @keyframes ruaCoreGlow {
+        0%,100% {
+          box-shadow:
+            0 0 8px  2px rgba(0,217,255,0.7),
+            0 0 20px 5px rgba(0,217,255,0.35),
+            0 0 40px 8px rgba(157,78,221,0.25),
+            inset 0 0 8px rgba(255,255,255,0.15);
+        }
+        50% {
+          box-shadow:
+            0 0 16px 5px rgba(0,217,255,1),
+            0 0 36px 10px rgba(0,217,255,0.5),
+            0 0 65px 16px rgba(157,78,221,0.4),
+            0 0 90px 24px rgba(0,217,255,0.12),
+            inset 0 0 14px rgba(255,255,255,0.28);
+        }
+      }
+
+      .logo-orbit {
+        position: relative !important;
+        overflow: visible !important;
+      }
+      /* Outer spinning ring */
+      .logo-orbit::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 1.5px solid transparent;
+        border-top-color: rgba(0,217,255,0.9);
+        border-right-color: rgba(157,78,221,0.55);
+        animation: ruaOrbitSpin 2.2s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* Counter-spinning dashed ring */
+      .logo-orbit::after {
+        content: '';
+        position: absolute;
+        inset: -10px;
+        border-radius: 50%;
+        border: 1px dashed rgba(0,217,255,0.28);
+        border-bottom-color: rgba(157,78,221,0.45);
+        animation: ruaOrbitSpinRev 3.8s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+      }
+      /* Core pulse */
+      .logo-core {
+        animation: ruaCoreGlow 2.6s ease-in-out infinite !important;
+        border-radius: 50% !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
+      /* Existing orbit-ring divs get proper animation */
+      .orbit-ring {
+        position: absolute !important;
+        inset: -3px !important;
+        border-radius: 50% !important;
+        border: 1.5px solid transparent !important;
+        border-top-color: rgba(0,217,255,0.5) !important;
+        animation: ruaOrbitSpin 1.7s linear infinite !important;
+      }
+      .orbit-ring.ring-2 {
+        inset: -6px !important;
+        border-top-color: transparent !important;
+        border-right-color: rgba(157,78,221,0.5) !important;
+        animation: ruaOrbitSpinRev 2.9s linear infinite !important;
+      }
     `;
     document.head.appendChild(style);
     return () => { const el = document.getElementById(styleId); if (el) el.remove(); };
   }, []);
 
-  // Don't render auth buttons until initial auth check is complete (prevents flash)
+  // ── Theme toggle spin state ───────────────────────────────────────────────
+  const [spinning, setSpinning] = useState(false);
+  const handleThemeToggle = () => {
+    setSpinning(true);
+    setDark(d => !d);
+    setTimeout(() => setSpinning(false), 400);
+  };
+
+  // Don't render auth buttons until initial auth check is complete
   if (!authChecked) {
     return (
       <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
@@ -176,7 +319,7 @@ const Navbar = () => {
             </div>
           </Link>
           <div className="desktop-nav">
-            {navItems.map((item, index) => (
+            {navItems.map((item) => (
               <Link key={item.name} to={item.path} className={`nav-link ${isActive(item.path) ? 'active' : ''}`} onClick={handleNavClick}>
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-text">{item.name}</span>
@@ -211,8 +354,8 @@ const Navbar = () => {
               </span>
             </div>
           </Link>
-          
-          {/* Desktop Navigation - ALL PUBLIC ITEMS */}
+
+          {/* Desktop Navigation */}
           <div className="desktop-nav">
             {navItems.map((item, index) => (
               <Link
@@ -236,8 +379,7 @@ const Navbar = () => {
                 )}
               </Link>
             ))}
-            
-            {/* Live Voice - ONLY SHOW WHEN AUTHENTICATED */}
+
             {isAuthenticated && (
               <Link
                 to="/live-voice"
@@ -261,9 +403,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* RIGHT SIDE: AI Status + Auth Button */}
+          {/* RIGHT SIDE */}
           <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            
+
             {/* AI Status */}
             <div className="ai-status">
               <div className="ai-rings">
@@ -281,9 +423,18 @@ const Navbar = () => {
               </div>
             </div>
 
-            {/* AUTH SECTION - SHOW LOGIN WHEN NOT AUTHENTICATED */}
+            {/* ── THEME TOGGLE — only addition ── */}
+            <button
+              className={`rua-theme-toggle${spinning ? ' spinning' : ''}`}
+              onClick={handleThemeToggle}
+              title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
+
+            {/* Auth */}
             {!isAuthenticated ? (
-              /* LOGIN BUTTON - VISIBLE WHEN NOT LOGGED IN */
               <Link
                 to="/login"
                 className="login-btn"
@@ -316,17 +467,15 @@ const Navbar = () => {
                 <span>Login</span>
               </Link>
             ) : (
-              /* LOGOUT/USER - VISIBLE WHEN LOGGED IN */
               <div className="auth-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {/* User Avatar */}
-                <div 
+                <div
                   className="user-avatar"
                   style={{
                     width: '36px',
                     height: '36px',
                     borderRadius: '50%',
-                    background: user?.profile?.avatar_url 
-                      ? `url(${user.profile.avatar_url}) center/cover` 
+                    background: user?.profile?.avatar_url
+                      ? `url(${user.profile.avatar_url}) center/cover`
                       : 'linear-gradient(135deg, #00d9ff, #9d4edd)',
                     border: '2px solid rgba(255,255,255,0.2)',
                     cursor: 'pointer',
@@ -340,8 +489,6 @@ const Navbar = () => {
                 >
                   {!user?.profile?.avatar_url && (user?.first_name?.[0] || user?.username?.[0] || 'U')}
                 </div>
-                
-                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
                   className="logout-btn"
@@ -376,7 +523,7 @@ const Navbar = () => {
           </div>
 
           {/* Hamburger */}
-          <button 
+          <button
             className={`hamburger ${isOpen ? 'open' : ''}`}
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
@@ -398,11 +545,22 @@ const Navbar = () => {
       <div className={`mobile-menu ${isOpen ? 'open' : ''}`}>
         <div className="mobile-header">
           <span className="mobile-title">Navigation</span>
-          <button className="mobile-close" onClick={() => setIsOpen(false)}>✕</button>
+          {/* ── THEME TOGGLE in mobile header too ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              className={`rua-theme-toggle${spinning ? ' spinning' : ''}`}
+              onClick={handleThemeToggle}
+              title={dark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme"
+              style={{ width: 30, height: 30, fontSize: 14 }}
+            >
+              {dark ? '☀️' : '🌙'}
+            </button>
+            <button className="mobile-close" onClick={() => setIsOpen(false)}>✕</button>
+          </div>
         </div>
-        
+
         <div className="mobile-nav">
-          {/* Public nav items */}
           {navItems.map((item, index) => (
             <Link
               key={item.name}
@@ -421,8 +579,7 @@ const Navbar = () => {
               <span className="mobile-arrow">→</span>
             </Link>
           ))}
-          
-          {/* Live Voice - Mobile */}
+
           {isAuthenticated && (
             <Link
               to="/live-voice"
@@ -441,14 +598,12 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* Mobile Auth Section */}
-          <div className="mobile-auth-section" style={{ 
-            marginTop: '20px', 
-            paddingTop: '20px', 
-            borderTop: '1px solid rgba(255,255,255,0.1)' 
+          <div className="mobile-auth-section" style={{
+            marginTop: '20px',
+            paddingTop: '20px',
+            borderTop: '1px solid rgba(255,255,255,0.1)'
           }}>
             {!isAuthenticated ? (
-              /* LOGIN BUTTON - MOBILE */
               <Link
                 to="/login"
                 onClick={() => setIsOpen(false)}
@@ -471,12 +626,11 @@ const Navbar = () => {
                 <span>Login / Sign Up</span>
               </Link>
             ) : (
-              /* LOGOUT - MOBILE */
               <div style={{ padding: '0 20px' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
                   marginBottom: '16px',
                   padding: '12px',
                   background: 'rgba(255,255,255,0.05)',
@@ -486,8 +640,8 @@ const Navbar = () => {
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    background: user?.profile?.avatar_url 
-                      ? `url(${user.profile.avatar_url}) center/cover` 
+                    background: user?.profile?.avatar_url
+                      ? `url(${user.profile.avatar_url}) center/cover`
                       : 'linear-gradient(135deg, #00d9ff, #9d4edd)',
                     border: '2px solid rgba(255,255,255,0.2)'
                   }} />
@@ -499,10 +653,7 @@ const Navbar = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsOpen(false);
-                  }}
+                  onClick={() => { handleLogout(); setIsOpen(false); }}
                   style={{
                     width: '100%',
                     padding: '14px',

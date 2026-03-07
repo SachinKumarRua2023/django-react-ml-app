@@ -1,24 +1,30 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+// mobile/app/_layout.tsx
+// Root entry — DO NOT add NavigationContainer here, AppNavigator has it
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import "react-native-gesture-handler";
+import React, { useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
+import AppNavigator from "../src/navigation/AppNavigator";
+import { useAuthStore } from "../src/store/authStore";
+import { LoadingScreen } from "../src/components/ui/LoadingScreen";
+import { COLORS } from "../src/constants/theme";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { loadUser, isLoading } = useAuthStore();
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+      <StatusBar style="light" backgroundColor={COLORS.background} />
+      <AppNavigator />
+    </View>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import MLVisuals from "./MLVisuals";
 import PythonVisuals from "./PythonVisuals";
+import WhiteBoard from "./WhiteBoard";
 
 
 // ============================================================
@@ -927,6 +928,7 @@ export default function SyllabusPage() {
     { id: 'quiz-mysql', label: '🗄️ MySQL Quiz', icon: '🗄️' },
     { id: 'ml-visuals', label: '🤖 ML Visuals', icon: '🤖' },
     { id: 'py-visuals', label: '🐍 Python Visuals', icon: '🐍' },
+    { id: 'whiteboard', label: '🖊️ Whiteboard', icon: '🖊️' },
   ];
 
   return (
@@ -952,7 +954,7 @@ export default function SyllabusPage() {
       {/* ── ML VISUALS MODE ── */}
       {viewMode === 'ml-visuals' && <MLVisuals />}
       {viewMode === 'py-visuals' && <PythonVisuals />}
-
+      {viewMode === 'whiteboard' && <WhiteBoard />}
       {/* ── COURSE MODE (all original code, unchanged) ── */}
       {viewMode === 'courses' && (
         <>
