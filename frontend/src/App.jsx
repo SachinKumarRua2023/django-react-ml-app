@@ -14,11 +14,11 @@ import TalkWithRua from "./components/TalkWithRua";
 
 export const TOKEN_KEY = "cosmos_token";
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? children : <Navigate to="/login" replace />;
-};
-
+// ProtectedRoute: only used for /login (public-only)
+// /live-voice is NOT wrapped in ProtectedRoute because VCRoom
+// handles its own auth internally via useCosmosAuth hook —
+// it shows its own login screen if no token is found.
+// This way Exit (which clears the token) doesn't cause a redirect loop.
 const PublicOnlyRoute = ({ children }) => {
   const token = localStorage.getItem(TOKEN_KEY);
   return token ? <Navigate to="/live-voice" replace /> : children;
@@ -48,17 +48,18 @@ function App() {
       <Navbar user={user} />
       <div className="main-wrapper">
         <Routes>
-          <Route path="/login" element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
-          <Route path="/live-voice" element={<ProtectedRoute><VCRoom /></ProtectedRoute>} />
+          <Route path="/login"      element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
 
-          <Route path="/"                  element={<MasterRua />} />
-          <Route path="/employees"         element={<Employees />} />
-          <Route path="/ml"                element={<MLPredictor />} />
-          <Route path="/syllabus"          element={<SyllabusPage />} />
-          <Route path="/trainer-kpi"       element={<TrainerDashboard />} />
-          <Route path="/mnemonic-system"   element={<MnemonicSystem />} />
-          <Route path="/talk-with-rua"     element={<TalkWithRua />} />
-          <Route path="/talk-with-rua"     element={<TalkWithRua />} /> {/* ← ADDED */}
+          {/* VCRoom handles its own auth — no ProtectedRoute wrapper needed */}
+          <Route path="/live-voice" element={<VCRoom />} />
+
+          <Route path="/"                element={<MasterRua />} />
+          <Route path="/employees"       element={<Employees />} />
+          <Route path="/ml"              element={<MLPredictor />} />
+          <Route path="/syllabus"        element={<SyllabusPage />} />
+          <Route path="/trainer-kpi"     element={<TrainerDashboard />} />
+          <Route path="/mnemonic-system" element={<MnemonicSystem />} />
+          <Route path="/talk-with-rua"   element={<TalkWithRua />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = 'https://django-react-ml-app.onrender.com  ';
+const API_URL = 'https://django-react-ml-app.onrender.com';
 axios.defaults.baseURL = API_URL;
+
+// ── ONLY FIX: these 2 constants match what LoginSignupLogout writes ──
+const TOKEN_KEY = "cosmos_token";  // was: 'auth_token'
+const USER_KEY  = "cosmos_user";   // was: 'user'
 
 // ── Theme hook (exported so other components can use it) ──────────────────────
 const THEME_KEY = "rua_theme";
@@ -60,8 +64,8 @@ const Navbar = () => {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = localStorage.getItem('auth_token');
-        const savedUser = localStorage.getItem('user');
+        const token = localStorage.getItem(TOKEN_KEY);      // FIXED: was 'auth_token'
+        const savedUser = localStorage.getItem(USER_KEY);   // FIXED: was 'user'
         console.log('Auth check - Token exists:', !!token);
         if (token && savedUser) {
           axios.defaults.headers.common['Authorization'] = `Token ${token}`;
@@ -88,8 +92,8 @@ const Navbar = () => {
   useEffect(() => {
     const handleStorageChange = () => {
       console.log('Storage changed, rechecking auth...');
-      const token = localStorage.getItem('auth_token');
-      const savedUser = localStorage.getItem('user');
+      const token = localStorage.getItem(TOKEN_KEY);      // FIXED: was 'auth_token'
+      const savedUser = localStorage.getItem(USER_KEY);   // FIXED: was 'user'
       if (token && savedUser) {
         axios.defaults.headers.common['Authorization'] = `Token ${token}`;
         setUser(JSON.parse(savedUser));
@@ -113,12 +117,13 @@ const Navbar = () => {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
+      localStorage.removeItem(TOKEN_KEY);     // FIXED: was 'auth_token'
+      localStorage.removeItem(USER_KEY);      // FIXED: was 'user'
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
       setIsAuthenticated(false);
-      navigate('/login');
+      window.dispatchEvent(new Event('storage'));
+      navigate('/');
     }
   };
 
@@ -143,6 +148,19 @@ const Navbar = () => {
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // ── ADDITION: handler for Live Voice nav click ───────────────────────────
+  // If authenticated → go directly to /live-voice (VCRoom handles its own auth)
+  // If not authenticated → go to /login so user can sign in first
+  const handleLiveVoiceClick = (e) => {
+    e.preventDefault();
+    handleNavClick();
+    if (isAuthenticated) {
+      navigate('/live-voice');
+    } else {
+      navigate('/login');
+    }
+  };
 
   // Inject responsive + lightning navbar styles (no logic change)
   useEffect(() => {
@@ -289,6 +307,16 @@ const Navbar = () => {
         border-right-color: rgba(157,78,221,0.5) !important;
         animation: ruaOrbitSpinRev 2.9s linear infinite !important;
       }
+
+      /* ── desktop-only: show text on desktop, hide on mobile ── */
+      .desktop-only { display: inline !important; }
+      @media (max-width: 1100px) {
+        .desktop-only { display: none !important; }
+      }
+
+      /* ── logout-btn: always visible, never overflow-hidden ── */
+      .logout-btn { flex-shrink: 0 !important; white-space: nowrap !important; }
+      .nav-right  { flex-shrink: 0 !important; overflow: visible !important; }
     `;
     document.head.appendChild(style);
     return () => { const el = document.getElementById(styleId); if (el) el.remove(); };
@@ -380,31 +408,31 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {isAuthenticated && (
-              <Link
-                to="/live-voice"
-                className={`nav-link ${isActive('/live-voice') ? 'active' : ''}`}
-                onClick={handleNavClick}
-                style={{ '--item-color': '#ff0000' }}
-              >
-                <span className="nav-icon-wrapper">
-                  <span className="nav-icon">🔴</span>
-                  <span className="icon-glow" />
-                </span>
-                <span className="nav-text">Live Voice</span>
-                <span className="nav-bg" />
-                {isActive('/live-voice') && (
-                  <>
-                    <span className="active-line" />
-                    <span className="active-glow" />
-                  </>
-                )}
-              </Link>
-            )}
+            {/* ── ADDITION: Live Voice link visible to all, but routes smartly ── */}
+            {/* Authenticated → /live-voice directly. Not authed → /login first. */}
+            <a
+              href="/live-voice"
+              className={`nav-link ${isActive('/live-voice') ? 'active' : ''}`}
+              onClick={handleLiveVoiceClick}
+              style={{ '--item-color': '#ff0000', cursor: 'pointer' }}
+            >
+              <span className="nav-icon-wrapper">
+                <span className="nav-icon">🔴</span>
+                <span className="icon-glow" />
+              </span>
+              <span className="nav-text">Live Voice</span>
+              <span className="nav-bg" />
+              {isActive('/live-voice') && (
+                <>
+                  <span className="active-line" />
+                  <span className="active-glow" />
+                </>
+              )}
+            </a>
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, overflow: 'visible', minWidth: 'fit-content' }}>
 
             {/* AI Status */}
             <div className="ai-status">
@@ -455,12 +483,12 @@ const Navbar = () => {
                   boxShadow: '0 4px 15px rgba(0, 217, 255, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(0, 217, 255, 0.4)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 217, 255, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 15px rgba(0, 217, 255, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(0, 217, 255, 0.3)';
                 }}
               >
                 <span>🔐</span>
@@ -504,19 +532,25 @@ const Navbar = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap',
+                    visibility: 'visible',
+                    opacity: 1,
+                    minWidth: 'fit-content',
+                    overflow: 'visible'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = 'rgba(239, 68, 68, 0.2)';
-                    e.target.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(239, 68, 68, 0.1)';
-                    e.target.style.transform = 'translateY(0)';
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   <span>⎋</span>
-                  <span className="desktop-only">Logout</span>
+                  <span>Logout</span>
                 </button>
               </div>
             )}
@@ -580,23 +614,22 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {isAuthenticated && (
-            <Link
-              to="/live-voice"
-              className={`mobile-link ${isActive('/live-voice') ? 'active' : ''}`}
-              onClick={handleNavClick}
-              style={{ '--item-color': '#ff0000', animationDelay: `${navItems.length * 0.1}s` }}
-            >
-              <span className="mobile-icon-bg">
-                <span className="mobile-icon">🔴</span>
-              </span>
-              <div className="mobile-link-content">
-                <span className="mobile-text">Live Voice</span>
-                {isActive('/live-voice') && <span className="mobile-active-badge">Active</span>}
-              </div>
-              <span className="mobile-arrow">→</span>
-            </Link>
-          )}
+          {/* ── ADDITION: Live Voice in mobile menu, same smart routing ── */}
+          <a
+            href="/live-voice"
+            className={`mobile-link ${isActive('/live-voice') ? 'active' : ''}`}
+            onClick={handleLiveVoiceClick}
+            style={{ '--item-color': '#ff0000', animationDelay: `${navItems.length * 0.1}s`, cursor: 'pointer' }}
+          >
+            <span className="mobile-icon-bg">
+              <span className="mobile-icon">🔴</span>
+            </span>
+            <div className="mobile-link-content">
+              <span className="mobile-text">Live Voice</span>
+              {isActive('/live-voice') && <span className="mobile-active-badge">Active</span>}
+            </div>
+            <span className="mobile-arrow">→</span>
+          </a>
 
           <div className="mobile-auth-section" style={{
             marginTop: '20px',
