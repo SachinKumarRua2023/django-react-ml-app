@@ -666,6 +666,7 @@ export default function SyllabusPage() {
   }, []);
 
   const [viewMode, setViewMode] = useState('courses');
+  const [orbOpen, setOrbOpen] = useState(false);
   const [activeSubject, setActiveSubject] = useState("python");
   const [activeModule, setActiveModule] = useState(null);
   const [activeTopic, setActiveTopic] = useState("");
@@ -788,9 +789,12 @@ export default function SyllabusPage() {
     { id: 'courses', label: '📚 Courses', icon: '📚' },
     { id: 'quiz-python', label: '🐍 Python Quiz', icon: '🐍' },
     { id: 'quiz-mysql', label: '🗄️ MySQL Quiz', icon: '🗄️' },
-    { id: 'ml-visuals', label: '🤖 ML Visuals', icon: '🤖' },
-    { id: 'py-visuals', label: '🐍 Python Visuals', icon: '🐍' },
-    { id: 'whiteboard', label: '🖊️ Whiteboard', icon: '🖊️' },
+  ];
+
+  const toolTabs = [
+    { id: 'ml-visuals',  label: 'ML Visuals',      icon: '🤖', color: '#a855f7' },
+    { id: 'py-visuals',  label: 'Python Visuals',  icon: '🐍', color: '#22d3ee' },
+    { id: 'whiteboard',  label: 'Whiteboard',      icon: '🖊️', color: '#f59e0b' },
   ];
 
   const isT = userRole === 'trainer';
@@ -1655,7 +1659,162 @@ export default function SyllabusPage() {
           .content-header { padding: 10px 16px; }
           .content-footer { padding: 12px 16px; }
         }
+        /* ─────────────────────────────────────────────────────────
+           FLOATING ORB + RADIAL TOOL MENU
+        ───────────────────────────────────────────────────────── */
+        .floating-orb-wrap {
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0;
+        }
+
+        /* Fan items container */
+        .orb-fan {
+          position: absolute;
+          bottom: 72px;
+          right: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .orb-fan.open { pointer-events: all; }
+
+        .orb-fan-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          opacity: 0;
+          transform: translateY(20px) scale(0.7);
+          transition: opacity 0.25s, transform 0.25s;
+          cursor: pointer;
+        }
+        .orb-fan.open .orb-fan-item:nth-child(1) { opacity:1; transform:translateY(0) scale(1); transition-delay:0.05s; }
+        .orb-fan.open .orb-fan-item:nth-child(2) { opacity:1; transform:translateY(0) scale(1); transition-delay:0.12s; }
+        .orb-fan.open .orb-fan-item:nth-child(3) { opacity:1; transform:translateY(0) scale(1); transition-delay:0.19s; }
+
+        .orb-fan-label {
+          font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+          padding: 5px 12px; border-radius: 20px;
+          background: rgba(0,0,0,0.7);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255,255,255,0.15);
+          color: white;
+          white-space: nowrap;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+          transition: background 0.2s, border-color 0.2s;
+        }
+        .orb-fan-item:hover .orb-fan-label { border-color: var(--item-color); color: var(--item-color); background: rgba(0,0,0,0.9); }
+
+        .orb-fan-btn {
+          width: 46px; height: 46px; border-radius: 50%;
+          border: 2px solid var(--item-color);
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(8px);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px;
+          box-shadow: 0 0 14px var(--item-color), 0 4px 16px rgba(0,0,0,0.5);
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          flex-shrink: 0;
+        }
+        .orb-fan-item:hover .orb-fan-btn {
+          transform: scale(1.15);
+          box-shadow: 0 0 24px var(--item-color), 0 4px 20px rgba(0,0,0,0.6);
+        }
+        .orb-fan-item.tool-active .orb-fan-btn {
+          background: var(--item-color);
+          box-shadow: 0 0 28px var(--item-color);
+        }
+        .orb-fan-item.tool-active .orb-fan-label {
+          color: var(--item-color);
+          border-color: var(--item-color);
+        }
+
+        /* Main orb */
+        .main-orb {
+          width: 60px; height: 60px; border-radius: 50%;
+          background: conic-gradient(from 0deg, #a855f7, #22d3ee, #f59e0b, #a855f7);
+          border: none;
+          cursor: pointer;
+          position: relative;
+          box-shadow:
+            0 0 0 4px rgba(168,85,247,0.25),
+            0 0 30px rgba(168,85,247,0.5),
+            0 0 60px rgba(34,211,238,0.3);
+          animation: orbSpin 4s linear infinite, orbPulse 2.5s ease-in-out infinite alternate;
+          transition: transform 0.3s, box-shadow 0.3s;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 24px;
+        }
+        .main-orb:hover {
+          transform: scale(1.12);
+          box-shadow:
+            0 0 0 6px rgba(168,85,247,0.35),
+            0 0 50px rgba(168,85,247,0.7),
+            0 0 80px rgba(34,211,238,0.5);
+        }
+        .main-orb.open {
+          animation: orbSpin 1.5s linear infinite;
+          transform: scale(1.1) rotate(45deg);
+          box-shadow:
+            0 0 0 6px rgba(34,211,238,0.4),
+            0 0 60px rgba(34,211,238,0.8),
+            0 0 100px rgba(168,85,247,0.5);
+        }
+
+        @keyframes orbSpin {
+          from { filter: hue-rotate(0deg); }
+          to   { filter: hue-rotate(360deg); }
+        }
+        @keyframes orbPulse {
+          from { box-shadow: 0 0 0 4px rgba(168,85,247,0.2), 0 0 30px rgba(168,85,247,0.4), 0 0 60px rgba(34,211,238,0.2); }
+          to   { box-shadow: 0 0 0 8px rgba(168,85,247,0.35), 0 0 50px rgba(168,85,247,0.7), 0 0 90px rgba(34,211,238,0.4); }
+        }
+
+        .orb-tooltip {
+          position: absolute;
+          bottom: -26px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          color: rgba(255,255,255,0.5);
+          white-space: nowrap;
+          pointer-events: none;
+          text-transform: uppercase;
+        }
       `}</style>
+
+      {/* ── FLOATING ORB ── */}
+      <div className="floating-orb-wrap">
+        <div className={`orb-fan ${orbOpen ? 'open' : ''}`}>
+          {toolTabs.map(t => (
+            <div
+              key={t.id}
+              className={`orb-fan-item ${viewMode === t.id ? 'tool-active' : ''}`}
+              style={{ '--item-color': t.color }}
+              onClick={() => { setViewMode(viewMode === t.id ? 'courses' : t.id); setOrbOpen(false); }}
+            >
+              <span className="orb-fan-label">{t.label}</span>
+              <div className="orb-fan-btn">{t.icon}</div>
+            </div>
+          ))}
+        </div>
+
+        <button className={`main-orb ${orbOpen ? 'open' : ''}`} onClick={() => setOrbOpen(o => !o)} title="Tools">
+          {orbOpen ? '✕' : '🔮'}
+          <span className="orb-tooltip">{orbOpen ? 'close' : 'tools'}</span>
+        </button>
+      </div>
+
     </div>
   );
 }
