@@ -8,7 +8,7 @@ import {
   resetSyllabusData,
   generateDefaultContent,
   SYLLABUS_STORAGE_KEY,
-} from "./syllabusData";
+} from "./SyllabusData";
 
 // ── Read trainer role from JWT user stored by LoginSignupLogout ──
 const getLoggedInUser = () => {
