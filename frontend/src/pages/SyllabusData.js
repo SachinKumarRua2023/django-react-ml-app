@@ -1,742 +1,112 @@
 // ============================================================
-// SYLLABUS DATA FILE — seekhowithrua.com
-// Stanford / Harvard / MIT University Level — 3 Master Tracks
-// Trainers edit via UI (localStorage). Learners = read-only.
+// SYLLABUS DATA FILE — Source of Truth
+// Trainers can edit this via the UI (persisted in localStorage)
+// Learners / guests get read-only access — no edit UI shown
 // ============================================================
 
 export const defaultSyllabusData = {
-
-  // ══════════════════════════════════════════════════════════
-  // TRACK 1 — AI & DATA SCIENCE (Stanford CS229 + CS230 Level)
-  // ══════════════════════════════════════════════════════════
-  ai_ds: {
-    title: "AI & Data Science",
-    icon: "🤖",
-    color: "#a855f7",
+  mysql: {
+    title: "MySQL Database",
+    icon: "🗄️",
+    color: "#00758f",
     modules: {
-      "Module 1 — Python for Computational Science": [
-        "Python Setup, Environments & Jupyter Notebooks",
-        "Variables, Data Types & Memory Management",
-        "Control Flow: Conditionals, Loops & Iterators",
-        "Functions, Lambda & Higher-Order Functions",
-        "Data Structures: Lists, Dicts, Sets & Tuples",
-        "Object-Oriented Programming: Classes & Inheritance",
-        "Modules, Packages & pip Environment Management",
-        "File I/O: CSV, JSON, Binary & Streaming Data",
-        "Exception Handling & Defensive Programming",
-        "Iterators, Generators & Memory-Efficient Code",
-        "Decorators, Context Managers & Metaclasses",
-        "NumPy: Array Creation, Broadcasting & Vectorization",
-        "NumPy Linear Algebra: Matrix Operations & SVD",
-        "Pandas: DataFrames, Series & Indexing Strategies",
-        "Data Cleaning: Missing Values, Outliers & Duplicates",
-        "Data Transformation: Merge, Join, Reshape & Pivot",
-        "Time Series: Datetime, Resampling & Rolling Windows",
-        "Matplotlib: Figures, Axes, Subplots & Custom Styles",
-        "Seaborn: Statistical Visualization & Heatmaps",
-        "Plotly: Interactive Dashboards & 3D Visualizations"
-      ],
-      "Module 2 — Mathematical Foundations for AI": [
-        "Linear Algebra: Vectors, Matrices & Tensor Operations",
-        "Matrix Decomposition: LU, QR, Cholesky & Eigenvalues",
-        "Vector Spaces, Subspaces & Orthogonality",
-        "Calculus: Limits, Derivatives & Gradient Vectors",
-        "Multivariable Calculus: Partial Derivatives & Jacobians",
-        "Chain Rule, Backpropagation Foundations & Autodiff",
-        "Probability Theory: Axioms, Bayes Theorem & Independence",
-        "Random Variables: Discrete & Continuous Distributions",
-        "Expectation, Variance, Covariance & Correlation",
-        "Maximum Likelihood Estimation (MLE) & MAP",
-        "Information Theory: Entropy, KL-Divergence & Cross-Entropy",
-        "Optimization: Convexity, Gradients & Hessian Matrices",
-        "Gradient Descent: Batch, Stochastic & Mini-Batch",
-        "Advanced Optimizers: Momentum, RMSprop, Adam & AdamW",
-        "Constrained Optimization: Lagrange Multipliers",
-        "Numerical Methods: Newton-Raphson, Finite Differences",
-        "Linear Regression: OLS, Ridge, Lasso & Elastic Net",
-        "Logistic Regression: Sigmoid, Softmax & Cross-Entropy",
-        "Bias-Variance Tradeoff & Model Complexity",
-        "Regularization: L1, L2, Dropout & Early Stopping"
-      ],
-      "Module 3 — Classical Machine Learning": [
-        "ML Pipeline: Data Collection, Preprocessing & Modeling",
-        "Feature Engineering: Scaling, Encoding & Selection",
-        "Dimensionality Reduction: PCA, t-SNE & UMAP",
-        "Supervised Learning: Regression vs Classification",
-        "K-Nearest Neighbors (KNN) & Distance Metrics",
-        "Naive Bayes: Gaussian, Multinomial & Bernoulli",
-        "Decision Trees: ID3, C4.5, CART & Pruning Strategies",
-        "Ensemble Methods: Bagging, Boosting & Stacking",
-        "Random Forests: Feature Importance & OOB Error",
-        "Gradient Boosting: XGBoost, LightGBM & CatBoost",
-        "Support Vector Machines: Kernels & Soft Margin",
-        "Kernel Methods: RBF, Polynomial & Custom Kernels",
-        "Clustering: K-Means, DBSCAN & Hierarchical",
-        "Gaussian Mixture Models & Expectation-Maximization",
-        "Anomaly Detection: Isolation Forest & One-Class SVM",
-        "Cross-Validation: k-Fold, Stratified & Time Series Split",
-        "Hyperparameter Tuning: Grid Search, Random & Bayesian",
-        "Model Evaluation: Precision, Recall, F1, ROC-AUC",
-        "Imbalanced Data: SMOTE, Class Weights & Thresholds",
-        "MLflow: Experiment Tracking & Model Registry"
-      ],
-      "Module 4 — Deep Learning Foundations": [
-        "Neural Networks: Perceptron, MLP & Universal Approximation",
-        "Activation Functions: ReLU, GELU, Swish & Mish",
-        "Weight Initialization: Xavier, He & Orthogonal",
-        "Backpropagation: Computational Graphs & Chain Rule",
-        "Loss Functions: MSE, MAE, Huber, Focal Loss",
-        "Batch Normalization & Layer Normalization",
-        "Dropout, DropConnect & Monte Carlo Dropout",
-        "Convolutional Neural Networks: Filters, Padding & Stride",
-        "CNN Architectures: LeNet, AlexNet, VGG, ResNet, DenseNet",
-        "Transfer Learning: Fine-Tuning & Feature Extraction",
-        "Data Augmentation: Geometric, Photometric & Mixup",
-        "Object Detection: R-CNN, YOLO, SSD & EfficientDet",
-        "Image Segmentation: U-Net, Mask R-CNN & SAM",
-        "Recurrent Neural Networks: LSTM, GRU & Bidirectional",
-        "Sequence-to-Sequence Models & Attention Mechanism",
-        "Word Embeddings: Word2Vec, GloVe & FastText",
-        "PyTorch: Tensors, Autograd & Custom Training Loops",
-        "TensorFlow/Keras: Functional API & Custom Layers",
-        "Distributed Training: Data Parallel & Model Parallel",
-        "Model Deployment: TorchScript, ONNX & TensorRT"
-      ],
-      "Module 5 — Generative AI & Large Language Models": [
-        "Transformer Architecture: Self-Attention & Multi-Head",
-        "Positional Encoding: Sinusoidal & Learned",
-        "BERT: Pre-training, Fine-Tuning & Masked LM",
-        "GPT Architecture: Autoregressive Language Modeling",
-        "T5, BART & Encoder-Decoder Architectures",
-        "Tokenization: BPE, WordPiece, SentencePiece & Unigram",
-        "Hugging Face: Transformers, Datasets & Accelerate",
-        "Prompt Engineering: Zero-Shot, Few-Shot & CoT",
-        "In-Context Learning & Instruction Fine-Tuning",
-        "Retrieval-Augmented Generation (RAG) Architecture",
-        "Vector Databases: Pinecone, Chroma, Weaviate & FAISS",
-        "LangChain: Chains, Agents, Memory & Tools",
-        "LlamaIndex: Data Connectors & Query Engines",
-        "Fine-Tuning LLMs: LoRA, QLoRA & Parameter-Efficient",
-        "RLHF: Reward Modeling, PPO & Constitutional AI",
-        "Quantization: INT8, INT4 & GPTQ for Inference",
-        "Local LLMs: Ollama, llama.cpp & vLLM",
-        "Multimodal Models: CLIP, LLaVA & GPT-4V",
-        "Diffusion Models: DDPM, Stable Diffusion & ControlNet",
-        "MLOps for LLMs: Monitoring, Drift Detection & Guardrails"
-      ],
-      "Module 6 — Reinforcement Learning": [
-        "RL Foundations: MDPs, Policies, Value Functions & Bellman",
-        "Dynamic Programming: Policy Iteration & Value Iteration",
-        "Monte Carlo Methods: First-Visit & Every-Visit",
-        "Temporal-Difference Learning: SARSA & Q-Learning",
-        "Deep Q-Networks (DQN): Experience Replay & Target Networks",
-        "Policy Gradients: REINFORCE, Actor-Critic & A3C",
-        "Proximal Policy Optimization (PPO) & TRPO",
-        "Soft Actor-Critic (SAC) & Maximum Entropy RL",
-        "Model-Based RL: MuZero, World Models & Dreamer",
-        "Multi-Agent RL: Game Theory & Nash Equilibrium",
-        "RLHF for LLMs: Reward Modeling & PPO Training",
-        "Imitation Learning: Behavioral Cloning & DAgger",
-        "Inverse Reinforcement Learning & Apprenticeship",
-        "RL Environments: OpenAI Gym, PettingZoo & Unity ML-Agents",
-        "Real-World RL: Sim-to-Real, Safety & Robustness",
-        "Applications: Robotics, Game Playing & Recommendation",
-        "Offline RL: Conservative Q-Learning & Decision Transformers",
-        "Hierarchical RL: Options Framework & FeUdal Networks",
-        "Curriculum Learning & Automatic Goal Generation",
-        "Capstone: Train DQN Agent on Atari from Scratch"
-      ],
-      "Module 7 — Computer Vision & Multimodal AI": [
-        "Image Fundamentals: Pixels, Channels & Color Spaces",
-        "Traditional CV: Filtering, Edge Detection & HOG",
-        "Feature Extraction: SIFT, SURF & ORB",
-        "Image Classification: From AlexNet to EfficientNet",
-        "Object Detection: Two-Stage vs Single-Stage Detectors",
-        "Instance Segmentation: Mask R-CNN & PointRend",
-        "Semantic Segmentation: DeepLab, PSPNet & U-Net++",
-        "Panoptic Segmentation & Video Object Segmentation",
-        "Optical Flow: Lucas-Kanade, Farneback & RAFT",
-        "Stereo Vision & Depth Estimation: MiDaS & DPT",
-        "Face Detection & Recognition: MTCNN, ArcFace & DeepFace",
-        "Pose Estimation: OpenPose, MediaPipe & PoseNet",
-        "OCR & Document Understanding: Tesseract, LayoutLM",
-        "Vision Transformers: ViT, DeiT, Swin & DETR",
-        "Self-Supervised Learning: SimCLR, MoCo & DINO",
-        "Multimodal Learning: CLIP, ALIGN & Florence",
-        "Image Captioning & Visual Question Answering",
-        "Neural Radiance Fields (NeRF) & 3D Vision",
-        "Video Understanding: I3D, SlowFast & Video Swin",
-        "Medical Imaging: U-Net, nnU-Net & Self-Attention"
-      ],
-      "Module 8 — Natural Language Processing": [
-        "Text Preprocessing: Tokenization, Normalization & Stemming",
-        "N-Gram Models: Counting, Smoothing & Perplexity",
-        "Part-of-Speech Tagging: HMM & CRF Models",
-        "Named Entity Recognition: BiLSTM-CRF & Transformers",
-        "Dependency Parsing: Transition-Based & Graph-Based",
-        "Sentiment Analysis: Lexicon-Based & Deep Learning",
-        "Topic Modeling: LDA, NMF & BERTopic",
-        "Machine Translation: Seq2Seq, Attention & Transformer",
-        "Summarization: Extractive vs Abstractive Methods",
-        "Question Answering: DrQA, Dense Passage Retrieval",
-        "Dialogue Systems: Task-Oriented & Open-Domain Chatbots",
-        "Constituency Parsing & Semantic Role Labeling",
-        "Coreference Resolution & Entity Linking",
-        "Text Generation: Beam Search, Sampling & Nucleus",
-        "Prompt Engineering for NLP Tasks",
-        "Instruction Tuning & Chain-of-Thought Prompting",
-        "Evaluation: BLEU, ROUGE, METEOR & BERTScore",
-        "Low-Resource NLP: Cross-Lingual Transfer & XLM-R",
-        "NLP Ethics: Bias Detection, Fairness & Toxicity",
-        "Information Extraction: Relation Extraction & Event Detection"
-      ],
-      "Module 9 — MLOps & Production Systems": [
-        "ML System Design: Requirements, Constraints & Trade-offs",
-        "Data Validation: Great Expectations, TFDV & Pandera",
-        "Feature Stores: Feast, Tecton & Vertex AI Feature Store",
-        "Training Pipelines: Kubeflow, Airflow & Prefect",
-        "Experiment Tracking: MLflow, Weights & Biases & Neptune",
-        "Model Versioning: DVC, LakeFS & Git-LFS",
-        "CI/CD for ML: GitHub Actions, Jenkins & GitLab CI",
-        "Containerization: Docker, Kubernetes & Helm Charts",
-        "Model Serving: FastAPI, Triton, TorchServe & TF Serving",
-        "A/B Testing for ML: Design, Metrics & Analysis",
-        "Monitoring: Data Drift, Concept Drift & Performance",
-        "Explainability: SHAP, LIME, Integrated Gradients & Attention",
-        "Fairness: Demographic Parity, Equalized Odds & Calibration",
-        "Security: Model Inversion, Adversarial Attacks & Privacy",
-        "Federated Learning: Architecture, Aggregation & Privacy",
-        "Edge Deployment: TensorFlow Lite, ONNX Runtime & Core ML",
-        "Cost Optimization: Spot Instances, Quantization & Pruning",
-        "AutoML: Neural Architecture Search & Hyperparameter Optimization",
-        "Data Labeling: Active Learning, Weak Supervision & Snorkel",
-        "Capstone: End-to-End ML Pipeline with Monitoring"
-      ],
-      "Module 10 — Advanced Topics & Research": [
-        "Graph Neural Networks: GCN, GAT & GraphSAGE",
-        "Geometric Deep Learning & Manifold Learning",
-        "Neural Architecture Search (NAS) & AutoML",
-        "Meta-Learning: MAML, Prototypical Networks & Reptile",
-        "Few-Shot Learning & Zero-Shot Learning",
-        "Continual Learning: Catastrophic Forgetting & Elastic Weight",
-        "Neural Turing Machines & Differentiable Neural Computers",
-        "Attention Mechanisms: Sparse, Linear & Performer",
-        "Mixture of Experts (MoE) & Switch Transformers",
-        "Neural Radiance Fields & Neural Rendering",
-        "Quantum Machine Learning: VQC & QAOA",
-        "Causal ML: DoWhy, Causal Forests & Instrumental Variables",
-        "Causality: Potential Outcomes, DAGs & d-Separation",
-        "AI Safety: Alignment, Interpretability & Robustness",
-        "AI Ethics: Fairness, Accountability & Transparency",
-        "Research Methodology: Literature Review & Reproducibility",
-        "Paper Reading: NeurIPS, ICML, ICLR & CVPR",
-        "Open Source Contribution: PyTorch, Hugging Face & Keras",
-        "Kaggle Competitions: Feature Engineering & Ensembling",
-        "Final Capstone: Research-Level Project with Publication"
-      ]
+      "Basics": ["Introduction to RDBMS", "SQL Syntax & Data Types", "SELECT Statement Deep Dive", "WHERE Clause & Operators", "ORDER BY & Sorting", "LIMIT & Pagination"],
+      "Intermediate": ["JOINS (INNER, LEFT, RIGHT, FULL)", "GROUP BY & HAVING Clauses", "Subqueries & Nested Queries", "Indexes & Query Optimization", "Views & Virtual Tables", "Stored Procedures"],
+      "Advanced": ["Triggers & Events", "Transactions & ACID", "Database Normalization", "Query Performance Tuning", "Replication & Scaling", "Backup & Recovery"]
     },
     topicContent: {}
   },
-
-  // ══════════════════════════════════════════════════════════
-  // TRACK 2 — FULL STACK + MOBILE (Harvard CS50 + CS51 Level)
-  // ══════════════════════════════════════════════════════════
-  fullstack: {
-    title: "Full Stack + Mobile",
-    icon: "🌐",
+  python: {
+    title: "Python Programming",
+    icon: "🐍",
+    color: "#ffd43b",
+    modules: {
+      "Core Python": ["Variables & Data Types", "Control Flow & Loops", "Functions & Scope", "OOP Concepts", "Exception Handling", "File Operations"],
+      "Advanced Python": ["Decorators & Closures", "Generators & Iterators", "Multithreading & Multiprocessing", "Async Programming (asyncio)", "Memory Management", "Metaclasses"],
+      "Backend Development": ["Django Framework Basics", "Django REST Framework", "Authentication & JWT", "API Development", "Testing & Debugging", "Deployment Strategies"]
+    },
+    topicContent: {}
+  },
+  react: {
+    title: "React Development",
+    icon: "⚛️",
     color: "#61dafb",
     modules: {
-      "Module 1 — Computational Thinking & C Foundations": [
-        "How Computers Work: Binary, Memory & CPU Architecture",
-        "Algorithms: Sorting, Searching & Asymptotic Analysis",
-        "C Programming: Syntax, Types & Control Structures",
-        "Memory Management: Stack, Heap & Pointers",
-        "Data Structures in C: Arrays, Linked Lists & Trees",
-        "Debugging: GDB, Valgrind & Memory Leak Detection",
-        "Recursion: Divide & Conquer, Backtracking & Memoization",
-        "Computational Complexity: Big-O, Omega & Theta Notation",
-        "File I/O: Binary Files, Buffers & System Calls",
-        "Cryptography Basics: Hashing, Encryption & Security",
-        "Problem Solving: Greedy Algorithms & Dynamic Programming",
-        "Software Engineering: Testing, Documentation & Version Control",
-        "Linux Fundamentals: Shell, Permissions & Processes",
-        "Git & GitHub: Branching, Merging & Collaborative Workflows",
-        "Build Systems: Make, CMake & Compiler Flags",
-        "Code Review: Style Guides, Linting & Static Analysis",
-        "Computer Systems: Assembly, Linking & Loading",
-        "Networking Basics: TCP/IP, Sockets & HTTP Protocol",
-        "Security: Buffer Overflows, SQL Injection & XSS",
-        "Capstone: Build a Memory Allocator in C"
-      ],
-      "Module 2 — Python & Data Structures": [
-        "Python Fundamentals: Syntax, Types & Control Flow",
-        "Functions: Arguments, Scope, Closures & Decorators",
-        "OOP in Python: Classes, Inheritance, Polymorphism & Magic Methods",
-        "Data Structures: Lists, Dicts, Sets, Tuples & Comprehensions",
-        "Advanced Collections: defaultdict, Counter, deque & heapq",
-        "Iterators, Generators & Context Managers",
-        "Functional Programming: map, filter, reduce & lambda",
-        "Error Handling: Exceptions, Logging & Debugging",
-        "File Handling: CSV, JSON, XML & Binary Formats",
-        "Regular Expressions: Pattern Matching & Text Processing",
-        "Web Scraping: BeautifulSoup, Scrapy & Selenium",
-        "APIs: REST, GraphQL, WebSockets & gRPC",
-        "Async Programming: asyncio, aiohttp & Concurrent Futures",
-        "Testing: unittest, pytest, Mock & Coverage",
-        "Performance: Profiling, Caching & Memoization",
-        "Design Patterns: Singleton, Factory, Observer & Strategy",
-        "Data Structures: Stacks, Queues, Heaps & Hash Tables",
-        "Trees: Binary Search, AVL, Red-Black & B-Trees",
-        "Graphs: Representation, Traversal & Shortest Paths",
-        "Capstone: Build a Web Server from Scratch in Python"
-      ],
-      "Module 3 — Databases & Backend Systems": [
-        "Relational Databases: ACID, Normalization & ER Diagrams",
-        "SQL: DDL, DML, DQL, DCL & TCL Commands",
-        "Advanced SQL: Joins, Subqueries, CTEs & Window Functions",
-        "Indexing: B-Trees, Hash Indexes & Query Optimization",
-        "Transactions: Isolation Levels, Deadlocks & Concurrency",
-        "NoSQL: MongoDB, Cassandra & DynamoDB",
-        "Redis: Caching, Pub/Sub & Session Management",
-        "PostgreSQL: Advanced Types, Full-Text Search & JSONB",
-        "Database Design: Sharding, Replication & Partitioning",
-        "ORMs: SQLAlchemy, Django ORM & Prisma",
-        "Backend Architecture: MVC, Layered & Microservices",
-        "API Design: RESTful Principles, HATEOAS & Versioning",
-        "Authentication: JWT, OAuth 2.0, SSO & MFA",
-        "Authorization: RBAC, ABAC & Policy Engines",
-        "Input Validation: Sanitization, Validation & Rate Limiting",
-        "Web Security: CORS, CSRF, XSS & Security Headers",
-        "Message Queues: RabbitMQ, Kafka & Celery",
-        "Search Engines: Elasticsearch, Solr & Meilisearch",
-        "Caching Strategies: CDN, Browser & Application Cache",
-        "Capstone: Design a Scalable E-commerce Database"
-      ],
-      "Module 4 — Web Frontend Development": [
-        "How the Web Works: DNS, HTTP/2, HTTP/3 & TLS",
-        "HTML5: Semantic Elements, Forms & Accessibility (ARIA)",
-        "CSS3: Flexbox, Grid, Animations & Custom Properties",
-        "Responsive Design: Media Queries, Mobile-First & Viewport",
-        "JavaScript ES6+: Arrow Functions, Destructuring & Modules",
-        "DOM Manipulation: Events, Traversal & Manipulation",
-        "Asynchronous JS: Promises, async/await & Event Loop",
-        "Fetch API: AJAX, CORS & Error Handling",
-        "TypeScript: Types, Interfaces, Generics & Decorators",
-        "Frontend Build Tools: Webpack, Vite, Rollup & Parcel",
-        "Package Managers: npm, yarn, pnpm & Monorepos",
-        "CSS Frameworks: Tailwind, Bootstrap & Material UI",
-        "Component Architecture: Atomic Design & Storybook",
-        "State Management: Redux, Zustand & Jotai",
-        "Routing: Client-Side, Dynamic Routes & Guards",
-        "Performance: Lazy Loading, Code Splitting & Tree Shaking",
-        "Testing: Jest, Vitest, React Testing Library & Cypress",
-        "WebAssembly: Rust-to-WASM & Performance Optimization",
-        "Progressive Web Apps: Service Workers, Manifest & Offline",
-        "Capstone: Build a Real-Time Collaborative Editor"
-      ],
-      "Module 5 — React Ecosystem & Modern Frontend": [
-        "React Fundamentals: JSX, Components, Props & State",
-        "Hooks: useState, useEffect, useContext & Custom Hooks",
-        "Advanced Hooks: useMemo, useCallback, useRef & useReducer",
-        "Component Patterns: HOC, Render Props & Compound Components",
-        "State Management: Context API, Redux Toolkit & Zustand",
-        "Side Effects: Data Fetching, Subscriptions & Cleanup",
-        "React Router: Nested Routes, Loaders & Actions",
-        "Forms: Controlled, Uncontrolled & React Hook Form",
-        "Styling: CSS-in-JS, Styled Components & Emotion",
-        "Performance: React.memo, useTransition & Suspense",
-        "Concurrent Features: useDeferredValue & startTransition",
-        "Server Components: Next.js App Router & React Server Components",
-        "Error Handling: Error Boundaries & Fallback UIs",
-        "Testing: Unit, Integration & E2E with React Testing Library",
-        "Next.js: SSR, SSG, ISR, Middleware & Edge Functions",
-        "Full-Stack React: Server Actions, API Routes & Middleware",
-        "Micro-Frontends: Module Federation & Single-SPA",
-        "Design Systems: Component Libraries & Documentation",
-        "Animation: Framer Motion, React Spring & GSAP",
-        "Capstone: Build a SaaS Dashboard with Next.js 14"
-      ],
-      "Module 6 — React Native & Cross-Platform Mobile": [
-        "React Native Architecture: Bridge, JSI & New Architecture",
-        "Expo vs Bare Workflow: When to Use What",
-        "Core Components: View, Text, Image, ScrollView & FlatList",
-        "Navigation: Stack, Tab, Drawer & Deep Linking",
-        "State Management: Redux, Zustand & React Query in RN",
-        "Native Modules: Bridging Swift/Kotlin with JavaScript",
-        "Performance: Hermes, Flipper & React DevTools",
-        "Animations: Animated API, Reanimated & Gesture Handler",
-        "Device APIs: Camera, Location, Sensors & Notifications",
-        "Storage: AsyncStorage, SecureStore & WatermelonDB",
-        "Authentication: Biometrics, OAuth & JWT in Mobile",
-        "Offline-First: Sync, Conflict Resolution & Optimistic UI",
-        "Push Notifications: Firebase, OneSignal & Local Notifications",
-        "Testing: Jest, Detox & Appium for Mobile",
-        "Deployment: CodePush, EAS Update & OTA Updates",
-        "App Store & Play Store: Submission, Review & Guidelines",
-        "Monetization: In-App Purchases, Subscriptions & Ads",
-        "Cross-Platform: Flutter Comparison & Native Modules",
-        "Desktop: React Native for Windows, macOS & Web",
-        "Capstone: Build a Social Media App with Real-Time Features"
-      ],
-      "Module 7 — Backend with Django & Node.js": [
-        "Django Architecture: MTV, ORM & Middleware",
-        "Models: Fields, Relationships, Managers & QuerySets",
-        "Views: Function-Based, Class-Based & Generic Views",
-        "Templates: Inheritance, Tags, Filters & Custom Tags",
-        "Forms: Validation, ModelForms & Custom Widgets",
-        "Admin Interface: Customization, Actions & Inlines",
-        "Django REST Framework: Serializers, ViewSets & Routers",
-        "Authentication: Session, Token, JWT & OAuth in DRF",
-        "Permissions: IsAuthenticated, Custom & Object-Level",
-        "Throttling, Pagination & Filtering in APIs",
-        "Signals, Celery & Background Task Processing",
-        "WebSockets: Django Channels & Real-Time Communication",
-        "Caching: Redis, Memcached & Per-View Cache",
-        "Testing: Unit, Integration & API Testing in Django",
-        "Node.js & Express: Event Loop, Streams & Clustering",
-        "NestJS: Controllers, Providers, Modules & Middleware",
-        "GraphQL: Schema, Resolvers, Mutations & Subscriptions",
-        "Apollo Server: Federation, Gateway & Data Sources",
-        "Microservices: Service Discovery, Circuit Breakers & gRPC",
-        "Capstone: Build a Real-Time Trading Platform Backend"
-      ],
-      "Module 8 — DevOps, Cloud & System Design": [
-        "System Design: Scalability, Availability & Consistency",
-        "Load Balancing: Algorithms, Health Checks & Sticky Sessions",
-        "Caching: CDN, Edge Caching & Cache Invalidation",
-        "Database Scaling: Read Replicas, Sharding & Partitioning",
-        "Microservices: Service Mesh, Istio & Linkerd",
-        "Containerization: Docker, Multi-Stage Builds & Best Practices",
-        "Orchestration: Kubernetes, Helm & Operators",
-        "CI/CD: GitHub Actions, GitLab CI, ArgoCD & Spinnaker",
-        "Infrastructure as Code: Terraform, Pulumi & AWS CDK",
-        "Cloud Providers: AWS, GCP & Azure Core Services",
-        "Serverless: Lambda, Cloud Functions & Fargate",
-        "Monitoring: Prometheus, Grafana, Datadog & New Relic",
-        "Logging: ELK Stack, Fluentd & Structured Logging",
-        "Tracing: OpenTelemetry, Jaeger & Zipkin",
-        "Security: Secrets Management, Vault & IAM Policies",
-        "Networking: VPC, Subnets, Security Groups & NAT",
-        "Disaster Recovery: Backups, Multi-Region & RTO/RPO",
-        "Cost Optimization: Reserved Instances, Spot & Savings Plans",
-        "SRE Principles: SLIs, SLOs, Error Budgets & Blameless Postmortems",
-        "Capstone: Design & Deploy a Multi-Region Microservices App"
-      ],
-      "Module 9 — AI Integration & Advanced Topics": [
-        "OpenAI API: GPT-4, Embeddings, Fine-Tuning & Assistants",
-        "Anthropic Claude: Constitutional AI & Long Context",
-        "LLM Integration: Streaming, Function Calling & RAG",
-        "Vector Search: Pinecone, Weaviate & pgvector",
-        "LangChain: Chains, Agents, Tools & Memory",
-        "LlamaIndex: Data Loaders, Indices & Query Engines",
-        "AI-Powered Features: Summarization, Translation & Code Gen",
-        "Image Generation: DALL-E, Midjourney & Stable Diffusion APIs",
-        "Speech: Whisper, Text-to-Speech & Voice Cloning",
-        "Recommendation Systems: Collaborative & Content-Based Filtering",
-        "Real-Time ML: Feature Stores, Online Inference & Kafka",
-        "Edge AI: TensorFlow.js, ONNX.js & WebNN",
-        "Browser AI: WebGPU, WebLLM & Local LLMs",
-        "AI Security: Prompt Injection, Data Poisoning & Mitigation",
-        "Ethical AI: Bias, Privacy & Responsible Deployment",
-        "Performance: Model Quantization, Pruning & Distillation",
-        "A/B Testing ML Features: Metrics, Analysis & Interpretation",
-        "Monitoring AI: Drift Detection, Performance & Latency",
-        "Cost Management: Token Optimization & Caching Strategies",
-        "Capstone: Build an AI-Powered SaaS with Full-Stack Integration"
-      ],
-      "Module 10 — Capstone Projects & Career": [
-        "Project Management: Agile, Scrum & Kanban for Developers",
-        "System Design Interviews: URL Shortener, Twitter, Uber",
-        "Coding Interviews: Arrays, Trees, Graphs & Dynamic Programming",
-        "Behavioral Interviews: STAR Method & Leadership Principles",
-        "Portfolio: GitHub, Blog, Open Source & Side Projects",
-        "Freelancing: Upwork, Toptal & Building Client Relationships",
-        "Startups: MVP, Product-Market Fit & Fundraising Basics",
-        "Open Source: Contributing to React, Django & Node.js",
-        "Technical Writing: Documentation, RFCs & Design Docs",
-        "Team Collaboration: Code Reviews, Pair Programming & Mentoring",
-        "Capstone 1: Full-Stack E-Commerce with AI Recommendations",
-        "Capstone 2: Real-Time Collaboration Platform (Figma-like)",
-        "Capstone 3: Social Media App with ML Content Moderation",
-        "Capstone 4: DevOps Dashboard with Kubernetes Integration",
-        "Capstone 5: AI-Powered Code Review Assistant",
-        "Final Project: End-to-End Production System with Monitoring",
-        "Career Paths: FAANG, Startups, Freelancing & Indie Hacking",
-        "Networking: Conferences, Meetups & Online Communities",
-        "Continuous Learning: Staying Updated in Fast-Moving Tech"
-      ]
+      "Fundamentals": ["JSX & Component Structure", "Props & State Management", "Hooks (useState, useEffect)", "Event Handling", "Conditional Rendering", "Lists & Keys"],
+      "Advanced React": ["Context API", "Redux Toolkit & RTK Query", "Performance Optimization", "Code Splitting & Lazy Loading", "Custom Hooks", "Error Boundaries"],
+      "Production Ready": ["Authentication Flows", "Protected Routes", "API Integration Patterns", "Vite & Build Optimization", "Testing (Jest, React Testing Library)", "Deployment on Vercel"]
     },
     topicContent: {}
   },
-
-  // ══════════════════════════════════════════════════════════
-  // TRACK 3 — GAME + IoT + AI (Stanford CS248 + MIT 6.837 Level)
-  // ══════════════════════════════════════════════════════════
-  game_iot: {
-    title: "Game + IoT + AI",
-    icon: "🎮",
+  ml: {
+    title: "Machine Learning",
+    icon: "🤖",
     color: "#ff6b6b",
     modules: {
-      "Module 1 — Game Design & Development Fundamentals": [
-        "Game Design Theory: Mechanics, Dynamics & Aesthetics (MDA)",
-        "Player Psychology: Flow, Motivation & Player Types",
-        "Game Genres: Platformers, RPGs, FPS, Strategy & Sandbox",
-        "Core Game Loops: Feedback, Progression & Reward Systems",
-        "Game Design Documents (GDD): Pitch, Concept & Production",
-        "Prototyping: Paper Prototypes, Digital MVPs & Iteration",
-        "Level Design: Pacing, Tutorials & Difficulty Curves",
-        "Narrative Design: Branching Stories, World-Building & Lore",
-        "Game Economy: Virtual Currencies, Inflation & Monetization",
-        "F2P Design: Retention, Monetization & Live Operations",
-        "UX for Games: HUD Design, Menus & Accessibility",
-        "Audio Design: SFX, Music, Adaptive Audio & Implementation",
-        "2D Art Pipeline: Concept, Sprite Sheets, Animation & UI",
-        "3D Art Pipeline: Modeling, Texturing, Rigging & Animation",
-        "Asset Optimization: Polygon Count, LODs & Texture Atlases",
-        "Version Control for Games: Perforce, Git LFS & Plastic SCM",
-        "Game Engines Overview: Unity, Unreal, Godot & Custom",
-        "Platform Considerations: PC, Console, Mobile & Cloud",
-        "Marketing: Trailers, Steam Pages & Community Building",
-        "Capstone: Design Document for Original Game Concept"
-      ],
-      "Module 2 — Unity Engine & C# Programming": [
-        "Unity Interface: Scene, Game, Hierarchy, Inspector & Project",
-        "C# for Unity: Variables, Control Flow, OOP & Collections",
-        "Unity Component System: MonoBehaviour, Lifecycle & Events",
-        "GameObjects: Transforms, Parenting & Scene Management",
-        "Physics: Rigidbody, Colliders, Joints & Raycasting",
-        "Input System: New Input System, Touch & Controller Support",
-        "Animation: Animator, Blend Trees, Animation Events & IK",
-        "Audio: AudioSource, AudioMixer, 3D Audio & Spatialization",
-        "UI System: Canvas, RectTransform, Layout Groups & Animation",
-        "ScriptableObjects: Data Architecture, Events & Custom Editors",
-        "Coroutines: Timing, Delays & Asynchronous Operations",
-        "Object Pooling: Memory Management & Performance",
-        "Pathfinding: NavMesh, A* Implementation & Crowd Simulation",
-        "Shaders: Shader Graph, HLSL & Visual Effects (VFX Graph)",
-        "Lighting: Global Illumination, Lightmapping & Real-time",
-        "Post-Processing: Bloom, SSAO, Color Grading & DOF",
-        "Build Pipeline: PC, Mobile, WebGL & Console Platforms",
-        "Optimization: Profiler, Frame Debugger, Draw Calls & Batching",
-        "Editor Scripting: Custom Tools, Windows & Automation",
-        "Capstone: 2D Platformer with Advanced Physics & AI"
-      ],
-      "Module 3 — Unreal Engine 5 & C++": [
-        "UE5 Architecture: Actors, Components, World & GameMode",
-        "Blueprints Visual Scripting: Variables, Functions & Events",
-        "C++ in UE5: UCLASS, UPROPERTY, UFUNCTION & Macros",
-        "Memory Management: Garbage Collection, Smart Pointers & TWeakObjectPtr",
-        "Actor Lifecycle: Spawn, BeginPlay, Tick & Destroy",
-        "Input: Action Mapping, Axis Mapping & Enhanced Input",
-        "Animation: Animation Blueprints, State Machines & Blend Spaces",
-        "Character Movement: CharacterMovementComponent & Networking",
-        "Physics: Chaos Physics, Ragdolls & Destruction",
-        "Materials: Material Editor, Instances & Layered Materials",
-        "Lighting: Lumen Real-Time GI, Nanite & Virtual Shadow Maps",
-        "World Building: Landscape, Foliage, Water & Procedural Tools",
-        "AI: Behavior Trees, Blackboards, EQS & Navigation",
-        "UMG UI: Widgets, Blueprints, Animation & Data Binding",
-        "Audio: MetaSounds, Spatial Audio & Audio Volumes",
-        "Networking: Replication, RPCs, Authority & Prediction",
-        "Optimization: Stat Commands, RenderDoc & Niagara",
-        "Editor Tools: Editor Utility Widgets & Python Scripting",
-        "Packaging: Cooking, Staging & Distribution",
-        "Capstone: Multiplayer FPS with Dedicated Server"
-      ],
-      "Module 4 — Artificial Intelligence in Games": [
-        "Game AI Overview: Pathfinding, Decision Making & Learning",
-        "Finite State Machines (FSM): States, Transitions & Hierarchies",
-        "Behavior Trees: Selectors, Sequences, Decorators & Services",
-        "Goal-Oriented Action Planning (GOAP): Actions, Goals & Planning",
-        "Utility AI: Scoring, Curves & Context Considerations",
-        "Pathfinding Algorithms: A*, Dijkstra, JPS & Theta*",
-        "Navigation: NavMesh, Crowd Manager & Local Avoidance",
-        "Steering Behaviors: Seek, Flee, Arrive, Wander & Flocking",
-        "Procedural Content Generation (PCG): Dungeons, Terrain & Quests",
-        "Unity ML-Agents: Installation, Training & Integration",
-        "Reinforcement Learning for Games: PPO, SAC & Curriculum",
-        "Imitation Learning: Recording & Cloning Player Behavior",
-        "Self-Play: Training Competitive Agents (Chess, Go, Dota)",
-        "Neural Networks in Games: Perceptrons to Deep Q-Networks",
-        "AI for NPCs: Dialogue, Memory & Emotional States",
-        "Procedural Animation: IK, Ragdolls & Animation Blending",
-        "AI Testing: Unit Tests, Playtesting & Automated Evaluation",
-        "Ethics in Game AI: Fairness, Addiction & Player Manipulation",
-        "Emergent Behavior: Cellular Automata, Boids & Flocking",
-        "Capstone: RTS AI with Resource Management & Strategy"
-      ],
-      "Module 5 — Internet of Things (IoT) Foundations": [
-        "IoT Architecture: Sensors, Edge, Gateway & Cloud Layers",
-        "Electronics Basics: Voltage, Current, Resistance & Ohm's Law",
-        "Circuit Design: Schematics, Breadboarding & PCB Design",
-        "Arduino: ATmega Architecture, IDE & C++ Programming",
-        "Digital I/O: GPIO, PWM, Interrupts & Timers",
-        "Analog I/O: ADC, DAC, Sensors & Signal Conditioning",
-        "Communication Protocols: UART, I2C, SPI & One-Wire",
-        "Wireless: WiFi (ESP8266/32), Bluetooth, BLE & LoRa",
-        "Sensors: Temperature, Humidity, Motion, Gas & Environmental",
-        "Actuators: Motors, Servos, Relays, Displays & LEDs",
-        "Power Management: Batteries, Solar, Sleep Modes & Efficiency",
-        "Raspberry Pi: Linux, Python & GPIO with gpiozero",
-        "Camera & Vision: Pi Camera, OpenCV & Image Processing",
-        "Edge Computing: Local Processing, Filters & Triggers",
-        "MQTT: Brokers, Topics, QoS & Retained Messages",
-        "CoAP, HTTP & WebSockets for IoT",
-        "Cloud IoT: AWS IoT Core, Azure IoT Hub & Google Cloud IoT",
-        "Data Storage: Time-Series DBs (InfluxDB), SQL & NoSQL",
-        "Security: Encryption, Certificates, Secure Boot & OTA",
-        "Capstone: Smart Home System with Multiple Sensors"
-      ],
-      "Module 6 — Edge AI & TinyML": [
-        "TinyML Overview: Constraints, Opportunities & Workflow",
-        "Microcontrollers: ARM Cortex-M, ESP32, Arduino Nano 33 BLE",
-        "TensorFlow Lite: Model Conversion, Quantization & Optimization",
-        "Post-Training Quantization: INT8, Dynamic Range & FP16",
-        "Quantization-Aware Training (QAT) for Edge",
-        "Model Optimization: Pruning, Clustering & Distillation",
-        "Edge Impulse: Data Collection, Training & Deployment",
-        "Keyword Spotting: Audio Preprocessing, MFCCs & Inference",
-        "Gesture Recognition: IMU Data, Filtering & Classification",
-        "Anomaly Detection: Autoencoders, Isolation Forest on Edge",
-        "Computer Vision on Edge: MobileNet, EfficientNet-Lite",
-        "Object Detection: YOLO-Lite, SSD & FOMO",
-        "Face Detection & Recognition on Microcontrollers",
-        "Audio ML: Wake Words, Sound Classification & Edge ASR",
-        "Sensor Fusion: Combining IMU, Audio & Vision Data",
-        "Coral Edge TPU: Compilation, Pipeline & Performance",
-        "NVIDIA Jetson: CUDA, TensorRT & DeepStream",
-        "Raspberry Pi AI: OpenVINO, TensorFlow Lite & MediaPipe",
-        "Power Optimization: Sleep Modes, Clock Gating & DVFS",
-        "Capstone: Wearable Fall Detection with Edge AI"
-      ],
-      "Module 7 — IoT + Game Integration": [
-        "Physical-Digital Bridge: Controllers, Sensors & Haptics",
-        "Custom Game Controllers: Arduino HID, BLE Gamepads",
-        "Haptic Feedback: Vibration Motors, Force Feedback & Tactors",
-        "Biometric Gaming: Heart Rate, GSR, EEG & Eye Tracking",
-        "Environmental Gaming: Weather, Location & Time Integration",
-        "Augmented Reality: AR Markers, Object Detection & Tracking",
-        "Mixed Reality: Passthrough, Spatial Anchors & Scene Understanding",
-        "Unity + Arduino: Serial Communication, Bluetooth & WiFi",
-        "Unreal + Raspberry Pi: TCP/UDP, MQTT & WebSockets",
-        "Real-World Data in Games: APIs, IoT Sensors & Live Feeds",
-        "Location-Based Games: GPS, Geofencing & Map Integration",
-        "Smart Toys: NFC, RFID & Connected Play Experiences",
-        "Fitness Gaming: Exergames, Motion Tracking & Health Data",
-        "Escape Rooms: IoT Puzzles, RFID Locks & Sensor Triggers",
-        "Interactive Installations: Projection Mapping & Kinect",
-        "Serious Games: Education, Healthcare & Training Simulations",
-        "Gamification of IoT: Rewards, Challenges & Leaderboards",
-        "Accessibility: Adaptive Controllers & Assistive Technology",
-        "Case Studies: Pokémon GO, Ring Fit & Nintendo Labo",
-        "Capstone: Location-Based AR Game with Physical Controllers"
-      ],
-      "Module 8 — Advanced Graphics & Simulation": [
-        "3D Math for Games: Vectors, Matrices, Quaternions & Transforms",
-        "Rendering Pipeline: Vertices, Shaders, Rasterization & Fragments",
-        "Shaders: Vertex, Fragment, Geometry & Compute Shaders",
-        "Lighting Models: Phong, Blinn-Phong, PBR & BRDFs",
-        "Shadows: Shadow Maps, PCF, Cascaded & Ray Traced",
-        "Global Illumination: Ray Tracing, Path Tracing & Radiosity",
-        "Post-Processing: HDR, Bloom, Tone Mapping & FXAA/MSAA",
-        "Particle Systems: Emitters, Forces, Collisions & GPU Simulation",
-        "Fluid Simulation: SPH, Grid-Based & Position-Based Dynamics",
-        "Cloth Simulation: Mass-Spring, FEM & Constraint Solvers",
-        "Destruction: Voronoi Fracturing, Chunks & Physics",
-        "Animation: Skeletal Animation, Skinning & Blend Shapes",
-        "Inverse Kinematics: CCD, FABRIK & Jacobian Methods",
-        "Crowd Simulation: Flow Fields, RVO & Social Forces",
-        "Procedural Generation: Noise (Perlin, Simplex), L-Systems & Grammars",
-        "Terrain Generation: Heightmaps, Erosion & Biome Systems",
-        "NVIDIA GameWorks: HairWorks, Flex, Blast & Flow",
-        "Virtual Production: LED Volumes, Camera Tracking & Real-Time",
-        "Cloud Rendering: Pixel Streaming & Remote Gameplay",
-        "Capstone: Procedural Planet Generator with Physics"
-      ],
-      "Module 9 — Extended Reality (XR) Development": [
-        "XR Overview: VR, AR, MR & Spatial Computing",
-        "VR Fundamentals: Immersion, Presence, Comfort & Interaction",
-        "VR Hardware: Meta Quest, PSVR, PCVR & Standalone",
-        "Unity XR: XR Interaction Toolkit, OpenXR & Input System",
-        "Unreal VR: SteamVR, Oculus & OpenXR Plugins",
-        "Hand Tracking: Gestures, Grabbing & Direct Manipulation",
-        "Locomotion: Teleportation, Smooth, Snap Turn & Comfort",
-        "UI in XR: World Space, Curved UI & Gaze Interaction",
-        "AR Foundation: Image Tracking, Plane Detection & Anchors",
-        "ARKit: Face Tracking, Scene Geometry & LiDAR",
-        "ARCore: Depth API, Occlusion & Geospatial API",
-        "Mixed Reality: Passthrough, Scene Understanding & Meshing",
-        "Social VR: Avatars, Voice Chat & Shared Spaces",
-        "Haptics in VR: Controllers, Gloves & Full-Body Suits",
-        "Optimization for XR: Foveated Rendering, ASW & Fixed Foveated",
-        "WebXR: Immersive Web, Three.js & Babylon.js",
-        "360° Video: Capture, Stitching, Playback & Interaction",
-        "Medical/Training VR: Simulations, Haptics & Assessment",
-        "Ethics in XR: Privacy, Addiction & Psychological Safety",
-        "Capstone: Multiplayer VR Escape Room with Hand Tracking"
-      ],
-      "Module 10 — Production, Publishing & Career": [
-        "Game Production: Milestones, Sprints & Agile for Games",
-        "Team Structure: Roles, Pipelines & Communication",
-        "Quality Assurance: Testing Strategies, Bug Tracking & Automation",
-        "Performance Budgets: CPU, GPU, Memory & Network",
-        "Platform Compliance: TRCs, Cert Requirements & Submissions",
-        "Monetization Strategies: Premium, F2P, Subscription & Hybrid",
-        "LiveOps: Events, Seasons, Battle Pass & Content Updates",
-        "Analytics: Player Behavior, Retention & Monetization Metrics",
-        "Community Management: Discord, Reddit & Content Creators",
-        "Marketing: ASO, Influencers, Trailers & Press Kits",
-        "Funding: Publishers, Investors, Crowdfunding & Grants",
-        "Indie Development: Scope, Risk & Sustainability",
-        "Game Jams: Ludum Dare, GMTK & Global Game Jam",
-        "Portfolio: Demo Reel, Itch.io & ArtStation for Games",
-        "Networking: GDC, IGDA & Game Developer Communities",
-        "Career Paths: AAA, Indie, Freelance & Education",
-        "Specializations: Tech Art, VFX, AI Programming & Design",
-        "Continuous Learning: Staying Current with Engine Updates",
-        "Capstone 1: Vertical Slice of Original Game (Publishable)",
-        "Capstone 2: IoT-Integrated Experience with AI"
-      ]
+      "Foundations": ["Linear Regression", "Logistic Regression", "K-Nearest Neighbors", "Decision Trees", "Support Vector Machines", "Naive Bayes"],
+      "Advanced ML": ["Random Forest & Bagging", "Gradient Boosting (XGBoost, LightGBM)", "Feature Engineering", "Hyperparameter Tuning", "Cross Validation", "Ensemble Methods"],
+      "Production ML": ["Model Evaluation Metrics", "Model Serialization (Pickle, Joblib)", "ML APIs with Django/FastAPI", "Docker Containerization", "Clustering (KMeans, DBSCAN)", "Real-world End-to-End Projects"]
+    },
+    topicContent: {}
+  },
+  genai: {
+    title: "Generative AI",
+    icon: "🧠",
+    color: "#a855f7",
+    modules: {
+      "LLM Fundamentals": ["Transformer Architecture", "Tokenization (BPE, WordPiece)", "Word Embeddings & Attention", "Prompt Engineering Basics", "Context Windows & Limits"],
+      "Advanced LLM": ["Fine-Tuning Strategies", "RAG Architecture & Implementation", "Vector Databases (Pinecone, Chroma)", "LangChain & LlamaIndex", "PEFT & LoRA", "Model Quantization"],
+      "Production AI": ["Local LLM Deployment (llama.cpp, Ollama)", "Building AI Chatbots", "Voice AI Integration (Whisper, TTS)", "Scaling AI Systems", "Cost Optimization", "Ethical AI Considerations"]
+    },
+    topicContent: {}
+  },
+  django: {
+    title: "Django Full Stack",
+    icon: "🎯",
+    color: "#092e20",
+    modules: {
+      "Django Basics": ["MTV Architecture", "Models & ORM", "Views & URL Routing", "Templates & Forms", "Admin Interface", "Static & Media Files"],
+      "Django Advanced": ["Class-Based Views", "Middleware & Signals", "Caching Strategies", "Celery & Background Tasks", "WebSockets & Channels", "Security Best Practices"],
+      "Full Stack Integration": ["REST API Development", "React-Django Integration", "Authentication (OAuth, JWT)", "Database Optimization", "Testing & CI/CD", "AWS/Render Deployment"]
     },
     topicContent: {}
   }
 };
 
-// ── Default content generator (fallback for topics without custom content) ──
+// ── Default content generator (fallback when no custom content set) ──
 export const generateDefaultContent = (topic) => ({
   title: topic,
-  description: `Master ${topic} with rigorous, hands-on instruction at Stanford CS, Harvard SEAS and MIT EECS depth. Core theory, practical implementation, and real-world engineering patterns used at top tech companies and research labs worldwide.`,
+  description: `Master ${topic} with hands-on examples and real-world projects. This topic dives deep into core concepts, practical patterns, and production-ready techniques.`,
   sections: [
     {
-      heading: "Core Theory & Mathematical Foundations",
-      text: "Every concept is taught from first principles — not to be abstract, but because understanding why something works makes you dramatically more effective at applying and debugging it in production. This section builds the mental model you will carry for years, grounded in the mathematical foundations used at leading research institutions."
+      heading: "Overview",
+      text: "This topic covers fundamental concepts and practical implementation strategies used in modern software development."
     },
     {
-      heading: "Implementation & Engineering Deep Dive",
-      text: "We implement this concept from scratch using industry-standard tools and frameworks, then examine how production systems handle the same problem at scale. Understanding the from-scratch version means you will never be blocked by a black-box library — you can always go one level deeper and fix it yourself."
+      heading: "Key Concepts",
+      text: "Understanding the core principles and best practices that make this topic essential for professional developers."
     },
     {
-      heading: "Industry Patterns & Production Best Practices",
-      text: "This is how engineers at Google, Meta, OpenAI, DeepMind, and top-tier startups actually use this concept in production systems. We cover common pitfalls, edge cases, performance considerations, and the design decisions that separate a working prototype from a production-grade system serving millions of users."
+      heading: "Practical Application",
+      text: "Real-world usage patterns, common pitfalls to avoid, and performance considerations when working with this technology."
     },
     {
-      heading: "Common Mistakes & Debugging Strategies",
-      text: "Every learner hits the same walls with this topic. This section documents the most frequent errors, misconceptions, and debugging challenges — and exactly how to resolve each one. Years of teaching experience and production debugging compressed into actionable, specific guidance."
-    },
-    {
-      heading: "Practice Exercise & Project",
-      text: "Apply everything from this topic with a structured exercise designed to expose any gaps in understanding. Complete it before moving on — active coding practice produces retention rates 4 to 5 times higher than passive reading alone. Struggling productively on this exercise is the point; the difficulty is calibrated to induce learning."
+      heading: "Practice Exercise",
+      text: "Apply what you've learned with hands-on coding challenges and mini-projects designed to reinforce these concepts."
     }
   ]
 });
 
+// ── Storage key for localStorage persistence ──
 export const SYLLABUS_STORAGE_KEY = "cosmos_syllabus_data";
 
+// ── Load syllabus: localStorage first, fallback to default ──
 export const loadSyllabusData = () => {
   try {
     const stored = localStorage.getItem(SYLLABUS_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Deep merge: ensure new default subjects are included if not in stored
       const merged = { ...defaultSyllabusData };
       Object.keys(parsed).forEach(key => {
         merged[key] = {
@@ -753,9 +123,10 @@ export const loadSyllabusData = () => {
   } catch (e) {
     console.warn("Failed to load syllabus from storage:", e);
   }
-  return JSON.parse(JSON.stringify(defaultSyllabusData));
+  return JSON.parse(JSON.stringify(defaultSyllabusData)); // deep clone
 };
 
+// ── Save syllabus to localStorage ──
 export const saveSyllabusData = (data) => {
   try {
     localStorage.setItem(SYLLABUS_STORAGE_KEY, JSON.stringify(data));
@@ -766,6 +137,7 @@ export const saveSyllabusData = (data) => {
   }
 };
 
+// ── Reset syllabus to default ──
 export const resetSyllabusData = () => {
   localStorage.removeItem(SYLLABUS_STORAGE_KEY);
   return JSON.parse(JSON.stringify(defaultSyllabusData));
