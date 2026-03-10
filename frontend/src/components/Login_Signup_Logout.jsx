@@ -244,7 +244,7 @@ function CosmosAuthCanvas() {
 // ─────────────────────────────────────────────────────────────────────────────
 //  API base URL — unchanged from original
 // ─────────────────────────────────────────────────────────────────────────────
-const API_URL = 'https://django-react-ml-app.onrender.com' || 'http://localhost:8000/api';
+const API_URL = 'https://api.seekhowithrua.com' || 'http://localhost:8000/api';
 
 // Create axios instance — unchanged from original
 const api = axios.create({
