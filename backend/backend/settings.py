@@ -81,7 +81,7 @@ ALLOWED_HOSTS = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    'https://app.seekhowithrua.com'
+    'https://app.seekhowithrua.com',
     'https://seekhowithrua.com',
     'https://www.seekhowithrua.com',
     'http://localhost:5173',
