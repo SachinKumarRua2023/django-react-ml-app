@@ -707,7 +707,7 @@ export default function VCRoom() {
         id:          p.id,
         title:       p.title || p.name,
         desc:        p.description || p.desc || "",
-        hostName:    p.host_username || p.host_name || p.created_by || "",
+        hostName: p.host_username || p.host_name || p.created_by || p.trainer_name || p.owner || "",
         hostId:      p.host_id || p.created_by_id,
         memberCount: p.member_count || p.participant_count || 0,
         isActive:    p.is_active !== false,
@@ -1385,7 +1385,7 @@ export default function VCRoom() {
                 {room.desc && <p>{room.desc}</p>}
                 <div className="room-card-meta">
                   <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
-                  <span className="badge badge-host">⭐ {room.hostName}</span>
+                  <span className="badge badge-host">⭐ Host: {room.hostName || "Unknown"}</span>
                   <span className="badge badge-users">👥 {room.memberCount}</span>
                 </div>
               </div>
