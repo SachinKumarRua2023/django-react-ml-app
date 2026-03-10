@@ -799,10 +799,12 @@ export default function SyllabusPage() {
   ];
 
   const isT = userRole === 'trainer';
+  const isMaster = getLoggedInUser()?.email === 'master@gmail.com';
+
 
   return (
     <div className="courses-page">
-      {isT && contentEditorOpen && editingTopic && (
+      {isMaster && contentEditorOpen && editingTopic && (
         <ContentEditorModal
           topic={editingTopic}
           content={editingContent}
@@ -977,15 +979,15 @@ export default function SyllabusPage() {
                       </button>
                       <button className="action-btn" title="Bookmark">🔖</button>
                       <button className="action-btn" title="Share">↗</button>
-                      {isT && (
-                        <button
-                          className="action-btn trainer-content-edit-btn"
-                          title="Edit topic content"
-                          onClick={() => {
-                            setEditingTopic(activeTopic);
-                            setEditingContent(getTopicContent(activeTopic));
-                            setContentEditorOpen(true);
-                          }}
+                      {isMaster && (
+                      <button
+                        className="action-btn trainer-content-edit-btn"
+                        title="Edit topic content"
+                        onClick={() => {
+                          setEditingTopic(activeTopic);
+                          setEditingContent(getTopicContent(activeTopic));
+                          setContentEditorOpen(true);
+                        }}
                         >
                           ✏️ Edit Content
                         </button>

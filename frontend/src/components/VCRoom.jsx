@@ -697,14 +697,12 @@ export default function VCRoom() {
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   // ─── Load panels from backend ───────────────────────────────────────────
-
-  async function loadPanels() {
-    if (!user) return;
-    setRoomsLoading(true);
+async function loadPanels() {
+  if (!user) return;
+  setRoomsLoading(true);
+  try {
     const { ok, data } = await apiFetch("/api/panels/");
     if (ok && Array.isArray(data)) {
-      // console.log("Panel fields:", Object.keys(data[0]), data[0]); // ← ADD THIS
-
       setRooms(data.map(p => ({
         id:          p.id,
         title:       p.title || p.name,
@@ -715,20 +713,25 @@ export default function VCRoom() {
         isActive:    p.is_active !== false,
         peerId:      p.peer_id || null,
       })));
+    } else {
+      setRooms([]);
     }
+  } catch {
+    setRooms([]);
+  } finally {
     setRoomsLoading(false);
   }
+}
 
-  useEffect(() => {
-    if (user) loadPanels();
-  }, [user]);
+useEffect(() => {
+  if (user) loadPanels();
+}, [user]);
 
-  // Check URL for direct room link
-  useEffect(() => {
-    const urlRoom = getRoomFromURL();
-    if (urlRoom && user) joinPanelById(urlRoom);
-  }, [user]);
-
+// Check URL for direct room link
+useEffect(() => {
+  const urlRoom = getRoomFromURL();
+  if (urlRoom && user) joinPanelById(urlRoom);
+}, [user]);
   // ─── AUTH SUBMIT ──────────────────────────────────────────────────────────
 
   async function handleAuth() {
