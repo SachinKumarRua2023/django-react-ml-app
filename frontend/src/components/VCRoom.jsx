@@ -1359,7 +1359,7 @@ export default function VCRoom() {
               {isAdmin && (
                 <button className="btn btn-rose btn-sm" onClick={async()=>{
                   if(!confirm("Delete ALL panels?")) return;
-                  await Promise.all(rooms.map(r=>apiFetch(`/api/panels/${r.id}/leave/`,{method:"POST"})));
+                  await Promise.all(rooms.map(r=>apiFetch(`/api/panels/${r.id}/delete/`,{method:"POST"})));
                   push("All panels cleared","cyan"); loadPanels();
                 }}>⛔ Delete All</button>
               )}

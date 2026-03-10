@@ -449,6 +449,14 @@ def kick_member(request, panel_id, user_id):
     PanelMember.objects.filter(panel=panel, user_id=user_id).delete()
     
     return Response({'message': 'Member kicked from panel'})
+@api_view(['DELETE', 'POST'])
+@permission_classes([IsAuthenticated])
+def delete_panel(request, panel_id):
+    panel = get_object_or_404(VoicePanel, id=panel_id)
+    if panel.host == request.user or request.user.email == "master@gmail.com":
+        panel.delete()
+        return Response({"status": "deleted"})
+    return Response({"error": "Not authorized"}, status=403)
 
 # Add these placeholder views for URL compatibility
 @api_view(['GET'])
@@ -478,3 +486,5 @@ def update_panel_peer(request, panel_id):
         panel.save(update_fields=['peer_id'])
 
     return Response({'status': 'ok', 'peer_id': panel.peer_id})
+
+

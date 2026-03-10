@@ -43,5 +43,6 @@ urlpatterns = [
     path('voice/rooms/', views.voice_rooms, name='voice_rooms'),
     path('voice/join/<str:room_id>/', views.join_room, name='join_room'),
     path('panels/<uuid:panel_id>/update-peer/', views.update_panel_peer, name='update_panel_peer'),
+    path('panels/<uuid:panel_id>/delete/', views.delete_panel, name='delete_panel'),
 #
 ]
