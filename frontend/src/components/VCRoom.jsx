@@ -703,7 +703,7 @@ export default function VCRoom() {
     setRoomsLoading(true);
     const { ok, data } = await apiFetch("/api/panels/");
     if (ok && Array.isArray(data)) {
-      console.log("Panel fields:", Object.keys(data[0]), data[0]); // ← ADD THIS
+      // console.log("Panel fields:", Object.keys(data[0]), data[0]); // ← ADD THIS
 
       setRooms(data.map(p => ({
         id:          p.id,
