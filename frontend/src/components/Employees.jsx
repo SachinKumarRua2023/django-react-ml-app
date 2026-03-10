@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://django-react-ml-app.onrender.com/api/employees/";
+const API = "https://api.seekhowithrua.com/api/employees/";
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
