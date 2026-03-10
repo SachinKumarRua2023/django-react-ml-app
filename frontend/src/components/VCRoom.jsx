@@ -643,7 +643,8 @@ export default function VCRoom() {
 
   const { user, loading, login, register, logout, authErr, setAuthErr } = useCosmosAuth();
   const { notifs, push } = useNotifications();
-
+  // ── Admin check ──
+  const isAdmin = user?.email === "Master@gmail.com";
   // ── Auth form state ──
   // FIX: authName now holds email for login (backend authenticates by email)
   const [authMode,     setAuthMode]     = useState("login");
@@ -1351,9 +1352,19 @@ export default function VCRoom() {
           </div>
           <div style={{ display:"flex", gap:9, alignItems:"center", flexWrap:"wrap" }}>
             <button className="btn btn-ghost btn-sm" onClick={loadPanels}>↻ Refresh</button>
-            {user.role==="trainer" && (
-              <button className="btn btn-primary" style={{ width:"auto" }} onClick={()=>setShowCreate(true)}>+ New Panel</button>
-            )}
+
+              {/* ADD THIS - ADMIN DELETE ALL BUTTON */}
+              {isAdmin && (
+                <button className="btn btn-rose btn-sm" onClick={async()=>{
+                  if(!confirm("Delete ALL panels?")) return;
+                  await Promise.all(rooms.map(r=>apiFetch(`/api/panels/${r.id}/leave/`,{method:"POST"})));
+                  push("All panels cleared","cyan"); loadPanels();
+                }}>⛔ Delete All</button>
+              )}
+
+              {user.role==="trainer" && (
+                <button className="btn btn-primary" style={{ width:"auto" }} onClick={()=>setShowCreate(true)}>+ New Panel</button>
+              )}
             <button className="btn btn-ghost btn-sm" onClick={logout}>← Exit</button>
           </div>
         </div>
