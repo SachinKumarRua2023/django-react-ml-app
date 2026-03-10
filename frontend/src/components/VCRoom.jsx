@@ -709,7 +709,7 @@ export default function VCRoom() {
         id:          p.id,
         title:       p.title || p.name,
         desc:        p.description || p.desc || "",
-        hostName: p.host_username || p.host_name || p.created_by || p.trainer_name || p.owner || p.trainer || p.user || "",
+        hostName:    p.host || "",
         hostId:      p.host_id || p.created_by_id,
         memberCount: p.member_count || p.participant_count || 0,
         isActive:    p.is_active !== false,
