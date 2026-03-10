@@ -23,7 +23,7 @@ SECRET_KEY = 'django-insecure-9kw!4)@$&am^_*_x=qzl_sv4c@qg@!v9jg39mt32%=r0%lxr$(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', 'django-react-ml-app.onrender.com']
+# ALLOWED_HOSTS = ["https://seekhowithrua.com", "https://www.seekhowithrua.com",'*', 'django-react-ml-app.onrender.com']
 
 ASGI_APPLICATION = "backend.asgi.application"
 
@@ -71,13 +71,31 @@ ROOT_URLCONF = 'backend.urls'
 # CORS SETTINGS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+ALLOWED_HOSTS = [
+    'seekhowithrua.com',
+    'www.seekhowithrua.com',
+    'api.seekhowithrua.com',
+    'django-react-ml-app.onrender.com',
+    '*',
+]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "https://django-react-ml-app.vercel.app",
+    'https://seekhowithrua.com',
+    'https://www.seekhowithrua.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'https://django-react-ml-app.vercel.app',
 ]
+# CORS_ALLOWED_ORIGINS = [
+#     'seekhowithrua.com',
+#     'www.seekhowithrua.com',
+#     'api.seekhowithrua.com',
+#     "http://localhost:5173",
+#     "http://localhost:3000",
+#     "http://127.0.0.1:5173",
+#     "https://django-react-ml-app.vercel.app",
+# ]
 
 CORS_ALLOW_HEADERS = [
     'authorization',
