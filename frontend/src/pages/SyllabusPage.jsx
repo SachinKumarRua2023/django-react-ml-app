@@ -667,6 +667,7 @@ export default function SyllabusPage() {
 
   const [viewMode, setViewMode] = useState('courses');
   const [orbOpen, setOrbOpen] = useState(false);
+  const [quizOrbOpen, setQuizOrbOpen] = useState(false);
   const [activeSubject, setActiveSubject] = useState("python");
   const [activeModule, setActiveModule] = useState(null);
   const [activeTopic, setActiveTopic] = useState("");
@@ -1005,7 +1006,17 @@ export default function SyllabusPage() {
                       <div className="teaser-header"><span>💻</span><span>Practice Code</span></div>
                       <div className="teaser-body">
                         <p>Interactive Python compiler coming soon...</p>
-                        <button className="btn btn-primary">Open IDE</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <button className="btn btn-primary">Open IDE</button>
+                          <button
+                            className="quiz-orb-fan-btn"
+                            style={{ '--qitem-color': '#22d3ee', width: '44px', height: '44px', fontSize: '20px', cursor: 'pointer' }}
+                            onClick={() => { setViewMode('quiz-python'); }}
+                            title="Take Quiz"
+                          >
+                            🧠
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -1791,6 +1802,529 @@ export default function SyllabusPage() {
           pointer-events: none;
           text-transform: uppercase;
         }
+        /* ═══════════════════════════════════════════════════════════════
+        3D FLOATING QUIZ ORB — Attention Grabbing Edition
+        Position: Fixed on body, animated, glowing, floating in 3D space
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-wrap {
+        position: fixed;
+        bottom: 32px;
+        right: 110px;   /* ← moves it left of the tools orb (60px orb + 32px right + 18px gap) */
+        left: unset;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        /* 3D perspective for depth */
+        perspective: 1000px;
+        transform-style: preserve-3d;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        MAIN ORB — 3D Sphere with Depth & Glow
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-main-orb {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        position: relative;
+        cursor: pointer;
+        border: none;
+        outline: none;
+        
+        /* Multi-layer gradient for 3D depth */
+        background: 
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(34,211,238,0.6) 0%, rgba(168,85,247,0.4) 40%, rgba(34,211,238,0.2) 70%, transparent 100%),
+          conic-gradient(from 180deg, #22d3ee, #a855f7, #06b6d4, #22d3ee);
+        
+        /* 3D shadow layers */
+        box-shadow: 
+          /* Inner glow */
+          inset -10px -10px 20px rgba(0,0,0,0.5),
+          inset 10px 10px 20px rgba(255,255,255,0.3),
+          /* Core glow */
+          0 0 0 4px rgba(34,211,238,0.3),
+          0 0 20px rgba(34,211,238,0.6),
+          0 0 40px rgba(168,85,247,0.4),
+          0 0 60px rgba(34,211,238,0.3),
+          /* Ambient glow */
+          0 10px 40px rgba(0,0,0,0.4);
+        
+        /* Floating animation */
+        animation: 
+          quizOrbFloat 3s ease-in-out infinite,
+          quizOrbSpin 8s linear infinite,
+          quizOrbPulse 2s ease-in-out infinite alternate;
+        
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-style: preserve-3d;
+      }
+
+      /* 3D highlight reflection */
+      .quiz-main-orb::before {
+        content: '';
+        position: absolute;
+        top: 15%;
+        left: 20%;
+        width: 25%;
+        height: 25%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.3) 40%, transparent 70%);
+        filter: blur(1px);
+        pointer-events: none;
+      }
+
+      /* Secondary reflection for more depth */
+      .quiz-main-orb::after {
+        content: '';
+        position: absolute;
+        bottom: 10%;
+        right: 15%;
+        width: 15%;
+        height: 15%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(168,85,247,0.6) 0%, transparent 70%);
+        filter: blur(2px);
+        pointer-events: none;
+      }
+
+      /* Hover state — intensify everything */
+      .quiz-main-orb:hover {
+        transform: scale(1.15) translateY(-5px);
+        box-shadow: 
+          inset -10px -10px 20px rgba(0,0,0,0.5),
+          inset 10px 10px 20px rgba(255,255,255,0.4),
+          0 0 0 6px rgba(34,211,238,0.4),
+          0 0 30px rgba(34,211,238,0.8),
+          0 0 60px rgba(168,85,247,0.6),
+          0 0 90px rgba(34,211,238,0.5),
+          0 15px 50px rgba(0,0,0,0.5);
+        animation-duration: 0.5s, 4s, 1s;
+      }
+
+      /* Open state — morph and spin fast */
+      .quiz-main-orb.open {
+        animation: quizOrbSpin 1s linear infinite, quizOrbMorph 0.6s ease forwards;
+        transform: scale(1.1) rotateX(15deg);
+        box-shadow: 
+          0 0 0 8px rgba(34,211,238,0.5),
+          0 0 50px rgba(34,211,238,0.9),
+          0 0 80px rgba(168,85,247,0.7),
+          0 0 120px rgba(34,211,238,0.5);
+      }
+
+      /* Active quiz state — pulsing alert */
+      .quiz-main-orb.quiz-active {
+        animation: 
+          quizOrbFloat 2s ease-in-out infinite,
+          quizOrbSpin 6s linear infinite,
+          quizOrbAlertPulse 1.5s ease-in-out infinite;
+        box-shadow: 
+          0 0 0 5px rgba(34,211,238,0.6),
+          0 0 40px rgba(34,211,238,1),
+          0 0 80px rgba(168,85,247,0.8),
+          0 0 120px rgba(34,211,238,0.6);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        KEYFRAME ANIMATIONS
+      ═══════════════════════════════════════════════════════════════ */
+
+      /* Smooth floating motion — like it's suspended in liquid */
+      @keyframes quizOrbFloat {
+        0%, 100% {
+          transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+        }
+        25% {
+          transform: translateY(-8px) rotateX(5deg) rotateY(5deg);
+        }
+        50% {
+          transform: translateY(-4px) rotateX(0deg) rotateY(10deg);
+        }
+        75% {
+          transform: translateY(-12px) rotateX(-5deg) rotateY(5deg);
+        }
+      }
+
+      /* Continuous hue rotation for living gradient */
+      @keyframes quizOrbSpin {
+        from {
+          filter: hue-rotate(0deg);
+        }
+        to {
+          filter: hue-rotate(-360deg);
+        }
+      }
+
+      /* Breathing glow pulse */
+      @keyframes quizOrbPulse {
+        from {
+          box-shadow: 
+            inset -10px -10px 20px rgba(0,0,0,0.5),
+            inset 10px 10px 20px rgba(255,255,255,0.2),
+            0 0 0 4px rgba(34,211,238,0.2),
+            0 0 20px rgba(34,211,238,0.4),
+            0 0 40px rgba(168,85,247,0.3),
+            0 0 60px rgba(34,211,238,0.2),
+            0 10px 40px rgba(0,0,0,0.4);
+        }
+        to {
+          box-shadow: 
+            inset -10px -10px 20px rgba(0,0,0,0.5),
+            inset 10px 10px 20px rgba(255,255,255,0.35),
+            0 0 0 8px rgba(34,211,238,0.4),
+            0 0 35px rgba(34,211,238,0.7),
+            0 0 55px rgba(168,85,247,0.5),
+            0 0 80px rgba(34,211,238,0.4),
+            0 10px 40px rgba(0,0,0,0.4);
+        }
+      }
+
+      /* Alert pulse when quiz is active — attention grabbing */
+      @keyframes quizOrbAlertPulse {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.08);
+        }
+      }
+
+      /* Morph animation when opening */
+      @keyframes quizOrbMorph {
+        0% {
+          border-radius: 50%;
+        }
+        50% {
+          border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+        }
+        100% {
+          border-radius: 50%;
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        ORBITING PARTICLES — Extra visual flair
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-particles {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100px;
+        height: 100px;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        opacity: 0.6;
+      }
+
+      .quiz-orb-particles span {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: #22d3ee;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #22d3ee;
+        animation: orbitParticle 4s linear infinite;
+      }
+
+      .quiz-orb-particles span:nth-child(1) {
+        top: 0;
+        left: 50%;
+        animation-delay: 0s;
+        animation-duration: 3s;
+      }
+
+      .quiz-orb-particles span:nth-child(2) {
+        top: 50%;
+        right: 0;
+        animation-delay: -1s;
+        animation-duration: 4s;
+        background: #a855f7;
+        box-shadow: 0 0 10px #a855f7;
+      }
+
+      .quiz-orb-particles span:nth-child(3) {
+        bottom: 0;
+        left: 50%;
+        animation-delay: -2s;
+        animation-duration: 3.5s;
+        background: #06b6d4;
+        box-shadow: 0 0 10px #06b6d4;
+      }
+
+      @keyframes orbitParticle {
+        0% {
+          transform: rotate(0deg) translateX(45px) rotate(0deg);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: rotate(360deg) translateX(45px) rotate(-360deg);
+          opacity: 0;
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        FAN MENU — Smooth unfold with 3D depth
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-fan {
+        position: absolute;
+        bottom: 85px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        pointer-events: none;
+        perspective: 800px;
+      }
+
+      .quiz-orb-fan.open {
+        pointer-events: all;
+      }
+
+      .quiz-orb-fan-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0;
+        transform: translateX(-30px) translateZ(-50px) rotateY(-15deg);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        transform-origin: left center;
+      }
+
+      /* Staggered entrance animation */
+      .quiz-orb-fan.open .quiz-orb-fan-item:nth-child(1) {
+        opacity: 1;
+        transform: translateX(0) translateZ(0) rotateY(0);
+        transition-delay: 0.08s;
+      }
+
+      .quiz-orb-fan.open .quiz-orb-fan-item:nth-child(2) {
+        opacity: 1;
+        transform: translateX(0) translateZ(0) rotateY(0);
+        transition-delay: 0.16s;
+      }
+
+      /* Hover lift effect on fan items */
+      .quiz-orb-fan-item:hover {
+        transform: translateX(5px) scale(1.05);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        FAN BUTTONS — Mini 3D orbs
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-fan-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--qitem-color);
+        background: 
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+          rgba(0,0,0,0.7);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+        box-shadow: 
+          inset -3px -3px 8px rgba(0,0,0,0.5),
+          inset 3px 3px 8px rgba(255,255,255,0.1),
+          0 0 15px var(--qitem-color),
+          0 4px 20px rgba(0,0,0,0.5);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .quiz-orb-fan-btn::before {
+        content: '';
+        position: absolute;
+        top: 10%;
+        left: 15%;
+        width: 30%;
+        height: 30%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      .quiz-orb-fan-item:hover .quiz-orb-fan-btn {
+        transform: scale(1.2) translateY(-3px);
+        box-shadow: 
+          inset -3px -3px 8px rgba(0,0,0,0.5),
+          inset 3px 3px 8px rgba(255,255,255,0.15),
+          0 0 25px var(--qitem-color),
+          0 0 40px var(--qitem-color),
+          0 8px 25px rgba(0,0,0,0.6);
+      }
+
+      .quiz-tool-active .quiz-orb-fan-btn {
+        background: 
+          radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5) 0%, transparent 50%),
+          var(--qitem-color);
+        box-shadow: 
+          0 0 30px var(--qitem-color),
+          0 0 50px var(--qitem-color),
+          inset 0 0 20px rgba(255,255,255,0.3);
+        animation: fanBtnPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes fanBtnPulse {
+        0%, 100% {
+          box-shadow: 
+            0 0 30px var(--qitem-color),
+            0 0 50px var(--qitem-color);
+        }
+        50% {
+          box-shadow: 
+            0 0 40px var(--qitem-color),
+            0 0 60px var(--qitem-color),
+            0 0 80px var(--qitem-color);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        FAN LABELS — Glass morphism style
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-fan-label {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 8px 16px;
+        border-radius: 25px;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        white-space: nowrap;
+        box-shadow: 
+          0 4px 20px rgba(0,0,0,0.4),
+          inset 0 1px 0 rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+
+      .quiz-orb-fan-item:hover .quiz-orb-fan-label {
+        border-color: var(--qitem-color);
+        color: var(--qitem-color);
+        background: rgba(0,0,0,0.9);
+        transform: translateX(5px);
+        box-shadow: 
+          0 0 20px rgba(0,0,0,0.5),
+          0 0 30px var(--qitem-color);
+      }
+
+      .quiz-tool-active .quiz-orb-fan-label {
+        color: var(--qitem-color);
+        border-color: var(--qitem-color);
+        background: rgba(0,0,0,0.9);
+        box-shadow: 0 0 20px var(--qitem-color);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        TOOLTIP — Floating label under main orb
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-tooltip {
+        position: absolute;
+        bottom: -32px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.6);
+        white-space: nowrap;
+        pointer-events: none;
+        text-transform: uppercase;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        animation: tooltipFloat 2s ease-in-out infinite;
+        background: rgba(0,0,0,0.6);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(8px);
+      }
+
+      @keyframes tooltipFloat {
+        0%, 100% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-3px);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        RESPONSIVE ADJUSTMENTS
+      ═══════════════════════════════════════════════════════════════ */
+
+      @media (max-width: 768px) {
+        .quiz-orb-wrap {
+          bottom: 20px;
+          left: 20px;
+        }
+        
+        .quiz-main-orb {
+          width: 60px;
+          height: 60px;
+        }
+        
+        .quiz-orb-fan-btn {
+          width: 44px;
+          height: 44px;
+          font-size: 18px;
+        }
+        
+        .quiz-orb-fan-label {
+          font-size: 12px;
+          padding: 6px 12px;
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+        ATTENTION GRABBER — Subtle screen edge glow
+      ═══════════════════════════════════════════════════════════════ */
+
+      .quiz-orb-wrap::before {
+        content: '';
+        position: fixed;
+        bottom: -100px;
+        left: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: -1;
+        animation: ambientGlow 4s ease-in-out infinite alternate;
+      }
+
+      @keyframes ambientGlow {
+        from {
+          opacity: 0.5;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0.8;
+          transform: scale(1.2);
+        }
+      }
       `}</style>
 
       {/* ── FLOATING ORB ── */}
@@ -1814,7 +2348,33 @@ export default function SyllabusPage() {
           <span className="orb-tooltip">{orbOpen ? 'close' : 'tools'}</span>
         </button>
       </div>
-
+      {/* ── QUIZ ORB — bottom-left floating brain orb ── */}
+      <div className="quiz-orb-wrap">
+        <div className={`quiz-orb-fan ${quizOrbOpen ? 'open' : ''}`}>
+          {[
+            { id: 'quiz-python', label: 'Python Quiz', icon: '🐍', color: '#22d3ee' },
+            { id: 'quiz-mysql',  label: 'MySQL Quiz',  icon: '🗄️', color: '#a855f7' },
+          ].map((t, i) => (
+            <div
+              key={t.id}
+              className={`quiz-orb-fan-item ${viewMode === t.id ? 'quiz-tool-active' : ''}`}
+              style={{ '--qitem-color': t.color }}
+              onClick={() => { setViewMode(viewMode === t.id ? 'courses' : t.id); setQuizOrbOpen(false); }}
+            >
+              <div className="quiz-orb-fan-btn">{t.icon}</div>
+              <span className="quiz-orb-fan-label">{t.label}</span>
+            </div>
+          ))}
+        </div>
+        <button
+          className={`quiz-main-orb ${quizOrbOpen ? 'open' : ''} ${(viewMode==='quiz-python'||viewMode==='quiz-mysql') ? 'quiz-active' : ''}`}
+          onClick={() => setQuizOrbOpen(o => !o)}
+          title="Quizzes"
+        >
+          {quizOrbOpen ? '✕' : (viewMode==='quiz-python'||viewMode==='quiz-mysql') ? '❓' : '🧠'}
+          <span className="quiz-orb-tooltip">{quizOrbOpen ? 'close' : 'quizzes'}</span>
+        </button>
+      </div>
     </div>
   );
 }
