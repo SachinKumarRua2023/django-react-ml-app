@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = 'https://django-react-ml-app.onrender.com';
+const API_URL = 'https://api.seekhowithrua.com';
 axios.defaults.baseURL = API_URL;
 
 // ── ONLY FIX: these 2 constants match what LoginSignupLogout writes ──
