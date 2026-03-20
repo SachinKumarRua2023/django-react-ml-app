@@ -405,6 +405,64 @@ const MasterRua = () => {
     { name: "Success Analyzer", tech: "Python + Data Science", icon: "🎯" },
   ];
 
+  // ── NEW DATA — vision pillars and ecosystem links ──────────────────────────
+  const visionPillars = [
+    {
+      icon: "🧠",
+      color: "#00d4ff",
+      title: "Memory Science",
+      sub: "Not just learning — permanent encoding",
+      body: "WMSC-level memory techniques. Students who couldn't recall 20 words were memorising 400 numbers in 21 days. The same tools memory trainers charge ₹1 lakh to teach — free on this platform.",
+    },
+    {
+      icon: "🎮",
+      color: "#f59e0b",
+      title: "Learn by Playing",
+      sub: "HatimAI Game Mode · Battle Zone",
+      body: "3D dungeon where real problems block your path. Multiplayer quiz battles where your quiz score is your armor. When you're stuck in a game, your brain encodes the solution permanently.",
+    },
+    {
+      icon: "🥋",
+      color: "#a855f7",
+      title: "Right Unique Allrounder",
+      sub: "RUA = the human AI can never replace",
+      body: "AI masters one skill. You master many. Kung Fu + Coding + Memory + Philosophy + Mimicry = irreplaceable. Mr. Rua and Master Rua titles are earned through demonstrated multi-domain mastery — not given.",
+    },
+    {
+      icon: "🔴",
+      color: "#1D9E75",
+      title: "Live Voice Rooms",
+      sub: "Learn · Debate · Get Hired · Earn",
+      body: "WebRTC-powered free voice rooms. Learn from experts. Join philosophy debates. Companies post hiring rooms. 1,000 followers unlocks monetisation. This is YouTube for knowledge — but you earn from day 1,000.",
+    },
+    {
+      icon: "🔬",
+      color: "#ec4899",
+      title: "Science-Backed Pedagogy",
+      sub: "13 peer-reviewed studies behind every feature",
+      body: "Ebbinghaus Forgetting Curve. Dual Coding Theory. Testing Effect. Dresler Neuron 2017 (memory palace reshapes brain). Every feature on this platform traces directly to published research.",
+    },
+    {
+      icon: "🌍",
+      color: "#84cc16",
+      title: "From Learning to Earning",
+      sub: "Courses → Projects → Jobs → Creator Economy",
+      body: "One platform. Complete journey. Learn with 3D visuals → practice in games → battle peers → get discovered in hiring rooms → earn as a creator. No other platform closes this loop.",
+    },
+  ];
+
+  const ecosystemLinks = [
+    { icon: "🌐", label: "Main Website",    url: "https://seekhowithrua.com",               desc: "SEO site · 8 courses · 170+ pages", color: "#00d4ff" },
+    { icon: "🚀", label: "Learning App",    url: "https://app.seekhowithrua.com",           desc: "Full LMS · ML predictor · Voice rooms", color: "#7c3aed" },
+    { icon: "🎮", label: "Gaming Lab",      url: "https://gaming.seekhowithrua.com",        desc: "3D battle engine · HatimAI game", color: "#f59e0b" },
+    { icon: "✨", label: "Animation Lab",   url: "https://animationlab.seekhowithrua.com",  desc: "CCNA viz · Sorting algo · Neural flow", color: "#a855f7" },
+    { icon: "🛠️", label: "Services",        url: "https://services.seekhowithrua.com",      desc: "Hire the team · Web · AI · Mobile", color: "#1D9E75" },
+    { icon: "▶",  label: "YouTube",         url: "https://www.youtube.com/@seekhowithrua_", desc: "Daily content · Dark psychology · 3D", color: "#ef4444" },
+    { icon: "⌥",  label: "GitHub",          url: "https://github.com/SachinKumarRua2023",   desc: "Open source · All repos", color: "#e2e8f0" },
+    { icon: "💬", label: "WhatsApp",        url: "https://wa.me/918826776018",              desc: "Direct mentorship · 8826776018", color: "#22c55e" },
+  ];
+  // ── END NEW DATA ───────────────────────────────────────────────────────────
+
   return (
     <div className="master-rua-page">
       <section className="hero-section">
@@ -501,8 +559,263 @@ const MasterRua = () => {
         </div>
       </section>
 
+      {/* ── NEW: RUA VISION SECTION ───────────────────────────────────────────── */}
+      <section className="rua-vision-section">
+        <div className="section-container">
+          <div className="rua-vision-eyebrow">WHY SEEKHOWITHRUA IS DIFFERENT</div>
+          <h2 className="rua-vision-title">
+            Not just EdTech.<br />
+            <span className="rua-vision-accent">A Movement.</span>
+          </h2>
+          <p className="rua-vision-sub">
+            AI can master one skill in days. We build humans who combine tech mastery, memory science,
+            physical discipline and creative intelligence — humans that no AI can replace.
+          </p>
+          <p className="rua-vision-quote">"Be a Rider, Not a Runner." — Master Rua</p>
+
+          <div className="rua-vision-grid">
+            {visionPillars.map((p) => (
+              <div key={p.title} className="rua-vc" style={{ borderLeftColor: p.color }}>
+                <div className="rua-vc-icon-wrap" style={{ background: p.color + '14', border: `1px solid ${p.color}30` }}>
+                  <span className="rua-vc-icon">{p.icon}</span>
+                </div>
+                <div className="rua-vc-body">
+                  <div className="rua-vc-title">{p.title}</div>
+                  <div className="rua-vc-sub" style={{ color: p.color }}>{p.sub}</div>
+                  <p className="rua-vc-text">{p.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* RUA title ladder */}
+          <div className="rua-title-bar">
+            <div className="rua-title-step">
+              <div className="rua-title-badge" style={{ borderColor: '#60a5fa55', color: '#60a5fa' }}>Learner Rua</div>
+              <div className="rua-title-desc">You enrolled. You're on the path.</div>
+            </div>
+            <div className="rua-title-arrow">→</div>
+            <div className="rua-title-step">
+              <div className="rua-title-badge" style={{ borderColor: '#a855f755', color: '#a855f7' }}>Mr. Rua</div>
+              <div className="rua-title-desc">Tech + physical or creative skill. 30-day challenge.</div>
+            </div>
+            <div className="rua-title-arrow">→</div>
+            <div className="rua-title-step">
+              <div className="rua-title-badge" style={{ borderColor: '#f59e0b88', color: '#f59e0b', boxShadow: '0 0 12px #f59e0b33' }}>👑 Master Rua</div>
+              <div className="rua-title-desc">Multi-domain mastery + community impact. Currently held by Sachin Kumar.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* ── END RUA VISION SECTION ───────────────────────────────────────────── */}
+
+      {/* ── NEW: ECOSYSTEM SECTION ───────────────────────────────────────────── */}
+      <section className="rua-eco-section">
+        <div className="section-container">
+          <div className="rua-vision-eyebrow">THE FULL ECOSYSTEM</div>
+          <h2 className="rua-vision-title" style={{ marginBottom: 8 }}>
+            Every platform. <span className="rua-vision-accent">One mission.</span>
+          </h2>
+          <p className="rua-vision-sub" style={{ marginBottom: 32 }}>
+            SeekhoWithRua is not one URL — it's an ecosystem. Here's everything, linked.
+          </p>
+          <div className="rua-eco-grid">
+            {ecosystemLinks.map((e) => (
+              <a
+                key={e.label}
+                href={e.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rua-eco-card"
+                style={{ borderTopColor: e.color }}
+              >
+                <div className="rua-eco-top">
+                  <span className="rua-eco-icon" style={{ color: e.color }}>{e.icon}</span>
+                  <span className="rua-eco-arrow">↗</span>
+                </div>
+                <div className="rua-eco-label">{e.label}</div>
+                <div className="rua-eco-desc">{e.desc}</div>
+                <div className="rua-eco-url">{e.url.replace('https://', '')}</div>
+              </a>
+            ))}
+          </div>
+          {/* contact strip */}
+          <div className="rua-contact-strip">
+            <span>📧 seekhowithrua@gmail.com</span>
+            <span className="rua-contact-dot">·</span>
+            <a href="https://wa.me/918826776018" target="_blank" rel="noopener noreferrer" style={{ color: '#22c55e', textDecoration: 'none' }}>💬 WhatsApp: 8826776018</a>
+            <span className="rua-contact-dot">·</span>
+            <a href="https://www.youtube.com/@seekhowithrua_" target="_blank" rel="noopener noreferrer" style={{ color: '#ef4444', textDecoration: 'none' }}>▶ @seekhowithrua_</a>
+          </div>
+        </div>
+      </section>
+      {/* ── END ECOSYSTEM SECTION ────────────────────────────────────────────── */}
+
       {/* Bodhi Monk floats over the entire page */}
       <BodhiMonk />
+
+      {/* ── NEW CSS — appended, zero existing classes changed ── */}
+      <style>{`
+        /* ── RUA VISION SECTION ── */
+        .rua-vision-section {
+          padding: 80px 40px;
+          background: radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.05) 0%, transparent 55%);
+          border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .rua-vision-eyebrow {
+          font-family: 'JetBrains Mono', monospace, sans-serif;
+          font-size: 10px; letter-spacing: 4px;
+          color: #1D9E75; margin-bottom: 14px;
+        }
+        .rua-vision-title {
+          font-size: clamp(26px, 3.5vw, 40px);
+          font-weight: 800; color: #fff;
+          line-height: 1.2; margin-bottom: 14px;
+        }
+        .rua-vision-accent { color: #00d4ff; }
+        .rua-vision-sub {
+          font-size: 13px; color: rgba(255,255,255,0.45);
+          max-width: 580px; line-height: 1.9;
+          margin-bottom: 10px;
+        }
+        .rua-vision-quote {
+          font-size: 13px; font-style: italic;
+          color: rgba(0,212,255,0.7);
+          margin-bottom: 44px;
+          padding-left: 14px;
+          border-left: 2px solid rgba(0,212,255,0.3);
+        }
+        .rua-vision-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 14px;
+          margin-bottom: 40px;
+        }
+        .rua-vc {
+          display: flex; gap: 14px; align-items: flex-start;
+          padding: 20px; border-radius: 12px;
+          background: rgba(10,10,30,0.7);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-left: 3px solid;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .rua-vc:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+        .rua-vc-icon-wrap {
+          width: 40px; height: 40px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .rua-vc-icon { font-size: 20px; }
+        .rua-vc-body { flex: 1; min-width: 0; }
+        .rua-vc-title {
+          font-size: 14px; font-weight: 700;
+          color: #fff; margin-bottom: 3px;
+        }
+        .rua-vc-sub {
+          font-size: 9px; letter-spacing: 1px;
+          text-transform: uppercase; margin-bottom: 8px;
+        }
+        .rua-vc-text {
+          font-size: 12px; color: rgba(255,255,255,0.42);
+          line-height: 1.75;
+        }
+
+        /* ── RUA TITLE LADDER ── */
+        .rua-title-bar {
+          display: flex; align-items: flex-start;
+          gap: 12px; flex-wrap: wrap;
+          padding: 24px 28px;
+          background: rgba(10,10,30,0.6);
+          border: 1px solid rgba(124,58,237,0.15);
+          border-radius: 14px;
+        }
+        .rua-title-step {
+          display: flex; flex-direction: column;
+          align-items: center; gap: 8px; flex: 1;
+          min-width: 120px; text-align: center;
+        }
+        .rua-title-badge {
+          padding: 6px 16px; border-radius: 20px;
+          font-size: 13px; font-weight: 700;
+          border: 1px solid; letter-spacing: 0.5px;
+        }
+        .rua-title-desc {
+          font-size: 11px; color: rgba(255,255,255,0.35);
+          line-height: 1.5; max-width: 160px;
+        }
+        .rua-title-arrow {
+          color: rgba(255,255,255,0.2);
+          font-size: 20px; padding-top: 10px;
+          flex-shrink: 0;
+        }
+
+        /* ── ECOSYSTEM SECTION ── */
+        .rua-eco-section {
+          padding: 80px 40px;
+          background: rgba(5,5,18,0.6);
+          border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .rua-eco-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 12px;
+          margin-bottom: 28px;
+        }
+        .rua-eco-card {
+          display: flex; flex-direction: column; gap: 6px;
+          padding: 18px; border-radius: 12px;
+          background: rgba(10,10,30,0.8);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-top: 2px solid;
+          text-decoration: none; color: inherit;
+          transition: transform 0.2s, border-color 0.2s;
+        }
+        .rua-eco-card:hover { transform: translateY(-3px); }
+        .rua-eco-top {
+          display: flex; justify-content: space-between;
+          align-items: center; margin-bottom: 4px;
+        }
+        .rua-eco-icon { font-size: 22px; }
+        .rua-eco-arrow {
+          font-size: 14px; color: rgba(255,255,255,0.18);
+          transition: color 0.2s;
+        }
+        .rua-eco-card:hover .rua-eco-arrow { color: #00d4ff; }
+        .rua-eco-label {
+          font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .rua-eco-desc {
+          font-size: 11px; color: rgba(255,255,255,0.38);
+          line-height: 1.5;
+        }
+        .rua-eco-url {
+          font-size: 9px; color: rgba(255,255,255,0.18);
+          font-family: 'JetBrains Mono', monospace, sans-serif;
+          letter-spacing: 0.3px; margin-top: 4px;
+          overflow: hidden; text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .rua-contact-strip {
+          display: flex; align-items: center;
+          gap: 12px; flex-wrap: wrap;
+          padding: 14px 20px;
+          background: rgba(10,10,30,0.5);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 10px;
+          font-size: 12px; color: rgba(255,255,255,0.4);
+        }
+        .rua-contact-dot { color: rgba(255,255,255,0.2); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+          .rua-vision-section, .rua-eco-section { padding: 50px 20px; }
+          .rua-vision-grid { grid-template-columns: 1fr; }
+          .rua-eco-grid { grid-template-columns: 1fr 1fr; }
+          .rua-title-bar { flex-direction: column; align-items: center; }
+          .rua-title-arrow { transform: rotate(90deg); padding-top: 0; }
+          .rua-contact-strip { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+      `}</style>
     </div>
   );
 };
