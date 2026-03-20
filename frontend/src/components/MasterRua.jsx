@@ -2,6 +2,7 @@
 // .env.local → VITE_GROQ_API_KEY=your_key_here
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import masterRuaImg from '../assets/master-rua.jpeg';
 
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -463,8 +464,51 @@ const MasterRua = () => {
   ];
   // ── END NEW DATA ───────────────────────────────────────────────────────────
 
+  const heroAuraStyles = `
+    .mr-avatar-wrap { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+    .mr-aura-r3 {
+      position:absolute; inset:-28px; border-radius:50%;
+      background:radial-gradient(ellipse at center, rgba(245,158,11,0.20) 0%, rgba(124,58,237,0.12) 45%, transparent 70%);
+      animation:mrAuraPulse 3.2s ease-in-out infinite;
+      pointer-events:none;
+    }
+    .mr-aura-r2 {
+      position:absolute; inset:-16px; border-radius:50%;
+      background:radial-gradient(ellipse at center, rgba(0,212,255,0.22) 0%, rgba(245,158,11,0.14) 50%, transparent 70%);
+      animation:mrAuraPulse 3.2s ease-in-out infinite 0.7s;
+      pointer-events:none;
+    }
+    .mr-spin-ring {
+      position:absolute; inset:-8px; border-radius:50%;
+      border:2px solid transparent;
+      background:linear-gradient(135deg,#f59e0b,#7c3aed,#00d4ff,#f59e0b) border-box;
+      -webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite:destination-out;
+      mask-composite:exclude;
+      animation:mrSpin 5s linear infinite;
+      box-shadow:0 0 20px rgba(245,158,11,0.45), 0 0 40px rgba(0,212,255,0.18);
+      pointer-events:none;
+    }
+    .mr-photo {
+      width:160px; height:160px; border-radius:50%;
+      object-fit:cover; object-position:top center;
+      display:block; position:relative; z-index:1;
+      box-shadow:0 0 28px rgba(245,158,11,0.35), inset 0 0 16px rgba(0,212,255,0.1);
+    }
+    .mr-photo-fallback {
+      width:160px; height:160px; border-radius:50%;
+      background:linear-gradient(135deg,#f59e0b,#ea580c);
+      display:flex; align-items:center; justify-content:center;
+      font-size:52px; position:relative; z-index:1;
+      box-shadow:0 0 28px rgba(245,158,11,0.35);
+    }
+    @keyframes mrAuraPulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.07)} }
+    @keyframes mrSpin { to{transform:rotate(360deg)} }
+  `;
+
   return (
     <div className="master-rua-page">
+      <style>{heroAuraStyles}</style>
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-text">
@@ -487,8 +531,22 @@ const MasterRua = () => {
           </div>
           <div className="hero-visual">
             <div className="character-container">
-              <div className="character-placeholder">
-                <span>🧙‍♂️</span><p>3D Professor Avatar</p><small>(Three.js Character Coming Soon)</small>
+              {/* Real photo — place master-rua.jpg in src/assets/ */}
+              <div className="mr-avatar-wrap">
+                <div className="mr-aura-r3" />
+                <div className="mr-aura-r2" />
+                <div className="mr-spin-ring" />
+                <img
+                  src={masterRuaImg}
+                  alt="Sachin Kumar — Master Rua"
+                  className="mr-photo"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const fb = e.currentTarget.nextElementSibling;
+                    if (fb) fb.style.display = "flex";
+                  }}
+                />
+                <div className="mr-photo-fallback" style={{ display: "none" }}>🧙‍♂️</div>
               </div>
               <div className="floating-elements">
                 <span className="float-1">🧠</span><span className="float-2">⚡</span>
