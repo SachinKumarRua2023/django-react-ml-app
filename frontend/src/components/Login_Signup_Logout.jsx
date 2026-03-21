@@ -151,7 +151,6 @@ const COSMOS_AUTH_STYLES = `
   }
   .ca-btn-voice:hover { box-shadow: 0 0 40px rgba(0,245,255,0.5); transform: translateY(-1px); }
 
-  /* ← NEW: Google button style */
   .ca-btn-google {
     display: flex; align-items: center; justify-content: center; gap: 10px;
     width: 100%; padding: 11px 22px; border-radius: 11px; cursor: pointer;
@@ -163,10 +162,7 @@ const COSMOS_AUTH_STYLES = `
   .ca-btn-google:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: rgba(102,0,255,0.6); transform: translateY(-1px); }
   .ca-btn-google:disabled { opacity: 0.38; cursor: not-allowed; }
 
-  /* ← NEW: OR divider */
-  .ca-divider {
-    display: flex; align-items: center; gap: 8px; margin: 12px 0;
-  }
+  .ca-divider { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
   .ca-divider-line { flex: 1; height: 1px; background: rgba(102,0,255,0.3); }
   .ca-divider-text { color: rgba(232,224,255,0.4); font-size: 0.72rem; }
 
@@ -200,7 +196,7 @@ function CosmosAuthCanvas() {
     const canvas = ref.current;
     const ctx    = canvas.getContext("2d");
     let raf;
-    const stars  = Array.from({ length: 200 }, () => ({
+    const stars = Array.from({ length: 200 }, () => ({
       x: Math.random(), y: Math.random(),
       r: Math.random() * 1.3 + 0.2,
       twinkleSpeed:  Math.random() * 0.018 + 0.004,
@@ -221,8 +217,10 @@ function CosmosAuthCanvas() {
       ctx.clearRect(0, 0, W, H);
       blobs.forEach(b => {
         const g = ctx.createRadialGradient(b.x*W, b.y*H, 0, b.x*W, b.y*H, b.r*Math.max(W,H));
-        g.addColorStop(0, `rgba(${b.c},${b.a})`); g.addColorStop(1, `rgba(${b.c},0)`);
-        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        g.addColorStop(0, `rgba(${b.c},${b.a})`);
+        g.addColorStop(1, `rgba(${b.c},0)`);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
       });
       stars.forEach(s => {
         s.twinkleOffset += s.twinkleSpeed;
@@ -234,7 +232,10 @@ function CosmosAuthCanvas() {
       raf = requestAnimationFrame(draw);
     }
     draw();
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
   return <canvas id="cosmos-auth-canvas" ref={ref} />;
 }
@@ -255,21 +256,17 @@ api.interceptors.request.use((config) => {
 const LoginSignupLogout = () => {
   const navigate = useNavigate();
 
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin,  setIsLogin]  = useState(true);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirm_password: '',
-    first_name: '',
-    last_name: '',
-    role: 'learner',
+    email: '', password: '', confirm_password: '',
+    first_name: '', last_name: '', role: 'learner',
   });
   const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
 
-  // ── ADDITION ONLY: inject cosmic styles ──────────────────────────────────
+  // Inject cosmic styles
   useEffect(() => {
     if (document.getElementById("cosmos-auth-styles")) return;
     const el = document.createElement("style");
@@ -278,43 +275,17 @@ const LoginSignupLogout = () => {
     document.head.appendChild(el);
   }, []);
 
-  // Check if already logged in — UNCHANGED
-  // ← NEW: also loads Google script
-  useEffect(() => {
-    const token     = localStorage.getItem(TOKEN_KEY);
-    const savedUser = localStorage.getItem("cosmos_user");
-    if (token && savedUser) {
-      navigate('/live-voice');
-      return;
-    }
-    // ← NEW: Load Google One Tap script
-    const script    = document.createElement('script');
-    script.src      = 'https://accounts.google.com/gsi/client';
-    script.async    = true;
-    script.defer    = true;
-    script.onload   = () => {
-      if (window.google && import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-        window.google.accounts.id.initialize({
-          client_id:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback:    (response) => handleGoogleLogin(response.credential),
-          auto_select: false,
-        });
-      }
-    };
-    document.head.appendChild(script);
-  }, [navigate]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  // ← NEW: Google login handler — addition only, zero impact on existing auth
+  // Google login handler — defined BEFORE useEffect that references it
   const handleGoogleLogin = async (googleToken) => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.post('api/auth/google/verify/', {
+      const response = await api.post('/api/auth/google/verify/', {
         token: googleToken,
         role:  formData.role,
       });
@@ -331,6 +302,31 @@ const LoginSignupLogout = () => {
       setLoading(false);
     }
   };
+
+  // Check if already logged in + load Google script
+  useEffect(() => {
+    const token     = localStorage.getItem(TOKEN_KEY);
+    const savedUser = localStorage.getItem("cosmos_user");
+    if (token && savedUser) {
+      navigate('/live-voice');
+      return;
+    }
+    // Load Google One Tap script
+    const script    = document.createElement('script');
+    script.src      = 'https://accounts.google.com/gsi/client';
+    script.async    = true;
+    script.defer    = true;
+    script.onload   = () => {
+      if (window.google && import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback:    (response) => handleGoogleLogin(response.credential),
+          auto_select: false,
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -361,10 +357,14 @@ const LoginSignupLogout = () => {
     setLoading(true);
     setError('');
     if (formData.password !== formData.confirm_password) {
-      setError('Passwords do not match'); setLoading(false); return;
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
     }
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters'); setLoading(false); return;
+      setError('Password must be at least 8 characters');
+      setLoading(false);
+      return;
     }
     try {
       const response = await api.post('api/register/', {
@@ -414,9 +414,7 @@ const LoginSignupLogout = () => {
     setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  RENDER: logged in state — UNCHANGED
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─── RENDER: logged in ────────────────────────────────────────────────────
   if (user) {
     return (
       <div className="cosmos-auth-root">
@@ -462,9 +460,7 @@ const LoginSignupLogout = () => {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  //  RENDER: login/register form — UNCHANGED + Google button added
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─── RENDER: login/register form ─────────────────────────────────────────
   return (
     <div className="cosmos-auth-root">
       <CosmosAuthCanvas />
@@ -490,39 +486,56 @@ const LoginSignupLogout = () => {
           {success && <div className="ca-ok-msg">{success}</div>}
 
           <form onSubmit={isLogin ? handleLogin : handleRegister}>
-
             {!isLogin && (
               <>
-                <input className="ca-input" type="text" name="first_name"
-                  value={formData.first_name} onChange={handleChange} placeholder="First Name" />
-                <input className="ca-input" type="text" name="last_name"
-                  value={formData.last_name} onChange={handleChange} placeholder="Last Name" />
+                <input
+                  className="ca-input" type="text" name="first_name"
+                  value={formData.first_name} onChange={handleChange}
+                  placeholder="First Name"
+                />
+                <input
+                  className="ca-input" type="text" name="last_name"
+                  value={formData.last_name} onChange={handleChange}
+                  placeholder="Last Name"
+                />
                 <div className="ca-section-label">I AM A —</div>
                 <div className="ca-role-selector" style={{ marginBottom:16 }}>
-                  <button type="button"
+                  <button
+                    type="button"
                     className={`ca-role-btn ${formData.role === 'trainer' ? 'active' : ''}`}
-                    onClick={() => setFormData(f => ({ ...f, role:'trainer' }))}>
+                    onClick={() => setFormData(f => ({ ...f, role:'trainer' }))}
+                  >
                     <span className="ca-role-icon">🔭</span>TRAINER
                   </button>
-                  <button type="button"
+                  <button
+                    type="button"
                     className={`ca-role-btn ${formData.role === 'learner' ? 'active' : ''}`}
-                    onClick={() => setFormData(f => ({ ...f, role:'learner' }))}>
+                    onClick={() => setFormData(f => ({ ...f, role:'learner' }))}
+                  >
                     <span className="ca-role-icon">🌱</span>SEEKER
                   </button>
                 </div>
               </>
             )}
 
-            <input className="ca-input" type="email" name="email"
-              value={formData.email} onChange={handleChange} placeholder="Email" required />
+            <input
+              className="ca-input" type="email" name="email"
+              value={formData.email} onChange={handleChange}
+              placeholder="Email" required
+            />
 
-            <input className="ca-input" type="password" name="password"
-              value={formData.password} onChange={handleChange} placeholder="Password" required />
+            <input
+              className="ca-input" type="password" name="password"
+              value={formData.password} onChange={handleChange}
+              placeholder="Password" required
+            />
 
             {!isLogin && (
-              <input className="ca-input" type="password" name="confirm_password"
+              <input
+                className="ca-input" type="password" name="confirm_password"
                 value={formData.confirm_password} onChange={handleChange}
-                placeholder="Confirm Password" required />
+                placeholder="Confirm Password" required
+              />
             )}
 
             <button type="submit" disabled={loading} className="ca-btn-primary">
@@ -530,7 +543,7 @@ const LoginSignupLogout = () => {
             </button>
           </form>
 
-          {/* ← NEW: Google Sign In — addition only, zero impact on form above */}
+          {/* Google Sign In */}
           <div className="ca-divider">
             <div className="ca-divider-line" />
             <span className="ca-divider-text">OR</span>
@@ -551,7 +564,7 @@ const LoginSignupLogout = () => {
             CONTINUE WITH GOOGLE
           </button>
 
-          {/* Toggle — UNCHANGED */}
+          {/* Toggle */}
           <div className="ca-toggle">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button className="ca-toggle-btn" onClick={() => handleTabSwitch(!isLogin)}>
