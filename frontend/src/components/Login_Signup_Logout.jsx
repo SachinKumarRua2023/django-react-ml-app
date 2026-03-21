@@ -393,7 +393,7 @@ const LoginSignupLogout = () => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await api.post('/logout/');
+      await api.post('/api/logout/');
     } catch (err) {
       console.log('Logout error:', err);
     } finally {

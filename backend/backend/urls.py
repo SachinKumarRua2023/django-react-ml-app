@@ -30,7 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/employees/', include('users.urls')),
     path('api/ml/', include('ml_apps.urls')),
-    path('api/vcr/', include('voice_rooms.urls')),  # ← MUST BE BEFORE api/
+    path('api/vcr/', include('voice_rooms.urls')),
     path('api/', include('livevc.urls')),
     path('debug/', debug_urls),
 ]
