@@ -41,13 +41,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
     'channels',
-    
+
     # Your apps
     'users',
     'ml_apps',
@@ -118,6 +118,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    # Rate limiting — prevents brute force attacks
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/min',
+        'user': '200/min',
+    },
 }
 
 TEMPLATES = [
@@ -176,3 +185,26 @@ USE_TZ = True
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# ─── SECURITY SETTINGS ────────────────────────────────────────────────────────
+# Render handles SSL at proxy level — do NOT redirect here
+SECURE_SSL_REDIRECT            = False
+SECURE_PROXY_SSL_HEADER        = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Secure cookies
+SESSION_COOKIE_SECURE          = True
+CSRF_COOKIE_SECURE             = True
+SESSION_COOKIE_HTTPONLY        = True
+CSRF_COOKIE_HTTPONLY           = True
+SESSION_COOKIE_SAMESITE        = 'Lax'
+CSRF_COOKIE_SAMESITE           = 'Lax'
+
+# HSTS — tells browsers to always use HTTPS for 1 year
+SECURE_HSTS_SECONDS            = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD            = True
+
+# Browser security headers
+SECURE_BROWSER_XSS_FILTER      = True
+SECURE_CONTENT_TYPE_NOSNIFF    = True
+X_FRAME_OPTIONS                = 'DENY'
