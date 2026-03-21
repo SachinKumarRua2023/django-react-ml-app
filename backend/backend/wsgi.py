@@ -1,27 +1,17 @@
-"""
-WSGI config for backend project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
-"""
-
-# import os
-
-# from django.core.wsgi import get_wsgi_application
-
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-
-# application = get_wsgi_application()
 import os
-from django.core.wsgi import get_wsgi_application
+import django
+from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-application = get_wsgi_application()
+django.setup()
 
-# ```
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import livevc.routing
 
-# **Also update Start Command on Render back to:**
-# ```
-# python manage.py migrate && gunicorn backend.wsgi:application --bind
+application = ProtocolTypeRouter({
+    "http":      get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(livevc.routing.websocket_urlpatterns)
+    ),
+})
