@@ -14,16 +14,11 @@ from pathlib import Path
 import os
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-9kw!4)@$&am^_*_x=qzl_sv4c@qg@!v9jg39mt32%=r0%lxr$('
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-# ALLOWED_HOSTS = ["app.seekhowithrua.com","https://seekhowithrua.com", "https://www.seekhowithrua.com",'*', 'django-react-ml-app.onrender.com']
 
 ASGI_APPLICATION = "backend.asgi.application"
 
@@ -33,7 +28,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,14 +35,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Third party apps
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
     'channels',
-
-    # Your apps
     'users',
     'ml_apps',
     'livevc',
@@ -72,6 +62,7 @@ ROOT_URLCONF = 'backend.urls'
 # CORS SETTINGS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
 ALLOWED_HOSTS = [
     'app.seekhowithrua.com',
     'seekhowithrua.com',
@@ -186,14 +177,16 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# ─── SECURITY SETTINGS ────────────────────────────────────────────────────────
-# Render handles SSL at proxy level — do NOT redirect here
+# ── SECURITY SETTINGS ─────────────────────────────────────────────────────────
+# Render handles SSL at proxy level — NEVER set SECURE_SSL_REDIRECT = True
 SECURE_SSL_REDIRECT            = False
 SECURE_PROXY_SSL_HEADER        = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Secure cookies
-SESSION_COOKIE_SECURE          = True
-CSRF_COOKIE_SECURE             = True
+# Cookie security — tied to DEBUG so they work on Render free tier
+# When DEBUG=True  → False (works on Render)
+# When DEBUG=False → True  (production security)
+SESSION_COOKIE_SECURE          = not DEBUG
+CSRF_COOKIE_SECURE             = not DEBUG
 SESSION_COOKIE_HTTPONLY        = True
 CSRF_COOKIE_HTTPONLY           = True
 SESSION_COOKIE_SAMESITE        = 'Lax'
