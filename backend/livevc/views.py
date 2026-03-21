@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from .models import UserProfile
 from django.core.exceptions import ValidationError
 import re
+from .google_auth import verify_google_token, get_or_create_google_user
 
 # voice_rooms hooks — recommendation + notifications
 from asgiref.sync import async_to_sync
@@ -16,6 +17,7 @@ from voice_rooms.models import (
     PanelCoOccurrence, UserRankScore
 )
 from voice_rooms.recommendation import get_recommended_panels
+
 
 def validate_password(password):
     """Validate password strength"""
@@ -564,3 +566,48 @@ def update_panel_peer(request, panel_id):
         panel.save(update_fields=['peer_id'])
 
     return Response({'status': 'ok', 'peer_id': panel.peer_id})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login(request):
+    """
+    POST /api/auth/google/
+    Body: { "token": "<Google ID token>", "role": "learner" }
+
+    Verifies Google ID token, creates or finds user,
+    returns Django auth token + user profile.
+    """
+    token_str = request.data.get('token', '')
+    role      = request.data.get('role', 'learner')
+
+    if not token_str:
+        return Response({'error': 'Google token is required'}, status=400)
+
+    try:
+        id_info = verify_google_token(token_str)
+    except ValueError as e:
+        return Response({'error': str(e)}, status=401)
+
+    try:
+        user, token, created = get_or_create_google_user(id_info, role)
+    except ValueError as e:
+        return Response({'error': str(e)}, status=400)
+
+    profile = user.profile
+
+    return Response({
+        'token':   token.key,
+        'created': created,
+        'user': {
+            'id':         user.id,
+            'email':      user.email,
+            'username':   user.username,
+            'first_name': user.first_name,
+            'last_name':  user.last_name,
+            'profile': {
+                'role':       profile.role,
+                'is_premium': profile.is_premium,
+                'avatar_url': profile.avatar_url,
+            }
+        }
+    }, status=201 if created else 200)
