@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'users',
     'ml_apps',
     'livevc',
-    'voice_rooms',   # ← ADD THIS
+    'voice_rooms',
 ]
 
 MIDDLEWARE = [
@@ -138,38 +138,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database
-if os.environ.get("RENDER") == "true":
-    DATABASES = {
-        'default': {
-            'ENGINE':   'django.db.backends.postgresql',
-            'NAME':     os.environ.get('DB_NAME', 'postgres'),
-            'USER':     os.environ.get('DB_USER', 'postgres.vhkiwztuyypdtvduapqf'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST':     os.environ.get('DB_HOST', 'aws-0-ap-southeast-2.pooler.supabase.com'),
-            'PORT':     os.environ.get('DB_PORT', '6543'),
-            'OPTIONS':  {'sslmode': 'require'},
-        }
+# Database — Supabase (both local and Render use same DB)
+DATABASES = {
+    'default': {
+        'ENGINE':   'django.db.backends.postgresql',
+        'NAME':     'postgres',
+        'USER':     'postgres.vhkiwztuyypdtvduapqf',
+        'PASSWORD': 'Drunken@1234#4321',
+        'HOST':     'db.vhkiwztuyypdtvduapqf.supabase.co',
+        'PORT':     '5432',
+        'OPTIONS':  {'sslmode': 'require'},
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE':   'django.db.backends.postgresql',
-            'NAME':     'postgres',
-            'USER':     'postgres.vhkiwztuyypdtvduapqf',
-            'PASSWORD': 'Drunken@1234#4321',
-            'HOST':     'aws-0-ap-southeast-2.pooler.supabase.com',
-            'PORT':     '6543',
-            'OPTIONS':  {'sslmode': 'require'},
-        }
-    }
-# ```
+}
 
-# Then also update the **Start Command** on Render:
-
-# Go to Render → web service → **Settings** → **Start Command** → change to:
-# ```
-# python manage.py migrate && gunicorn backend.wsgi:application
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
