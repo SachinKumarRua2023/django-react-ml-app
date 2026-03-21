@@ -138,15 +138,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database — Supabase Transaction Pooler
-# Uses pooler URL (IPv4) — compatible with Render free tier
+# Database — Supabase Transaction Pooler (aws-1, IPv4, Render compatible)
 DATABASES = {
     'default': {
         'ENGINE':   'django.db.backends.postgresql',
         'NAME':     'postgres',
         'USER':     'postgres.vhkiwztuyypdtvduapqf',
         'PASSWORD': 'Drunken@1234#4321',
-        'HOST':     'aws-0-ap-southeast-2.pooler.supabase.com',
+        'HOST':     'aws-1-ap-southeast-2.pooler.supabase.com',
         'PORT':     '6543',
         'OPTIONS':  {'sslmode': 'require'},
     }
