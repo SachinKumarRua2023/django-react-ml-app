@@ -465,45 +465,212 @@ const MasterRua = () => {
   // ── END NEW DATA ───────────────────────────────────────────────────────────
 
   const heroAuraStyles = `
-    .mr-avatar-wrap { position:relative; display:inline-flex; align-items:center; justify-content:center; }
-    .mr-aura-r3 {
-      position:absolute; inset:-28px; border-radius:50%;
-      background:radial-gradient(ellipse at center, rgba(245,158,11,0.20) 0%, rgba(124,58,237,0.12) 45%, transparent 70%);
-      animation:mrAuraPulse 3.2s ease-in-out infinite;
-      pointer-events:none;
+    /* ── OUTER WRAPPER ── */
+    .mr-card-outer {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      /* extra space so waves don't clip */
+      padding: 100px;
+      margin: -100px;
+      /* ensure label is always a flex row after the card */
+      justify-content: flex-start;
     }
-    .mr-aura-r2 {
-      position:absolute; inset:-16px; border-radius:50%;
-      background:radial-gradient(ellipse at center, rgba(0,212,255,0.22) 0%, rgba(245,158,11,0.14) 50%, transparent 70%);
-      animation:mrAuraPulse 3.2s ease-in-out infinite 0.7s;
-      pointer-events:none;
+
+    /* ── STATIC CARD BORDER — 4 colored sides, no animation ── */
+    .mr-card-spin-border {
+      position: absolute;
+      width: 252px; height: 272px;
+      border-radius: 22px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -54%);
+      background: transparent;
+      border-top:    2.5px solid #00d4ff;
+      border-right:  2.5px solid #a855f7;
+      border-bottom: 2.5px solid #f59e0b;
+      border-left:   2.5px solid #1D9E75;
+      box-shadow:
+        0 0 10px rgba(0,212,255,0.35),
+        0 0 10px rgba(168,85,247,0.25);
+      pointer-events: none;
+      z-index: 1;
     }
-    .mr-spin-ring {
-      position:absolute; inset:-8px; border-radius:50%;
-      border:2px solid transparent;
-      background:linear-gradient(135deg,#f59e0b,#7c3aed,#00d4ff,#f59e0b) border-box;
-      -webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite:destination-out;
-      mask-composite:exclude;
-      animation:mrSpin 5s linear infinite;
-      box-shadow:0 0 20px rgba(245,158,11,0.45), 0 0 40px rgba(0,212,255,0.18);
-      pointer-events:none;
+
+    /* ── SOFT BACKGROUND GLOW ── */
+    .mr-card-glow {
+      position: absolute;
+      width: 260px; height: 280px;
+      border-radius: 24px;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -54%);
+      background: radial-gradient(
+        ellipse at center,
+        rgba(0,212,255,0.10) 0%,
+        rgba(124,58,237,0.08) 45%,
+        transparent 75%
+      );
+      pointer-events: none;
+      z-index: 0;
+      animation: mrGlowPulse 3s ease-in-out infinite;
+    }
+    @keyframes mrGlowPulse {
+      0%,100% { opacity: 0.6; transform: translate(-50%,-54%) scale(1); }
+      50%      { opacity: 1;   transform: translate(-50%,-54%) scale(1.03); }
+    }
+
+    /* ── WAVE BASE — shared properties ── */
+    .mr-wave {
+      position: absolute;
+      top: 50%; left: 50%;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /*
+      Waves morph from square (border-radius ~20px matching card)
+      to circle (border-radius 50%) as they expand outward.
+      Each wave is slightly larger + more circular than the previous.
+      5 waves staggered by 0.55s each → continuous cascade.
+      card size = 240×260. waves grow proportionally.
+    */
+
+    /* Wave 1 — closest, nearly square, cyan */
+    .mr-wave-1 {
+      width: 266px; height: 286px;
+      margin-left: -133px; margin-top: -165px;
+      border-radius: 24px;
+      border: 1.8px solid rgba(0, 212, 255, 0.75);
+      box-shadow: 0 0 10px rgba(0,212,255,0.25);
+      animation: mrWave1 2.75s ease-out infinite 0s;
+    }
+    @keyframes mrWave1 {
+      0%   { opacity: 0.85; transform: scale(0.94); border-radius: 22px; }
+      100% { opacity: 0;    transform: scale(1.08); border-radius: 26px; }
+    }
+
+    /* Wave 2 — slightly larger, slightly rounder, purple */
+    .mr-wave-2 {
+      width: 300px; height: 316px;
+      margin-left: -150px; margin-top: -182px;
+      border-radius: 34px;
+      border: 1.5px solid rgba(168, 85, 247, 0.65);
+      box-shadow: 0 0 14px rgba(168,85,247,0.18);
+      animation: mrWave2 2.75s ease-out infinite 0.55s;
+    }
+    @keyframes mrWave2 {
+      0%   { opacity: 0.75; transform: scale(0.93); border-radius: 32px; }
+      100% { opacity: 0;    transform: scale(1.09); border-radius: 42px; }
+    }
+
+    /* Wave 3 — medium, transitioning, amber */
+    .mr-wave-3 {
+      width: 340px; height: 352px;
+      margin-left: -170px; margin-top: -200px;
+      border-radius: 52px;
+      border: 1.3px solid rgba(245, 158, 11, 0.55);
+      box-shadow: 0 0 16px rgba(245,158,11,0.14);
+      animation: mrWave3 2.75s ease-out infinite 1.10s;
+    }
+    @keyframes mrWave3 {
+      0%   { opacity: 0.65; transform: scale(0.92); border-radius: 50px; }
+      100% { opacity: 0;    transform: scale(1.10); border-radius: 70px; }
+    }
+
+    /* Wave 4 — large, almost oval, teal */
+    .mr-wave-4 {
+      width: 386px; height: 395px;
+      margin-left: -193px; margin-top: -221px;
+      border-radius: 100px;
+      border: 1.1px solid rgba(29, 158, 117, 0.45);
+      animation: mrWave4 2.75s ease-out infinite 1.65s;
+    }
+    @keyframes mrWave4 {
+      0%   { opacity: 0.55; transform: scale(0.92); border-radius: 95px; }
+      100% { opacity: 0;    transform: scale(1.10); border-radius: 130px; }
+    }
+
+    /* Wave 5 — very large, near circle, cyan-faint */
+    .mr-wave-5 {
+      width: 436px; height: 440px;
+      margin-left: -218px; margin-top: -244px;
+      border-radius: 50%;
+      border: 0.9px solid rgba(0, 212, 255, 0.30);
+      animation: mrWave5 2.75s ease-out infinite 2.20s;
+    }
+    @keyframes mrWave5 {
+      0%   { opacity: 0.45; transform: scale(0.91); }
+      100% { opacity: 0;    transform: scale(1.11); }
+    }
+
+    /* Wave 6 — outermost, full circle, purple-faint */
+    .mr-wave-6 {
+      width: 490px; height: 490px;
+      margin-left: -245px; margin-top: -269px;
+      border-radius: 50%;
+      border: 0.7px solid rgba(168, 85, 247, 0.18);
+      animation: mrWave5 2.75s ease-out infinite 2.75s;
+    }
+
+    /* ── THE CARD ── */
+    .mr-card-box {
+      position: relative;
+      width: 240px; height: 260px;
+      border-radius: 20px;
+      overflow: hidden;
+      z-index: 3;
+      background: #0a0a1a;
+      flex-shrink: 0;
     }
     .mr-photo {
-      width:160px; height:160px; border-radius:50%;
-      object-fit:cover; object-position:top center;
-      display:block; position:relative; z-index:1;
-      box-shadow:0 0 28px rgba(245,158,11,0.35), inset 0 0 16px rgba(0,212,255,0.1);
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      /* no border-radius here — card-box overflow:hidden handles clipping */
+    }
+    .mr-card-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 40px;
+      background: linear-gradient(0deg, rgba(10,10,26,0.65) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 4;
     }
     .mr-photo-fallback {
-      width:160px; height:160px; border-radius:50%;
-      background:linear-gradient(135deg,#f59e0b,#ea580c);
-      display:flex; align-items:center; justify-content:center;
-      font-size:52px; position:relative; z-index:1;
-      box-shadow:0 0 28px rgba(245,158,11,0.35);
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 64px;
+      background: linear-gradient(135deg, #0a0a1a, #1a0a2a);
     }
-    @keyframes mrAuraPulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.07)} }
-    @keyframes mrSpin { to{transform:rotate(360deg)} }
+
+    /* ── NAME LABEL — sits below card, never inside it ── */
+    .mr-name-label {
+      position: relative;
+      z-index: 5;
+      margin-top: 14px;
+      text-align: center;
+      width: 240px;
+      flex-shrink: 0;
+    }
+    .mr-name-label h3 {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #00d4ff 0%, #a855f7 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0 0 5px;
+    }
+    .mr-name-label span {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.32);
+      font-family: 'JetBrains Mono', monospace, sans-serif;
+      text-transform: uppercase;
+    }
   `;
 
   return (
@@ -529,25 +696,44 @@ const MasterRua = () => {
               <a href="#projects" className="btn btn-secondary">View Projects</a>
             </div>
           </div>
+
           <div className="hero-visual">
             <div className="character-container">
-              {/* Real photo — place master-rua.jpg in src/assets/ */}
-              <div className="mr-avatar-wrap">
-                <div className="mr-aura-r3" />
-                <div className="mr-aura-r2" />
-                <div className="mr-spin-ring" />
-                <img
-                  src={masterRuaImg}
-                  alt="Sachin Kumar — Master Rua"
-                  className="mr-photo"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const fb = e.currentTarget.nextElementSibling;
-                    if (fb) fb.style.display = "flex";
-                  }}
-                />
-                <div className="mr-photo-fallback" style={{ display: "none" }}>🧙‍♂️</div>
+              {/* ── Master Rua photo card with morph waves ── */}
+              <div className="mr-card-outer">
+                {/* Background glow */}
+                <div className="mr-card-glow" />
+                {/* 6 waves: square → circle as they expand */}
+                <div className="mr-wave mr-wave-1" />
+                <div className="mr-wave mr-wave-2" />
+                <div className="mr-wave mr-wave-3" />
+                <div className="mr-wave mr-wave-4" />
+                <div className="mr-wave mr-wave-5" />
+                <div className="mr-wave mr-wave-6" />
+                {/* Static 4-color border overlay */}
+                <div className="mr-card-spin-border" />
+                {/* Card with photo */}
+                <div className="mr-card-box">
+                  <img
+                    src={masterRuaImg}
+                    alt="Sachin Kumar — Master Rua"
+                    className="mr-photo"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const fb = e.currentTarget.nextElementSibling;
+                      if (fb) fb.style.display = "flex";
+                    }}
+                  />
+                  <div className="mr-photo-fallback" style={{ display: "none" }}>🧙‍♂️</div>
+                  <div className="mr-card-overlay" />
+                </div>
+                {/* Name below */}
+                <div className="mr-name-label">
+                  <h3>Master Rua</h3>
+                  <span>Sachin Kumar · Right Unique Allrounder</span>
+                </div>
               </div>
+
               <div className="floating-elements">
                 <span className="float-1">🧠</span><span className="float-2">⚡</span>
                 <span className="float-3">🎯</span><span className="float-4">💎</span>

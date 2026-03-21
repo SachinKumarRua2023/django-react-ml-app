@@ -20,6 +20,14 @@
  *  7. _participantsRef accessed safely — ref initialized before any usage
  *  8. Register flow: uses email as login credential after auto-login
  *
+ *  ── NEW ADDITIONS ────────────────────────────────────────────────────────
+ *  9.  Follow/Unfollow button in People tab
+ *  10. Upvote button on speaker AvatarOrb
+ *  11. Onboarding screen on first login
+ *  12. Leaderboard sidebar tab (Overall + College)
+ *  13. WebSocket real-time notifications (followed host goes live)
+ *  14. YouTube-style 3-row panel recommendations
+ *
  *  ── HOW AUTH WORKS ──────────────────────────────────────────────────────
  *  1. On mount → GET /api/profile/ with stored token
  *  2. profile.role === 'trainer' → trainer UI; else learner UI
@@ -37,6 +45,14 @@
  *  POST   /api/panels/<id>/mute-all/       → trainer mutes all
  *  POST   /api/panels/<id>/promote/<uid>/  → promote to speaker
  *  POST   /api/panels/<id>/kick/<uid>/     → kick a member
+ *
+ *  ── NEW VCR APIs USED ────────────────────────────────────────────────────
+ *  POST   /api/vcr/follow/<id>/            → follow/unfollow user
+ *  POST   /api/vcr/upvote/                 → upvote speaker
+ *  GET    /api/vcr/leaderboard/            → overall + college rankings
+ *  POST   /api/vcr/onboarding/             → save course/interests/college
+ *  GET    /api/vcr/profile/               → check onboarded flag
+ *  WS     ws/notifications/<user_id>/      → real-time follow notifications
  *
  *  ── ENV VARIABLE ─────────────────────────────────────────────────────────
  *  Set in frontend/.env:
@@ -71,6 +87,9 @@ const PEER_CONFIG  = {
     ],
   },
 };
+
+// ← NEW: WebSocket base URL derived from API_BASE
+const WS_BASE = API_BASE.replace(/^https/, "wss").replace(/^http/, "ws");
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  API HELPERS
@@ -116,8 +135,6 @@ function useCosmosAuth() {
     apiFetch("/api/profile/")
       .then(({ ok, data }) => {
         if (ok && data) {
-          // FIX #1: backend returns { id, email, username, profile: { role, ... } }
-          // role is nested under data.profile.role, NOT data.user_type
           const role = data?.profile?.role || data?.role || data?.user_type || "learner";
           const u = {
             id:    data.id,
@@ -126,7 +143,6 @@ function useCosmosAuth() {
             email: data.email,
           };
           setUser(u);
-          // Write raw response so Navbar.jsx can read role badge without extra fetch
           localStorage.setItem("cosmos_user", JSON.stringify(data));
         } else {
           setToken(null);
@@ -137,7 +153,6 @@ function useCosmosAuth() {
       .catch(() => { setToken(null); setLoading(false); });
   }, []);
 
-  // FIX #2: Login sends email field — backend authenticates by email
   async function login(emailOrUsername, password) {
     setAuthErr("");
     const { ok, data } = await apiFetch("/api/login/", {
@@ -150,8 +165,6 @@ function useCosmosAuth() {
     }
     const token = data.token || data.access || "";
     setToken(token);
-
-    // Fetch profile after login
     const prof = await apiFetch("/api/profile/");
     if (prof.ok && prof.data) {
       const role = prof.data?.profile?.role || prof.data?.role || prof.data?.user_type || "learner";
@@ -161,14 +174,12 @@ function useCosmosAuth() {
         role:  role === "trainer" ? "trainer" : "learner",
         email: prof.data.email,
       });
-      // Sync with Navbar.jsx and App.jsx ProtectedRoute
       localStorage.setItem("cosmos_user", JSON.stringify(prof.data));
       return true;
     }
     return false;
   }
 
-  // FIX #3: Register sends `role` (not user_type), `confirm_password`, and `email`
   async function register(username, email, password, userType) {
     setAuthErr("");
     const { ok, data } = await apiFetch("/api/register/", {
@@ -176,10 +187,10 @@ function useCosmosAuth() {
       body: JSON.stringify({
         email,
         password,
-        confirm_password: password,   // backend validates this
-        first_name: username,          // use as display name
+        confirm_password: password,
+        first_name: username,
         last_name: "",
-        role: userType,               // backend reads `role` field
+        role: userType,
       }),
     });
     if (!ok) {
@@ -189,11 +200,9 @@ function useCosmosAuth() {
       );
       return false;
     }
-    // Auto-login with email after register
     return login(email, password);
   }
 
-  // Logout → POST /api/logout/
   async function logout() {
     await apiFetch("/api/logout/", { method: "POST" }).catch(() => {});
     setToken(null);
@@ -202,6 +211,59 @@ function useCosmosAuth() {
   }
 
   return { user, loading, login, register, logout, authErr, setAuthErr };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ← NEW: VCR NOTIFICATIONS HOOK — WebSocket listener
+//  Connects to ws/notifications/<user_id>/
+//  Receives: panel_created, followed_host_live, new_follower
+// ─────────────────────────────────────────────────────────────────────────────
+
+function useVCRNotifications(userId, push, onPanelCreated) {
+  const wsRef = useRef(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    const url = `${WS_BASE}/ws/notifications/${userId}/`;
+    const ws  = new WebSocket(url);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      // Keepalive ping every 30s to prevent sleep
+      const ping = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 30000);
+      ws._ping = ping;
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === "notification" || msg.type === "panel_created") {
+          const d = msg.data || msg;
+          // Show popup notification
+          push(`🔴 ${d.message || d.panel_title}`, "cyan", 6000);
+          // Call handler so rooms list can refresh
+          if (onPanelCreated) onPanelCreated(d);
+        }
+        if (msg.type === "new_follower") {
+          push(`👤 ${msg.data?.message || "Someone followed you!"}`, "gold", 4000);
+        }
+      } catch {}
+    };
+
+    ws.onerror = () => {};
+    ws.onclose = () => {
+      if (ws._ping) clearInterval(ws._ping);
+    };
+
+    return () => {
+      if (ws._ping) clearInterval(ws._ping);
+      ws.close();
+    };
+  }, [userId]);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -425,6 +487,13 @@ const STYLES = `
   .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
   .empty-state h3 { font-family: var(--font-display); font-size: 0.9rem; margin-bottom: 8px; color: var(--text); }
 
+  /* ← NEW: YouTube-style row label */
+  .row-label {
+    font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.2em;
+    color: var(--cyan); text-transform: uppercase; margin: 22px 0 10px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border2);
+  }
+
   /* ── Panel Screen ── */
   .panel-screen { display: grid; grid-template-columns: 1fr 330px; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
   @media(max-width: 768px) { .panel-screen { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; } }
@@ -458,12 +527,10 @@ const STYLES = `
     border: 2px solid var(--border);
   }
 
-  /* Speaking animation */
   .avatar-orb.speaking .avatar-inner { border-color: var(--cyan); box-shadow: 0 0 22px rgba(0,245,255,0.65), 0 0 60px rgba(0,245,255,0.2); animation: speakPulse 0.9s ease-in-out infinite alternate; }
   .avatar-orb.speaking::before, .avatar-orb.speaking::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid rgba(0,245,255,0.3); animation: ringExpand 1.5s ease-out infinite; pointer-events: none; }
   .avatar-orb.speaking::after { inset: -20px; border-color: rgba(0,245,255,0.13); animation-delay: 0.55s; }
 
-  /* Role colors */
   .avatar-orb.role-host    .avatar-inner { border-color: var(--gold);   box-shadow: 0 0 18px rgba(255,215,0,0.4); }
   .avatar-orb.role-cohost  .avatar-inner { border-color: var(--aurora); box-shadow: 0 0 14px rgba(191,0,255,0.4); }
   .avatar-orb.role-speaker .avatar-inner { border-color: var(--violet); box-shadow: 0 0 12px rgba(102,0,255,0.35); }
@@ -540,6 +607,27 @@ const STYLES = `
 
   .divider { height: 1px; background: linear-gradient(90deg,transparent,var(--border),transparent); margin: 8px 0; }
 
+  /* ← NEW: Leaderboard styles */
+  .leaderboard-wrap { padding: 11px; display: flex; flex-direction: column; gap: 6px; }
+  .lb-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .lb-tab { flex: 1; padding: 7px; border-radius: 8px; border: 1px solid var(--border); background: var(--glass2); color: var(--muted); font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.1em; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .lb-tab.active { background: rgba(102,0,255,0.2); color: var(--cyan); border-color: var(--border2); }
+  .lb-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--glass2); border: 1px solid var(--border); border-radius: 10px; transition: border-color 0.2s; }
+  .lb-row.me { border-color: rgba(0,245,255,0.4); background: rgba(0,245,255,0.04); }
+  .lb-rank { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 0.58rem; font-weight: 700; flex-shrink: 0; }
+  .lb-name { flex: 1; font-family: var(--font-display); font-size: 0.62rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lb-college { font-size: 0.55rem; color: var(--muted); }
+  .lb-score { font-family: var(--font-display); font-size: 0.72rem; color: var(--violet); font-weight: 700; }
+
+  /* ← NEW: Onboarding screen */
+  .onboard-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 20px; }
+  .onboard-card { background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 34px; width: 100%; max-width: 500px; backdrop-filter: blur(20px); box-shadow: var(--glow); animation: floatIn 0.4s ease; }
+  .onboard-card h2 { font-family: var(--font-display); font-size: 0.85rem; color: var(--cyan); letter-spacing: 0.2em; margin-bottom: 8px; text-align: center; }
+  .onboard-card p { color: var(--muted); font-size: 0.8rem; text-align: center; margin-bottom: 20px; }
+  .interest-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .interest-chip { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--glass2); color: var(--muted); font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+  .interest-chip.selected { border-color: var(--cyan); color: var(--cyan); background: rgba(0,245,255,0.08); box-shadow: var(--glow-cyan); }
+
   /* ── Animations ── */
   @keyframes floatIn    { from { opacity:0; transform:translateY(28px) scale(0.97); } to { opacity:1; transform:none; } }
   @keyframes speakPulse { from { box-shadow: 0 0 20px rgba(0,245,255,0.65), 0 0 60px rgba(0,245,255,0.2); } to { box-shadow: 0 0 42px rgba(0,245,255,0.95), 0 0 100px rgba(0,245,255,0.4); } }
@@ -604,7 +692,7 @@ function CosmosCanvas() {
 //  AVATAR ORB
 // ─────────────────────────────────────────────────────────────────────────────
 
-function AvatarOrb({ participant, isSpeaking, canControl, onMute, onKick, onPromote, myId }) {
+function AvatarOrb({ participant, isSpeaking, canControl, onMute, onKick, onPromote, onUpvote, myId, myRole }) {
   const isMe    = participant.id === myId;
   const initial = (participant.name || "?")[0].toUpperCase();
   const roleColors = { host:"#ffd700", cohost:"#bf00ff", speaker:"#9933ff", listener:"#6600ff" };
@@ -623,6 +711,196 @@ function AvatarOrb({ participant, isSpeaking, canControl, onMute, onKick, onProm
           {onKick   && participant.role !== "host" && <button className="btn btn-rose btn-icon btn-sm" onClick={() => onKick(participant.id, participant.backendId)}>✕</button>}
           {onPromote && participant.role === "listener" && participant.handRaised && <button className="btn btn-gold btn-icon btn-sm" onClick={() => onPromote(participant.id, participant.backendId)}>⬆</button>}
         </div>
+      )}
+      {/* ← NEW: Upvote button — visible to listeners on speakers only */}
+      {!isMe && participant.role === "speaker" && myRole === "listener" && onUpvote && (
+        <button
+          className="btn btn-gold btn-icon btn-sm"
+          title="Upvote this speaker"
+          style={{ marginTop: 3 }}
+          onClick={() => onUpvote(participant.backendId)}
+        >⭐</button>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ← NEW: ONBOARDING SCREEN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function OnboardingScreen({ onComplete }) {
+  const COURSES = [
+    'data-science-course','ai-course','full-stack-development',
+    'python-programming-course','web-development-course',
+    'game-development','iot-robotics','mobile-app-development',
+  ];
+  const INTERESTS = [
+    { key:'it_tech',          label:'💻 IT & Tech'        },
+    { key:'spiritual',        label:'🧘 Spiritual'        },
+    { key:'debate',           label:'🗣️ Debate'           },
+    { key:'school_college',   label:'🎓 School/College'   },
+    { key:'virtual_friends',  label:'👥 Virtual Friends'  },
+    { key:'hiring',           label:'💼 Hiring'           },
+  ];
+  const [course,   setCourse]   = useState('');
+  const [selected, setSelected] = useState([]);
+  const [college,  setCollege]  = useState('');
+  const [busy,     setBusy]     = useState(false);
+
+  const toggle = (k) => setSelected(p => p.includes(k) ? p.filter(x=>x!==k) : [...p, k]);
+
+  async function submit() {
+    setBusy(true);
+    await onComplete({ current_course: course, interests: selected, college, skill_tags: [] });
+    setBusy(false);
+  }
+
+  return (
+    <div className="cosmos-root">
+      <CosmosCanvas />
+      <div className="onboard-screen">
+        <div className="onboard-card">
+          <h2>PERSONALISE YOUR COSMOS</h2>
+          <p>Takes 30 seconds. Panels will be recommended based on your answers.</p>
+
+          <div className="stage-section-label" style={{ marginBottom: 8 }}>Which course are you studying?</div>
+          <select
+            className="cosmos-input"
+            value={course}
+            onChange={e => setCourse(e.target.value)}
+            style={{ marginBottom: 16 }}
+          >
+            <option value="">Select your course (optional)</option>
+            {COURSES.map(c => (
+              <option key={c} value={c}>{c.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+            ))}
+          </select>
+
+          <div className="stage-section-label" style={{ marginBottom: 8 }}>What are you interested in?</div>
+          <div className="interest-grid">
+            {INTERESTS.map(i => (
+              <button
+                key={i.key}
+                className={`interest-chip ${selected.includes(i.key) ? 'selected' : ''}`}
+                onClick={() => toggle(i.key)}
+              >{i.label}</button>
+            ))}
+          </div>
+
+          <input
+            className="cosmos-input"
+            placeholder="College / University (optional)"
+            value={college}
+            onChange={e => setCollege(e.target.value)}
+            style={{ marginTop: 8 }}
+          />
+
+          <button
+            className="btn btn-primary"
+            style={{ marginTop: 8 }}
+            onClick={submit}
+            disabled={busy}
+          >
+            {busy ? "..." : "◈ ENTER THE COSMOS"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ← NEW: LEADERBOARD COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+function VCRLeaderboard({ userId }) {
+  const [tab,     setTab]     = useState("overall");
+  const [data,    setData]    = useState([]);
+  const [myRank,  setMyRank]  = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const college = (() => {
+    try { return JSON.parse(localStorage.getItem("cosmos_user") || "{}"); }
+    catch { return {}; }
+  })()?.profile?.college || "";
+
+  useEffect(() => {
+    setLoading(true);
+    const url = tab === "college" && college
+      ? `/api/vcr/leaderboard/?type=college&college=${encodeURIComponent(college)}`
+      : `/api/vcr/leaderboard/?type=overall`;
+    apiFetch(url)
+      .then(({ ok, data }) => {
+        if (ok && data) {
+          setData(Array.isArray(data.leaderboard) ? data.leaderboard : []);
+          setMyRank(data.my_rank || null);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [tab]);
+
+  const rankColor = (r) => r===1?"#ffd700":r===2?"#9ca3af":r===3?"#cd7c2f":"rgba(255,255,255,0.1)";
+  const rankText  = (r) => r===1?"#000":r===2?"#000":r===3?"#000":"rgba(255,255,255,0.5)";
+
+  return (
+    <div className="leaderboard-wrap">
+      <div className="lb-tabs">
+        <button className={`lb-tab ${tab==="overall"?"active":""}`} onClick={()=>setTab("overall")}>🌍 OVERALL</button>
+        <button className={`lb-tab ${tab==="college"?"active":""}`} onClick={()=>setTab("college")}>🎓 COLLEGE</button>
+      </div>
+
+      {tab==="college" && !college && (
+        <div style={{ color:"var(--muted)",fontSize:"0.72rem",padding:"12px 4px",textAlign:"center" }}>
+          Set your college in onboarding to see college rankings.
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign:"center",padding:30 }}><div className="spinner" /></div>
+      ) : (
+        <>
+          {data.map(row => (
+            <div key={row.rank} className={`lb-row ${row.user_id===userId?"me":""}`}>
+              <div className="lb-rank" style={{ background:rankColor(row.rank), color:rankText(row.rank) }}>
+                {row.rank}
+              </div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div className="lb-name">{row.username}{row.user_id===userId?" (you)":""}</div>
+                {row.college && <div className="lb-college">{row.college}</div>}
+              </div>
+              <div style={{ textAlign:"right" }}>
+                <div className="lb-score">{row.score}</div>
+                <div style={{ fontSize:"0.52rem",color:"var(--muted)",marginTop:2 }}>
+                  {row.followers}f · {row.upvotes}⭐
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {data.length === 0 && (
+            <div style={{ color:"var(--muted)",fontSize:"0.78rem",textAlign:"center",padding:"30px 0" }}>
+              No rankings yet. Join panels to earn your score.
+            </div>
+          )}
+
+          {/* My rank if not in top 50 */}
+          {myRank && !data.find(r=>r.user_id===userId) && (
+            <>
+              <div className="divider" />
+              <div className="lb-row me">
+                <div className="lb-rank" style={{ background:"rgba(102,0,255,0.3)",color:"var(--violet)" }}>
+                  {myRank.rank}
+                </div>
+                <div style={{ flex:1 }}>
+                  <div className="lb-name">You</div>
+                </div>
+                <div className="lb-score">{myRank.score}</div>
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
@@ -643,13 +921,14 @@ export default function VCRoom() {
 
   const { user, loading, login, register, logout, authErr, setAuthErr } = useCosmosAuth();
   const { notifs, push } = useNotifications();
+
   // ── Admin check ──
   const isAdmin = user?.email === "master@gmail.com";
+
   // ── Auth form state ──
-  // FIX: authName now holds email for login (backend authenticates by email)
   const [authMode,     setAuthMode]     = useState("login");
-  const [authName,     setAuthName]     = useState("");   // used as display name on register
-  const [authEmail,    setAuthEmail]    = useState("");   // email for both login+register
+  const [authName,     setAuthName]     = useState("");
+  const [authEmail,    setAuthEmail]    = useState("");
   const [authPass,     setAuthPass]     = useState("");
   const [authUserType, setAuthUserType] = useState("learner");
   const [authBusy,     setAuthBusy]     = useState(false);
@@ -657,9 +936,18 @@ export default function VCRoom() {
   // ── Screens ──
   const [screen, setScreen] = useState("rooms");
 
+  // ← NEW: Onboarding state
+  const [onboarded,        setOnboarded]        = useState(true);  // assume true until checked
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // ← NEW: Follow state — tracks who current user follows
+  const [followedIds, setFollowedIds] = useState(new Set());
+
   // ── Room list ──
-  const [rooms,        setRooms]       = useState([]);
-  const [roomsLoading, setRoomsLoading]= useState(false);
+  const [rooms,        setRooms]        = useState([]);
+  // ← NEW: recommendation rows
+  const [recRows,      setRecRows]      = useState({ because_your_course:[], others_also_joined:[], trending_now:[], labels:{} });
+  const [roomsLoading, setRoomsLoading] = useState(false);
 
   // ── Create modal ──
   const [showCreate,  setShowCreate]  = useState(false);
@@ -689,63 +977,160 @@ export default function VCRoom() {
   const myUserRef    = useRef(null);
   const analyserRefs = useRef({});
 
-  // FIX #7: _participantsRef must be declared BEFORE any function that uses it
   const _participantsRef = useRef([]);
   useEffect(() => { _participantsRef.current = participants; }, [participants]);
 
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  // ─── Load panels from backend ───────────────────────────────────────────
-async function loadPanels() {
-  if (!user) return;
-  setRoomsLoading(true);
-  try {
-    const { ok, data } = await apiFetch("/api/panels/");
-    if (ok && Array.isArray(data)) {
-      setRooms(data.map(p => ({
-        id:          p.id,
-        title:       p.title || p.name,
-        desc:        p.description || p.desc || "",
-        hostName:    p.host || "",
-        hostId:      p.host_id || p.created_by_id,
-        memberCount: p.member_count || p.participant_count || 0,
-        isActive:    p.is_active !== false,
-        peerId:      p.peer_id || null,
-      })));
-    } else {
-      setRooms([]);
+  // ← NEW: Start WebSocket notifications once user is loaded
+  useVCRNotifications(
+    user?.id,
+    push,
+    (panelData) => {
+      // A followed host created a panel — refresh rooms list
+      loadPanels();
     }
-  } catch {
-    setRooms([]);
-  } finally {
-    setRoomsLoading(false);
+  );
+
+  // ← NEW: Check onboarding status after login
+  useEffect(() => {
+    if (!user || onboardingChecked) return;
+    apiFetch("/api/vcr/profile/")
+      .then(({ ok, data }) => {
+        if (ok && data) {
+          setOnboarded(data.onboarded === true);
+        } else {
+          setOnboarded(false);
+        }
+        setOnboardingChecked(true);
+      })
+      .catch(() => {
+        setOnboarded(true); // fail safe — don't block user
+        setOnboardingChecked(true);
+      });
+  }, [user, onboardingChecked]);
+
+  // ─── Load panels from backend ────────────────────────────────────────────
+  async function loadPanels() {
+    if (!user) return;
+    setRoomsLoading(true);
+    try {
+      const { ok, data } = await apiFetch("/api/panels/");
+      if (ok && data) {
+        // ← NEW: Handle both flat array (fallback) and recommendation rows
+        if (Array.isArray(data)) {
+          // Flat fallback
+          setRooms(data.map(p => ({
+            id:          p.id,
+            title:       p.title || p.name,
+            desc:        p.description || p.desc || "",
+            hostName:    p.host || "",
+            hostId:      p.host_id || p.created_by_id,
+            memberCount: p.member_count || p.participant_count || 0,
+            isActive:    p.is_active !== false,
+            peerId:      p.peer_id || null,
+          })));
+          setRecRows({ because_your_course:[], others_also_joined:[], trending_now:[], all_ranked:[], labels:{} });
+        } else {
+          // ← NEW: YouTube-style rows
+          const mapPanel = p => ({
+            id:          p.id,
+            title:       p.title || p.name,
+            desc:        "",
+            hostName:    p.host || "",
+            hostId:      p.host_id,
+            memberCount: p.member_count || 0,
+            isActive:    true,
+            peerId:      p.peer_id || null,
+          });
+          setRecRows({
+            because_your_course: (data.because_your_course || []).map(mapPanel),
+            others_also_joined:  (data.others_also_joined  || []).map(mapPanel),
+            trending_now:        (data.trending_now        || []).map(mapPanel),
+            all_ranked:          (data.all_ranked          || []).map(mapPanel),
+            labels:              data.labels || {},
+          });
+          setRooms((data.all_ranked || []).map(mapPanel));
+        }
+      } else {
+        setRooms([]);
+      }
+    } catch {
+      setRooms([]);
+    } finally {
+      setRoomsLoading(false);
+    }
   }
-}
 
-useEffect(() => {
-  if (user) loadPanels();
-}, [user]);
+  useEffect(() => {
+    if (user) loadPanels();
+  }, [user]);
 
-// Check URL for direct room link
-useEffect(() => {
-  const urlRoom = getRoomFromURL();
-  if (urlRoom && user) joinPanelById(urlRoom);
-}, [user]);
+  useEffect(() => {
+    const urlRoom = getRoomFromURL();
+    if (urlRoom && user) joinPanelById(urlRoom);
+  }, [user]);
+
   // ─── AUTH SUBMIT ──────────────────────────────────────────────────────────
 
   async function handleAuth() {
     setAuthBusy(true);
     let ok;
     if (authMode === "login") {
-      // FIX: login uses authEmail field (not authName)
       ok = await login(authEmail, authPass);
     } else {
-      // FIX: register passes display name + email separately
       ok = await register(authName, authEmail, authPass, authUserType);
     }
     setAuthBusy(false);
     if (ok) push(`Welcome to the cosmos! 🌌`, "cyan");
+  }
+
+  // ← NEW: Onboarding complete handler
+  async function handleOnboardingComplete(data) {
+    const { ok } = await apiFetch("/api/vcr/onboarding/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (ok) {
+      setOnboarded(true);
+      push("Profile saved! Panels are now personalised for you ✨", "cyan");
+    } else {
+      // Don't block user if onboarding fails
+      setOnboarded(true);
+    }
+  }
+
+  // ← NEW: Follow / Unfollow
+  async function handleFollow(targetUserId) {
+    const { ok, data } = await apiFetch(`/api/vcr/follow/${targetUserId}/`, { method: "POST" });
+    if (ok) {
+      const newSet = new Set(followedIds);
+      if (data.status === "followed") {
+        newSet.add(targetUserId);
+        push(`✅ Following ${data.username}`, "cyan");
+      } else {
+        newSet.delete(targetUserId);
+        push(`Unfollowed ${data.username}`, "default");
+      }
+      setFollowedIds(newSet);
+    }
+  }
+
+  // ← NEW: Upvote speaker
+  async function handleUpvote(toUserId) {
+    const { ok, data } = await apiFetch("/api/vcr/upvote/", {
+      method: "POST",
+      body: JSON.stringify({
+        to_user_id: toUserId,
+        panel_id:   panelRef.current?.id,
+      }),
+    });
+    if (ok && data.status === "upvoted") {
+      push(`⭐ Upvoted! Their score: ${data.new_score}`, "gold");
+    } else if (data?.status === "already_upvoted") {
+      push("You already upvoted this speaker", "default");
+    }
   }
 
   // ─── CREATE PANEL ─────────────────────────────────────────────────────────
@@ -754,21 +1139,19 @@ useEffect(() => {
     if (!panelTitle.trim()) { push("Enter a panel title"); return; }
     setCreateBusy(true);
 
-    // Load PeerJS first so we have our peer ID ready
     let PeerJS;
     try { PeerJS = await loadPeerJS(); }
     catch { push("Could not load PeerJS from CDN. Check your internet connection.", "err"); setCreateBusy(false); return; }
 
-    const tempCode  = genCode(8);
+    const tempCode   = genCode(8);
     const tempPeerId = makePeerId(tempCode, user.id);
 
-    // FIX #4: Backend create_panel requires `topic` field with valid choice
     const { ok, data } = await apiFetch("/api/panels/create/", {
       method: "POST",
       body: JSON.stringify({
         title:       panelTitle.trim(),
         description: panelDesc.trim(),
-        topic:       "general",          // required by backend model choices
+        topic:       "general",
         max_members: 4,
       }),
     });
@@ -779,13 +1162,10 @@ useEffect(() => {
       return;
     }
 
-    const panel    = data;
-    const panelId  = panel.id;
+    const panel   = data;
+    const panelId = panel.id;
+    const peerId  = makePeerId(panelId, user.id);
 
-    // FIX #5: We now have the real panel ID. Build peer ID using real panel ID.
-    const peerId = makePeerId(panelId, user.id);
-
-    // Init PeerJS as host
     const peer = new PeerJS(peerId, PEER_CONFIG);
     myPeer.current    = peer;
     myRoleRef.current = "host";
@@ -806,9 +1186,6 @@ useEffect(() => {
       setRoomInURL(panelId);
       push("Panel live! Share the link.", "cyan");
 
-      // FIX #5 cont: save peer_id to backend so joiners can discover it
-      // We use a PUT/PATCH. Backend BACKEND_PATCH.py showed join/ returns host_peer_id from panel.peer_id.
-      // We need to store it. Best effort — won't break if endpoint doesn't support PATCH.
       try {
         await apiFetch(`/api/panels/${panelId}/update-peer/`, {
           method: "POST",
@@ -816,13 +1193,10 @@ useEffect(() => {
         });
       } catch {}
 
-      // Also store peer_id in panelRef so join responses get it via WS/peer-to-peer
       panelRef.current.peerId = myActualPeerId;
-
       await startMic();
     });
 
-    // Host receives data connections
     peer.on("connection", conn => {
       conn.on("open", () => {
         setupDataConn(conn);
@@ -836,7 +1210,6 @@ useEffect(() => {
       });
     });
 
-    // Host receives audio calls
     peer.on("call", call => {
       call.answer(myStream.current);
       callConns.current[call.peer] = call;
@@ -850,11 +1223,9 @@ useEffect(() => {
   // ─── JOIN PANEL ───────────────────────────────────────────────────────────
 
   async function joinPanelById(panelId) {
-    // Tell backend we're joining
     const { ok, data: joinData } = await apiFetch(`/api/panels/${panelId}/join/`, { method: "POST" });
     if (!ok) { push(joinData?.detail || joinData?.error || "Could not join panel", "err"); return; }
 
-    // FIX #6: Backend join_panel returns host_peer_id — read it correctly
     const hostPeerId = joinData?.host_peer_id || joinData?.peer_id;
     if (!hostPeerId) {
       push("Host is not connected yet. Ask them to reshare the link.", "err");
@@ -890,7 +1261,6 @@ useEffect(() => {
       conn.on("error", () => push("Could not reach host. Panel may have ended.", "err"));
     });
 
-    // Receive audio
     peer.on("call", call => {
       call.answer(myStream.current);
       callConns.current[call.peer] = call;
@@ -1269,7 +1639,6 @@ useEffect(() => {
 
           {authErr && <div className="err-msg">{authErr}</div>}
 
-          {/* FIX: Login uses email, not username */}
           <input
             className="cosmos-input"
             placeholder={authMode === "login" ? "Email" : "Display Name"}
@@ -1318,6 +1687,11 @@ useEffect(() => {
     </div>
   );
 
+  // ← NEW: RENDER: ONBOARDING (first login only)
+  if (user && onboardingChecked && !onboarded) return (
+    <OnboardingScreen onComplete={handleOnboardingComplete} />
+  );
+
   // ─────────────────────────────────────────────────────────────────────────
   //  RENDER: ROOMS LIST
   // ─────────────────────────────────────────────────────────────────────────
@@ -1327,7 +1701,6 @@ useEffect(() => {
       <CosmosCanvas />
       <NotifStack notifs={notifs} />
 
-      {/* Create panel modal */}
       {showCreate && (
         <div className="modal-overlay" onClick={()=>setShowCreate(false)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -1357,19 +1730,16 @@ useEffect(() => {
           </div>
           <div style={{ display:"flex", gap:9, alignItems:"center", flexWrap:"wrap" }}>
             <button className="btn btn-ghost btn-sm" onClick={loadPanels}>↻ Refresh</button>
-
-              {/* ADD THIS - ADMIN DELETE ALL BUTTON */}
-              {isAdmin && (
-                <button className="btn btn-rose btn-sm" onClick={async()=>{
-                  if(!confirm("Delete ALL panels?")) return;
-                  await Promise.all(rooms.map(r=>apiFetch(`/api/panels/${r.id}/delete/`,{method:"POST"})));
-                  push("All panels cleared","cyan"); loadPanels();
-                }}>⛔ Delete All</button>
-              )}
-
-              {user.role==="trainer" && (
-                <button className="btn btn-primary" style={{ width:"auto" }} onClick={()=>setShowCreate(true)}>+ New Panel</button>
-              )}
+            {isAdmin && (
+              <button className="btn btn-rose btn-sm" onClick={async()=>{
+                if(!confirm("Delete ALL panels?")) return;
+                await Promise.all(rooms.map(r=>apiFetch(`/api/panels/${r.id}/delete/`,{method:"POST"})));
+                push("All panels cleared","cyan"); loadPanels();
+              }}>⛔ Delete All</button>
+            )}
+            {user.role==="trainer" && (
+              <button className="btn btn-primary" style={{ width:"auto" }} onClick={()=>setShowCreate(true)}>+ New Panel</button>
+            )}
             <button className="btn btn-ghost btn-sm" onClick={logout}>← Exit</button>
           </div>
         </div>
@@ -1383,22 +1753,94 @@ useEffect(() => {
             <p>{user.role==="trainer" ? "Create the first panel to start a conversation." : "No panels live right now. Check back soon."}</p>
           </div>
         ) : (
-          rooms.filter(r=>r.isActive).map(room => (
-            <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
-              <div className="room-card-info">
-                <h3>{room.title}</h3>
-                {room.desc && <p>{room.desc}</p>}
-                <div className="room-card-meta">
-                  <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
-                  <span className="badge badge-host">⭐ Host: {room.hostName || "Unknown"}</span>
-                  <span className="badge badge-users">👥 {room.memberCount}</span>
+          <>
+            {/* ← NEW: YouTube-style 3 labelled rows */}
+            {recRows.because_your_course?.length > 0 && (
+              <>
+                <div className="row-label">
+                  ✨ {recRows.labels?.because_your_course || "Because of your course"}
                 </div>
-              </div>
-              <button className="btn btn-cyan btn-sm" onClick={e=>{ e.stopPropagation(); handleJoinRoom(room); }}>
-                Enter →
-              </button>
-            </div>
-          ))
+                {recRows.because_your_course.map(room => (
+                  <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
+                    <div className="room-card-info">
+                      <h3>{room.title}</h3>
+                      <div className="room-card-meta">
+                        <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
+                        <span className="badge badge-host">⭐ {room.hostName}</span>
+                        <span className="badge badge-users">👥 {room.memberCount}</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-cyan btn-sm" onClick={e=>{ e.stopPropagation(); handleJoinRoom(room); }}>Enter →</button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {recRows.others_also_joined?.length > 0 && (
+              <>
+                <div className="row-label">
+                  🔗 {recRows.labels?.others_also_joined || "Others also joined"}
+                </div>
+                {recRows.others_also_joined.map(room => (
+                  <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
+                    <div className="room-card-info">
+                      <h3>{room.title}</h3>
+                      <div className="room-card-meta">
+                        <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
+                        <span className="badge badge-host">⭐ {room.hostName}</span>
+                        <span className="badge badge-users">👥 {room.memberCount}</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-cyan btn-sm" onClick={e=>{ e.stopPropagation(); handleJoinRoom(room); }}>Enter →</button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {recRows.trending_now?.length > 0 && (
+              <>
+                <div className="row-label">
+                  🔥 {recRows.labels?.trending_now || "Trending now"}
+                </div>
+                {recRows.trending_now.map(room => (
+                  <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
+                    <div className="room-card-info">
+                      <h3>{room.title}</h3>
+                      <div className="room-card-meta">
+                        <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
+                        <span className="badge badge-host">⭐ {room.hostName}</span>
+                        <span className="badge badge-users">👥 {room.memberCount}</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-cyan btn-sm" onClick={e=>{ e.stopPropagation(); handleJoinRoom(room); }}>Enter →</button>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* All panels fallback — shows when no rows have content yet */}
+            {recRows.because_your_course?.length === 0 &&
+             recRows.others_also_joined?.length  === 0 &&
+             recRows.trending_now?.length        === 0 && (
+              <>
+                <div className="row-label">🌌 All Live Panels</div>
+                {rooms.filter(r=>r.isActive).map(room => (
+                  <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
+                    <div className="room-card-info">
+                      <h3>{room.title}</h3>
+                      {room.desc && <p>{room.desc}</p>}
+                      <div className="room-card-meta">
+                        <span className="badge badge-live"><span className="live-dot" /> LIVE</span>
+                        <span className="badge badge-host">⭐ Host: {room.hostName || "Unknown"}</span>
+                        <span className="badge badge-users">👥 {room.memberCount}</span>
+                      </div>
+                    </div>
+                    <button className="btn btn-cyan btn-sm" onClick={e=>{ e.stopPropagation(); handleJoinRoom(room); }}>Enter →</button>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -1448,11 +1890,17 @@ useEffect(() => {
                 const isMe = p.id===String(user.id);
                 const isSpeaking = speakingIds.has(isMe?"__me__":p.peerId);
                 return (
-                  <AvatarOrb key={p.id} participant={p} isSpeaking={isSpeaking}
+                  <AvatarOrb
+                    key={p.id}
+                    participant={p}
+                    isSpeaking={isSpeaking}
                     canControl={isController&&!isMe}
                     onMute={isController?muteParticipant:null}
                     onKick={isController&&p.role!=="host"?kickParticipant:null}
-                    onPromote={null} myId={String(user.id)}
+                    onPromote={null}
+                    onUpvote={handleUpvote}
+                    myId={String(user.id)}
+                    myRole={myRole}
                   />
                 );
               })}
@@ -1517,6 +1965,8 @@ useEffect(() => {
           <div className="sidebar-tabs">
             <button className={`sidebar-tab ${sidebarTab==="chat"?"active":""}`} onClick={()=>setSidebarTab("chat")}>CHAT</button>
             <button className={`sidebar-tab ${sidebarTab==="people"?"active":""}`} onClick={()=>setSidebarTab("people")}>PEOPLE</button>
+            {/* ← NEW: Leaderboard tab */}
+            <button className={`sidebar-tab ${sidebarTab==="ranks"?"active":""}`} onClick={()=>setSidebarTab("ranks")}>RANKS</button>
             {myRole==="host"&&<button className={`sidebar-tab ${sidebarTab==="host"?"active":""}`} onClick={()=>setSidebarTab("host")}>HOST</button>}
           </div>
 
@@ -1555,15 +2005,32 @@ useEffect(() => {
                         {p.muted&&<span className="badge" style={{ fontSize:"0.58rem" }}>🔇</span>}
                       </div>
                     </div>
-                    {isController&&p.id!==String(user.id)&&p.role!=="host"&&(
-                      <div className="p-actions">
-                        <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>muteParticipant(p.id,p.backendId)}>🔇</button>
-                        <button className="btn btn-rose btn-icon btn-sm"  onClick={()=>kickParticipant(p.id,p.backendId)}>✕</button>
-                      </div>
-                    )}
+                    <div className="p-actions">
+                      {/* ← NEW: Follow button — only for others */}
+                      {p.id !== String(user.id) && (
+                        <button
+                          className={`btn btn-sm ${followedIds.has(p.backendId) ? "btn-cyan" : "btn-ghost"}`}
+                          onClick={() => handleFollow(p.backendId)}
+                          title={followedIds.has(p.backendId) ? "Unfollow" : "Follow"}
+                        >
+                          {followedIds.has(p.backendId) ? "✓ Following" : "+ Follow"}
+                        </button>
+                      )}
+                      {isController&&p.id!==String(user.id)&&p.role!=="host"&&(
+                        <>
+                          <button className="btn btn-ghost btn-icon btn-sm" onClick={()=>muteParticipant(p.id,p.backendId)}>🔇</button>
+                          <button className="btn btn-rose btn-icon btn-sm"  onClick={()=>kickParticipant(p.id,p.backendId)}>✕</button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* ← NEW: Leaderboard tab content */}
+            {sidebarTab==="ranks"&&(
+              <VCRLeaderboard userId={user.id} />
             )}
 
             {sidebarTab==="host"&&myRole==="host"&&(
