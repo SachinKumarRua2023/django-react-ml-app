@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // ADD THIS
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { TOKEN_KEY } from '../App'; // Import the token key
+import { TOKEN_KEY } from '../App';
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COSMOS UI STYLES — mirrors VCRoom auth screen exactly
-//  ADDITION ONLY: injected via <style> tag, zero logic touched
-// ─────────────────────────────────────────────────────────────────────────────
 const COSMOS_AUTH_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@300;400;600&display=swap');
 
@@ -42,7 +38,6 @@ const COSMOS_AUTH_STYLES = `
     position: relative;
   }
 
-  /* Canvas star field */
   #cosmos-auth-canvas {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 0;
@@ -56,7 +51,6 @@ const COSMOS_AUTH_STYLES = `
     padding: 24px; gap: 28px;
   }
 
-  /* Logo */
   .cosmos-auth-logo { text-align: center; animation: caFloatIn 1.2s ease forwards; }
   .cosmos-auth-logo h1 {
     font-family: var(--font-display); font-size: clamp(2rem,6vw,3.5rem); font-weight: 900;
@@ -69,7 +63,6 @@ const COSMOS_AUTH_STYLES = `
     text-transform: uppercase; margin-top: 8px;
   }
 
-  /* Card */
   .cosmos-auth-card {
     background: var(--glass); border: 1px solid var(--border); border-radius: 24px;
     padding: 36px; width: 100%; max-width: 460px; backdrop-filter: blur(20px);
@@ -77,7 +70,6 @@ const COSMOS_AUTH_STYLES = `
     animation: caFloatIn 1.4s ease forwards;
   }
 
-  /* Tabs */
   .ca-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .ca-tab {
     flex: 1; padding: 11px; text-align: center; font-family: var(--font-display);
@@ -87,7 +79,6 @@ const COSMOS_AUTH_STYLES = `
   .ca-tab.active { background: rgba(102,0,255,0.25); color: var(--cyan); }
   .ca-tab:hover:not(.active) { color: var(--text); }
 
-  /* Role selector */
   .ca-role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
   .ca-role-btn {
     padding: 14px; border-radius: 14px; border: 1px solid var(--border);
@@ -99,7 +90,6 @@ const COSMOS_AUTH_STYLES = `
   .ca-role-btn:hover { border-color: var(--purple); background: rgba(102,0,255,0.2); box-shadow: var(--glow); }
   .ca-role-btn.active { border-color: var(--cyan); background: rgba(0,245,255,0.08); box-shadow: var(--glow-cyan); }
 
-  /* Inputs */
   .ca-input {
     width: 100%; padding: 13px 16px; background: rgba(0,0,0,0.45);
     border: 1px solid var(--border); border-radius: 11px; color: var(--text);
@@ -111,7 +101,6 @@ const COSMOS_AUTH_STYLES = `
   .ca-input::placeholder { color: var(--muted); }
   .ca-input option { background: var(--nebula); color: var(--text); }
 
-  /* Error/Success */
   .ca-err-msg {
     color: var(--rose); font-size: 0.8rem; margin-bottom: 14px; text-align: center;
     padding: 8px; background: rgba(255,45,120,0.08); border-radius: 8px;
@@ -123,14 +112,12 @@ const COSMOS_AUTH_STYLES = `
     border: 1px solid rgba(0,255,136,0.2);
   }
 
-  /* Section label */
   .ca-section-label {
     font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.28em;
     color: var(--muted); text-transform: uppercase; padding-bottom: 7px;
     border-bottom: 1px solid var(--border); margin-bottom: 10px;
   }
 
-  /* Buttons */
   .ca-btn-primary {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; padding: 13px 22px; border-radius: 11px; border: none; cursor: pointer;
@@ -164,7 +151,25 @@ const COSMOS_AUTH_STYLES = `
   }
   .ca-btn-voice:hover { box-shadow: 0 0 40px rgba(0,245,255,0.5); transform: translateY(-1px); }
 
-  /* Toggle link */
+  /* ← NEW: Google button style */
+  .ca-btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 11px 22px; border-radius: 11px; cursor: pointer;
+    font-family: var(--font-display); font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; transition: all 0.25s ease;
+    background: rgba(255,255,255,0.06); color: #e8e0ff;
+    border: 1px solid rgba(102,0,255,0.3); margin-top: 0;
+  }
+  .ca-btn-google:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: rgba(102,0,255,0.6); transform: translateY(-1px); }
+  .ca-btn-google:disabled { opacity: 0.38; cursor: not-allowed; }
+
+  /* ← NEW: OR divider */
+  .ca-divider {
+    display: flex; align-items: center; gap: 8px; margin: 12px 0;
+  }
+  .ca-divider-line { flex: 1; height: 1px; background: rgba(102,0,255,0.3); }
+  .ca-divider-text { color: rgba(232,224,255,0.4); font-size: 0.72rem; }
+
   .ca-toggle { text-align: center; margin-top: 18px; color: var(--muted); font-size: 0.82rem; }
   .ca-toggle-btn {
     background: none; border: none; color: var(--cyan); cursor: pointer;
@@ -172,7 +177,6 @@ const COSMOS_AUTH_STYLES = `
   }
   .ca-toggle-btn:hover { color: var(--violet); }
 
-  /* Profile card */
   .ca-profile-info {
     background: var(--glass2); border: 1px solid var(--border); border-radius: 14px;
     padding: 18px; margin-bottom: 20px;
@@ -181,10 +185,8 @@ const COSMOS_AUTH_STYLES = `
   .ca-profile-info p strong { color: var(--text); }
   .ca-premium { color: var(--gold) !important; font-weight: bold; }
 
-  /* Hint text */
   .ca-hint { color: var(--muted); font-size: 0.7rem; text-align: center; }
 
-  /* Animations */
   @keyframes caFloatIn { from { opacity:0; transform:translateY(28px) scale(0.97); } to { opacity:1; transform:none; } }
 
   ::-webkit-scrollbar { width: 4px; }
@@ -192,10 +194,6 @@ const COSMOS_AUTH_STYLES = `
   ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
 `;
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COSMOS CANVAS — reused from VCRoom (star field + nebula)
-//  ADDITION ONLY: pure visual component, zero logic
-// ─────────────────────────────────────────────────────────────────────────────
 function CosmosAuthCanvas() {
   const ref = React.useRef(null);
   useEffect(() => {
@@ -241,34 +239,22 @@ function CosmosAuthCanvas() {
   return <canvas id="cosmos-auth-canvas" ref={ref} />;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  API base URL — unchanged from original
-// ─────────────────────────────────────────────────────────────────────────────
 const API_URL = 'https://api.seekhowithrua.com' || 'http://localhost:8000/api';
 
-// Create axios instance — unchanged from original
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Add token to requests if exists — unchanged from original
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
-  if (token) {
-    config.headers.Authorization = `Token ${token}`;
-  }
+  if (token) config.headers.Authorization = `Token ${token}`;
   return config;
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  COMPONENT — ALL LOGIC IDENTICAL TO ORIGINAL, only JSX/styles replaced
-// ─────────────────────────────────────────────────────────────────────────────
 const LoginSignupLogout = () => {
-  const navigate = useNavigate(); // ADD THIS
-  
+  const navigate = useNavigate();
+
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -278,9 +264,9 @@ const LoginSignupLogout = () => {
     last_name: '',
     role: 'learner',
   });
-  const [user, setUser] = useState(null);
+  const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
 
   // ── ADDITION ONLY: inject cosmic styles ──────────────────────────────────
@@ -293,58 +279,76 @@ const LoginSignupLogout = () => {
   }, []);
 
   // Check if already logged in — UNCHANGED
+  // ← NEW: also loads Google script
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token     = localStorage.getItem(TOKEN_KEY);
     const savedUser = localStorage.getItem("cosmos_user");
     if (token && savedUser) {
-      navigate('/live-voice'); // Redirect if already logged in
+      navigate('/live-voice');
+      return;
     }
+    // ← NEW: Load Google One Tap script
+    const script    = document.createElement('script');
+    script.src      = 'https://accounts.google.com/gsi/client';
+    script.async    = true;
+    script.defer    = true;
+    script.onload   = () => {
+      if (window.google && import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback:    (response) => handleGoogleLogin(response.credential),
+          auto_select: false,
+        });
+      }
+    };
+    document.head.appendChild(script);
   }, [navigate]);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+  };
+
+  // ← NEW: Google login handler — addition only, zero impact on existing auth
+  const handleGoogleLogin = async (googleToken) => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await api.post('api/auth/google/verify/', {
+        token: googleToken,
+        role:  formData.role,
+      });
+      const { token, user } = response.data;
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem("cosmos_user", JSON.stringify(user));
+      window.dispatchEvent(new Event('storage'));
+      setUser(user);
+      setSuccess('Google login successful!');
+      navigate('/live-voice');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Google login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
       const response = await api.post('api/login/', {
-        email: formData.email,
+        email:    formData.email,
         password: formData.password,
       });
-
       const { token, user } = response.data;
-      
-      // Use cosmos_token to match VCRoom and App.jsx
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem("cosmos_user", JSON.stringify(user));
-      
-      // Dispatch storage event to notify Navbar
       window.dispatchEvent(new Event('storage'));
-      
       setUser(user);
       setSuccess('Login successful!');
-      
-      // NAVIGATE TO LIVE VOICE AFTER LOGIN
       navigate('/live-voice');
-      
-      // Clear form
-      setFormData({
-        email: '',
-        password: '',
-        confirm_password: '',
-        first_name: '',
-        last_name: '',
-        role: 'learner',
-      });
-      
+      setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
@@ -356,54 +360,29 @@ const LoginSignupLogout = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     if (formData.password !== formData.confirm_password) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
+      setError('Passwords do not match'); setLoading(false); return;
     }
-
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
-      setLoading(false);
-      return;
+      setError('Password must be at least 8 characters'); setLoading(false); return;
     }
-
     try {
       const response = await api.post('api/register/', {
-        email: formData.email,
-        password: formData.password,
+        email:            formData.email,
+        password:         formData.password,
         confirm_password: formData.confirm_password,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        role: formData.role,
+        first_name:       formData.first_name,
+        last_name:        formData.last_name,
+        role:             formData.role,
       });
-
       const { token, user } = response.data;
-      
-      // Use cosmos_token to match VCRoom and App.jsx
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem("cosmos_user", JSON.stringify(user));
-      
-      // Dispatch storage event to notify Navbar
       window.dispatchEvent(new Event('storage'));
-      
       setUser(user);
       setSuccess('Registration successful! Welcome!');
-      
-      // NAVIGATE TO LIVE VOICE AFTER REGISTRATION
       navigate('/live-voice');
-      
-      // Clear form
-      setFormData({
-        email: '',
-        password: '',
-        confirm_password: '',
-        first_name: '',
-        last_name: '',
-        role: 'learner',
-      });
-      
+      setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -420,39 +399,24 @@ const LoginSignupLogout = () => {
     } finally {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem("cosmos_user");
-      
-      // Dispatch storage event to notify Navbar
       window.dispatchEvent(new Event('storage'));
-      
       setUser(null);
       setIsLogin(true);
       setLoading(false);
       setSuccess('Logged out successfully');
-      
-      // NAVIGATE TO LOGIN AFTER LOGOUT
       navigate('/login');
     }
   };
 
-  // ── ADDITION ONLY: helper to clear form on tab switch ────────────────────
   const handleTabSwitch = (toLogin) => {
     setIsLogin(toLogin);
     setError('');
-    setFormData({
-      email: '',
-      password: '',
-      confirm_password: '',
-      first_name: '',
-      last_name: '',
-      role: 'learner',
-    });
+    setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
   };
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  RENDER — cosmic UI shell wrapping the original form logic
+  //  RENDER: logged in state — UNCHANGED
   // ─────────────────────────────────────────────────────────────────────────
-
-  // If user is logged in, show profile — same data as original, cosmic skin
   if (user) {
     return (
       <div className="cosmos-auth-root">
@@ -462,82 +426,62 @@ const LoginSignupLogout = () => {
             <h1>COSMOS</h1>
             <p>Philosophy · Spirituality · AI · Innovation · Seekers</p>
           </div>
-
           <div className="cosmos-auth-card">
-            <div style={{ textAlign: 'center', marginBottom: 22 }}>
+            <div style={{ textAlign:'center', marginBottom:22 }}>
               <div style={{
-                width: 64, height: 64, borderRadius: '50%', margin: '0 auto 12px',
-                background: 'linear-gradient(135deg,#06001a,#0d0025)',
-                border: '2px solid rgba(0,245,255,0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.6rem', boxShadow: '0 0 20px rgba(0,245,255,0.3)',
+                width:64, height:64, borderRadius:'50%', margin:'0 auto 12px',
+                background:'linear-gradient(135deg,#06001a,#0d0025)',
+                border:'2px solid rgba(0,245,255,0.4)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:'1.6rem', boxShadow:'0 0 20px rgba(0,245,255,0.3)',
               }}>
                 {(user.first_name || user.username || 'U')[0].toUpperCase()}
               </div>
-              <div style={{ fontFamily: "'Orbitron',monospace", fontSize: '0.8rem', letterSpacing: '0.15em', color: '#00f5ff' }}>
+              <div style={{ fontFamily:"'Orbitron',monospace", fontSize:'0.8rem', letterSpacing:'0.15em', color:'#00f5ff' }}>
                 WELCOME BACK
               </div>
-              <div style={{ fontFamily: "'Orbitron',monospace", fontWeight: 900, fontSize: '1rem', color: '#e8e0ff', marginTop: 4 }}>
+              <div style={{ fontFamily:"'Orbitron',monospace", fontWeight:900, fontSize:'1rem', color:'#e8e0ff', marginTop:4 }}>
                 {user.first_name || user.username}
               </div>
             </div>
-
             <div className="ca-profile-info">
               <p><strong>Email:</strong> {user.email}</p>
               <p><strong>Role:</strong> {user.profile?.role || user.role}</p>
               {user.profile?.is_premium && <p className="ca-premium">⭐ Premium Member</p>}
             </div>
-
-            {/* Button to enter voice chat — same onClick as original */}
-            <button
-              onClick={() => navigate('/live-voice')}
-              className="ca-btn-voice"
-            >
+            <button onClick={() => navigate('/live-voice')} className="ca-btn-voice">
               🎙️ ENTER VOICE CHAT ROOM
             </button>
-
-            <button
-              onClick={handleLogout}
-              disabled={loading}
-              className="ca-btn-logout"
-            >
+            <button onClick={handleLogout} disabled={loading} className="ca-btn-logout">
               {loading ? '...' : '⎋ LOGOUT'}
             </button>
-
-            {success && <div className="ca-ok-msg" style={{ marginTop: 12 }}>{success}</div>}
+            {success && <div className="ca-ok-msg" style={{ marginTop:12 }}>{success}</div>}
           </div>
         </div>
       </div>
     );
   }
 
-  // Show login/signup form — same fields/handlers as original, cosmic skin
+  // ─────────────────────────────────────────────────────────────────────────
+  //  RENDER: login/register form — UNCHANGED + Google button added
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="cosmos-auth-root">
       <CosmosAuthCanvas />
       <div className="cosmos-auth-inner">
 
-        {/* Logo */}
         <div className="cosmos-auth-logo">
           <h1>COSMOS</h1>
           <p>Philosophy · Spirituality · AI · Innovation · Seekers</p>
         </div>
 
-        {/* Card */}
         <div className="cosmos-auth-card">
 
-          {/* Tabs — replaces isLogin toggle, same state */}
           <div className="ca-tabs">
-            <button
-              className={`ca-tab ${isLogin ? 'active' : ''}`}
-              onClick={() => handleTabSwitch(true)}
-            >
+            <button className={`ca-tab ${isLogin ? 'active' : ''}`} onClick={() => handleTabSwitch(true)}>
               SIGN IN
             </button>
-            <button
-              className={`ca-tab ${!isLogin ? 'active' : ''}`}
-              onClick={() => handleTabSwitch(false)}
-            >
+            <button className={`ca-tab ${!isLogin ? 'active' : ''}`} onClick={() => handleTabSwitch(false)}>
               REGISTER
             </button>
           </div>
@@ -545,103 +489,72 @@ const LoginSignupLogout = () => {
           {error   && <div className="ca-err-msg">{error}</div>}
           {success && <div className="ca-ok-msg">{success}</div>}
 
-          {/* Form — same onSubmit handlers, same field names */}
           <form onSubmit={isLogin ? handleLogin : handleRegister}>
 
-            {/* Register-only fields */}
             {!isLogin && (
               <>
-                <input
-                  className="ca-input"
-                  type="text"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  placeholder="First Name"
-                />
-                <input
-                  className="ca-input"
-                  type="text"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  placeholder="Last Name"
-                />
-
-                {/* Role selector — cosmic style matching VCRoom */}
+                <input className="ca-input" type="text" name="first_name"
+                  value={formData.first_name} onChange={handleChange} placeholder="First Name" />
+                <input className="ca-input" type="text" name="last_name"
+                  value={formData.last_name} onChange={handleChange} placeholder="Last Name" />
                 <div className="ca-section-label">I AM A —</div>
-                <div className="ca-role-selector" style={{ marginBottom: 16 }}>
-                  <button
-                    type="button"
+                <div className="ca-role-selector" style={{ marginBottom:16 }}>
+                  <button type="button"
                     className={`ca-role-btn ${formData.role === 'trainer' ? 'active' : ''}`}
-                    onClick={() => setFormData(f => ({ ...f, role: 'trainer' }))}
-                  >
-                    <span className="ca-role-icon">🔭</span>
-                    TRAINER
+                    onClick={() => setFormData(f => ({ ...f, role:'trainer' }))}>
+                    <span className="ca-role-icon">🔭</span>TRAINER
                   </button>
-                  <button
-                    type="button"
+                  <button type="button"
                     className={`ca-role-btn ${formData.role === 'learner' ? 'active' : ''}`}
-                    onClick={() => setFormData(f => ({ ...f, role: 'learner' }))}
-                  >
-                    <span className="ca-role-icon">🌱</span>
-                    SEEKER
+                    onClick={() => setFormData(f => ({ ...f, role:'learner' }))}>
+                    <span className="ca-role-icon">🌱</span>SEEKER
                   </button>
                 </div>
               </>
             )}
 
-            {/* Email — both modes */}
-            <input
-              className="ca-input"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              required
-            />
+            <input className="ca-input" type="email" name="email"
+              value={formData.email} onChange={handleChange} placeholder="Email" required />
 
-            {/* Password */}
-            <input
-              className="ca-input"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-            />
+            <input className="ca-input" type="password" name="password"
+              value={formData.password} onChange={handleChange} placeholder="Password" required />
 
-            {/* Confirm password — register only */}
             {!isLogin && (
-              <input
-                className="ca-input"
-                type="password"
-                name="confirm_password"
-                value={formData.confirm_password}
-                onChange={handleChange}
-                placeholder="Confirm Password"
-                required
-              />
+              <input className="ca-input" type="password" name="confirm_password"
+                value={formData.confirm_password} onChange={handleChange}
+                placeholder="Confirm Password" required />
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="ca-btn-primary"
-            >
+            <button type="submit" disabled={loading} className="ca-btn-primary">
               {loading ? '...' : isLogin ? '◈ ENTER THE VOID' : '◈ CREATE ACCOUNT'}
             </button>
           </form>
 
-          {/* Toggle — same logic as original */}
+          {/* ← NEW: Google Sign In — addition only, zero impact on form above */}
+          <div className="ca-divider">
+            <div className="ca-divider-line" />
+            <span className="ca-divider-text">OR</span>
+            <div className="ca-divider-line" />
+          </div>
+          <button
+            type="button"
+            disabled={loading}
+            className="ca-btn-google"
+            onClick={() => window.google?.accounts.id.prompt()}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink:0 }}>
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            CONTINUE WITH GOOGLE
+          </button>
+
+          {/* Toggle — UNCHANGED */}
           <div className="ca-toggle">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              className="ca-toggle-btn"
-              onClick={() => handleTabSwitch(!isLogin)}
-            >
+            <button className="ca-toggle-btn" onClick={() => handleTabSwitch(!isLogin)}>
               {isLogin ? 'Sign Up' : 'Login'}
             </button>
           </div>
