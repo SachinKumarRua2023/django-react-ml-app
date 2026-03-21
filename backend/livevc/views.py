@@ -611,3 +611,20 @@ def google_login(request):
             }
         }
     }, status=201 if created else 200)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upgrade_to_trainer(request):
+    """
+    POST /api/upgrade-to-trainer/
+    Allows a learner to upgrade their role to trainer.
+    """
+    profile = request.user.profile
+    if profile.role == 'trainer':
+        return Response({'message': 'Already a trainer'})
+    profile.role = 'trainer'
+    profile.save()
+    return Response({
+        'status': 'upgraded',
+        'role': 'trainer',
+        'message': 'You can now create panels!'
+    })
