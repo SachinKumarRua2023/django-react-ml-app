@@ -138,15 +138,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database — Supabase (both local and Render use same DB)
+# Database — Supabase Transaction Pooler
+# Uses pooler URL (IPv4) — compatible with Render free tier
 DATABASES = {
     'default': {
         'ENGINE':   'django.db.backends.postgresql',
         'NAME':     'postgres',
         'USER':     'postgres.vhkiwztuyypdtvduapqf',
         'PASSWORD': 'Drunken@1234#4321',
-        'HOST':     'db.vhkiwztuyypdtvduapqf.supabase.co',
-        'PORT':     '5432',
+        'HOST':     'aws-0-ap-southeast-2.pooler.supabase.com',
+        'PORT':     '6543',
         'OPTIONS':  {'sslmode': 'require'},
     }
 }
