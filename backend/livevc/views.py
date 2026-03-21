@@ -8,6 +8,15 @@ from .models import UserProfile
 from django.core.exceptions import ValidationError
 import re
 
+# voice_rooms hooks — recommendation + notifications
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from voice_rooms.models import (
+    PanelSession, UserPanelHistory,
+    PanelCoOccurrence, UserRankScore
+)
+from voice_rooms.recommendation import get_recommended_panels
+
 def validate_password(password):
     """Validate password strength"""
     if len(password) < 8:
@@ -257,6 +266,29 @@ def create_panel(request):
         user=user,
         role='co_host'
     )
+
+    # Notify all followers that host created a new panel
+    try:
+        channel_layer = get_channel_layer()
+        followers = user.vcr_followers.select_related('from_user').all()
+        for follow in followers:
+            async_to_sync(channel_layer.group_send)(
+                f'notifications_{follow.from_user.id}',
+                {
+                    'type': 'panel_created',
+                    'data': {
+                        'type':        'panel_created',
+                        'message':     f'{user.username} just created a new panel!',
+                        'panel_id':    str(panel.id),
+                        'panel_title': panel.title,
+                        'panel_topic': panel.topic,
+                        'host':        user.username,
+                        'host_id':     user.id,
+                    }
+                }
+            )
+    except Exception:
+        pass  # Never break panel creation due to notification failure
     
     return Response({
         'id': str(panel.id),
@@ -270,22 +302,37 @@ def create_panel(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_panels(request):
-    """List all active panels"""
-    panels = VoicePanel.objects.filter(is_active=True).select_related('host')
-    data = []
-    for panel in panels:
-        member_count = panel.members.count()
-        data.append({
-            'id': str(panel.id),
-            'title': panel.title,
-            'topic': panel.topic,
-            'host': panel.host.username,
-            'host_id': panel.host.id,
-            'member_count': member_count,
-            'max_members': panel.max_members,
-            'created_at': panel.created_at,
-        })
-    return Response(data)
+    """
+    List all active panels.
+    Returns personalised ranked rows for authenticated users.
+    Uses YouTube-style recommendation engine from voice_rooms.
+    """
+    from livevc.models import VoicePanel
+    try:
+        result = get_recommended_panels(
+            VoicePanel.objects.filter(is_active=True),
+            request.user
+        )
+        return Response(result)
+    except Exception:
+        # Fallback to flat list if recommendation engine fails
+        panels = VoicePanel.objects.filter(
+            is_active=True
+        ).select_related('host')
+        data = []
+        for panel in panels:
+            data.append({
+                'id':           str(panel.id),
+                'title':        panel.title,
+                'topic':        panel.topic,
+                'host':         panel.host.username,
+                'host_id':      panel.host.id,
+                'member_count': panel.members.count(),
+                'max_members':  panel.max_members,
+                'created_at':   panel.created_at,
+            })
+        return Response({'all_ranked': data})
+
 # ── 4. backend/livevc/views.py — fix join_panel to return host_peer_id ────────
 # Find your existing join_panel view and make sure the return includes peer_id:
 #
@@ -301,6 +348,26 @@ def join_panel(request, panel_id):
         return Response({'error': 'Panel is full'}, status=400)
 
     PanelMember.objects.create(panel=panel, user=user, role='listener')
+
+    # Record session + co-occurrence for recommendation engine
+    try:
+        session = PanelSession.objects.create(
+            user=user,
+            panel_id=str(panel.id),
+            panel_title=panel.title,
+            role='listener',
+        )
+        request.session[f'vcr_session_{panel.id}'] = session.id
+        UserPanelHistory.objects.get_or_create(
+            user=user,
+            panel_id=str(panel.id)
+        )
+        PanelCoOccurrence.record_join(
+            user=user,
+            new_panel_id=str(panel.id)
+        )
+    except Exception:
+        pass  # Never break join due to tracking failure
 
     return Response({
         'panel_id':     str(panel.id),
@@ -346,6 +413,16 @@ def leave_panel(request, panel_id):
     user = request.user
     
     PanelMember.objects.filter(panel=panel, user=user).delete()
+
+    # Close session + recalculate rank score
+    try:
+        session_id = request.session.get(f'vcr_session_{panel.id}')
+        if session_id:
+            session = PanelSession.objects.get(id=session_id)
+            session.close_session()
+            del request.session[f'vcr_session_{panel.id}']
+    except Exception:
+        pass  # Never break leave due to tracking failure
     
     # If host leaves, close the panel
     if panel.host == user:
@@ -449,6 +526,7 @@ def kick_member(request, panel_id, user_id):
     PanelMember.objects.filter(panel=panel, user_id=user_id).delete()
     
     return Response({'message': 'Member kicked from panel'})
+
 @api_view(['DELETE', 'POST'])
 @permission_classes([IsAuthenticated])
 def delete_panel(request, panel_id):
@@ -486,5 +564,3 @@ def update_panel_peer(request, panel_id):
         panel.save(update_fields=['peer_id'])
 
     return Response({'status': 'ok', 'peer_id': panel.peer_id})
-
-

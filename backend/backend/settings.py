@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'users',
     'ml_apps',
     'livevc',
+    'voice_rooms',   # ← ADD THIS
 ]
 
 MIDDLEWARE = [
@@ -141,23 +142,26 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 if os.environ.get("RENDER") == "true":
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'hr_portal_luvi',
-            'USER': 'hr_portal_luvi_user',
-            'PASSWORD': 'FMlZQtLyX46NKbh3ACbkP8FgFrzAYXZM',
-            'HOST': 'dpg-d6b4df4hncsc7386oo9g-a',
-            'PORT': '5432',
+            'ENGINE':   'django.db.backends.postgresql',
+            'NAME':     'postgres',
+            'USER':     'postgres.vhkiwztuyypdtvduapqf',
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'Drunken@1234#4321'),
+            'HOST':     'aws-0-ap-southeast-2.pooler.supabase.com',
+            'PORT':     '6543',
+            'OPTIONS':  {'sslmode': 'require'},
         }
     }
+
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'hr_portal_luvi',
-            'USER': 'hr_portal_luvi_user',
-            'PASSWORD': 'FMlZQtLyX46NKbh3ACbkP8FgFrzAYXZM',
-            'HOST': 'dpg-d6b4df4hncsc7386oo9g-a.oregon-postgres.render.com',
-            'PORT': '5432',
+            'ENGINE':   'django.db.backends.postgresql',
+            'NAME':     'postgres',
+            'USER':     'postgres',
+            'PASSWORD': 'Drunken@1234#4321',
+            'HOST':     'db.vhkiwztuyypdtvduapqf.supabase.co',
+            'PORT':     '5432',
+            'OPTIONS':  {'sslmode': 'require'},
         }
     }
 
