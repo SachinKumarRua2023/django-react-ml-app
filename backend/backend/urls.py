@@ -28,10 +28,9 @@ def debug_urls(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/employees/', include('users.urls')),  # CORRECT - with trailing slash
+    path('api/employees/', include('users.urls')),
     path('api/ml/', include('ml_apps.urls')),
-    path('api/', include('livevc.urls')),  # This gives /api/login/, /api/register/, etc.
-    path('debug/', debug_urls),  # Add this temporarily
-
-
+    path('api/vcr/', include('voice_rooms.urls')),  # ← MUST BE BEFORE api/
+    path('api/', include('livevc.urls')),
+    path('debug/', debug_urls),
 ]
