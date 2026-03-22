@@ -20,13 +20,21 @@
  *  7. _participantsRef accessed safely — ref initialized before any usage
  *  8. Register flow: uses email as login credential after auto-login
  *
- *  ── NEW ADDITIONS ────────────────────────────────────────────────────────
+ *  ── EXISTING ADDITIONS ───────────────────────────────────────────────────
  *  9.  Follow/Unfollow button in People tab
  *  10. Upvote button on speaker AvatarOrb
  *  11. Onboarding screen on first login
  *  12. Leaderboard sidebar tab (Overall + College)
  *  13. WebSocket real-time notifications (followed host goes live)
  *  14. YouTube-style 3-row panel recommendations
+ *
+ *  ── NEW ADDITIONS (this version) ─────────────────────────────────────────
+ *  15. GROUP / DM chat tabs — private 1-on-1 messaging with any participant
+ *  16. DM message handler — type:'dm' via existing DataChannel
+ *  17. DM notification popup when new private message received
+ *  18. Group audio for ALL — host calls every listener (WhatsApp-style)
+ *      Everyone hears everyone who is unmuted
+ *  19. Listener starts mic on join (receive-only until promoted)
  *
  *  ── HOW AUTH WORKS ──────────────────────────────────────────────────────
  *  1. On mount → GET /api/profile/ with stored token
@@ -88,7 +96,6 @@ const PEER_CONFIG  = {
   },
 };
 
-// ← NEW: WebSocket base URL derived from API_BASE
 const WS_BASE = API_BASE.replace(/^https/, "wss").replace(/^http/, "ws");
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,7 +128,7 @@ async function apiFetch(path, options = {}) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  AUTH HOOK — wired to your Django backend
+//  AUTH HOOK
 // ─────────────────────────────────────────────────────────────────────────────
 
 function useCosmosAuth() {
@@ -129,7 +136,6 @@ function useCosmosAuth() {
   const [loading, setLoading] = useState(true);
   const [authErr, setAuthErr] = useState("");
 
-  // On mount — check if already logged in via stored token
   useEffect(() => {
     if (!getToken()) { setLoading(false); return; }
     apiFetch("/api/profile/")
@@ -214,9 +220,7 @@ function useCosmosAuth() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ← NEW: VCR NOTIFICATIONS HOOK — WebSocket listener
-//  Connects to ws/notifications/<user_id>/
-//  Receives: panel_created, followed_host_live, new_follower
+//  VCR NOTIFICATIONS HOOK
 // ─────────────────────────────────────────────────────────────────────────────
 
 function useVCRNotifications(userId, push, onPanelCreated) {
@@ -229,7 +233,6 @@ function useVCRNotifications(userId, push, onPanelCreated) {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      // Keepalive ping every 30s to prevent sleep
       const ping = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: "ping" }));
@@ -243,9 +246,7 @@ function useVCRNotifications(userId, push, onPanelCreated) {
         const msg = JSON.parse(e.data);
         if (msg.type === "notification" || msg.type === "panel_created") {
           const d = msg.data || msg;
-          // Show popup notification
           push(`🔴 ${d.message || d.panel_title}`, "cyan", 6000);
-          // Call handler so rooms list can refresh
           if (onPanelCreated) onPanelCreated(d);
         }
         if (msg.type === "new_follower") {
@@ -487,7 +488,6 @@ const STYLES = `
   .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
   .empty-state h3 { font-family: var(--font-display); font-size: 0.9rem; margin-bottom: 8px; color: var(--text); }
 
-  /* ← NEW: YouTube-style row label */
   .row-label {
     font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.2em;
     color: var(--cyan); text-transform: uppercase; margin: 22px 0 10px;
@@ -574,6 +574,39 @@ const STYLES = `
   .chat-input-area input:focus { border-color: var(--purple); }
   .chat-input-area input::placeholder { color: var(--muted); }
 
+  /* ← NEW: Chat subtabs (GROUP / DM) */
+  .chat-subtabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+  .chat-subtab {
+    flex: 1; padding: 9px; text-align: center; font-family: var(--font-display);
+    font-size: 0.55rem; letter-spacing: 0.12em; color: var(--muted); cursor: pointer;
+    background: none; border: none; border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .chat-subtab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .chat-subtab:hover:not(.active) { color: var(--text); }
+
+  /* ← NEW: DM list styles */
+  .dm-list { padding: 11px; display: flex; flex-direction: column; gap: 6px; }
+  .dm-person {
+    display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+    background: var(--glass2); border: 1px solid var(--border); border-radius: 11px;
+    cursor: pointer; transition: border-color 0.2s;
+  }
+  .dm-person:hover { border-color: var(--cyan); }
+  .dm-person.active { border-color: var(--cyan); background: rgba(0,245,255,0.05); }
+  .dm-unread {
+    background: var(--cyan); color: #000; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 0.55rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); flex-shrink: 0;
+  }
+  .dm-back {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 0.72rem; padding: 9px 14px; font-family: var(--font-body);
+    border-bottom: 1px solid var(--border); width: 100%; text-align: left;
+    transition: color 0.2s;
+  }
+  .dm-back:hover { color: var(--cyan); }
+
   /* ── Participants list (sidebar) ── */
   .participants-list { padding: 11px; display: flex; flex-direction: column; gap: 7px; }
   .participant-item { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--glass2); border: 1px solid var(--border); border-radius: 11px; transition: border-color 0.2s; }
@@ -607,7 +640,7 @@ const STYLES = `
 
   .divider { height: 1px; background: linear-gradient(90deg,transparent,var(--border),transparent); margin: 8px 0; }
 
-  /* ← NEW: Leaderboard styles */
+  /* ── Leaderboard styles ── */
   .leaderboard-wrap { padding: 11px; display: flex; flex-direction: column; gap: 6px; }
   .lb-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
   .lb-tab { flex: 1; padding: 7px; border-radius: 8px; border: 1px solid var(--border); background: var(--glass2); color: var(--muted); font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.1em; cursor: pointer; text-align: center; transition: all 0.2s; }
@@ -619,7 +652,7 @@ const STYLES = `
   .lb-college { font-size: 0.55rem; color: var(--muted); }
   .lb-score { font-family: var(--font-display); font-size: 0.72rem; color: var(--violet); font-weight: 700; }
 
-  /* ← NEW: Onboarding screen */
+  /* ── Onboarding screen ── */
   .onboard-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 20px; }
   .onboard-card { background: var(--glass); border: 1px solid var(--border); border-radius: 24px; padding: 34px; width: 100%; max-width: 500px; backdrop-filter: blur(20px); box-shadow: var(--glow); animation: floatIn 0.4s ease; }
   .onboard-card h2 { font-family: var(--font-display); font-size: 0.85rem; color: var(--cyan); letter-spacing: 0.2em; margin-bottom: 8px; text-align: center; }
@@ -639,7 +672,7 @@ const STYLES = `
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  COSMOS CANVAS — Star field + nebula
+//  COSMOS CANVAS
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CosmosCanvas() {
@@ -647,7 +680,7 @@ function CosmosCanvas() {
   useEffect(() => {
     const canvas = ref.current;
     const ctx    = canvas.getContext("2d");
-    let raf, t   = 0;
+    let raf;
     const stars  = Array.from({ length: 200 }, () => ({
       x: Math.random(), y: Math.random(),
       r: Math.random() * 1.3 + 0.2,
@@ -679,7 +712,6 @@ function CosmosCanvas() {
         ctx.fillStyle = `rgba(232,224,255,${s.brightness*(0.4+0.6*Math.sin(s.twinkleOffset))})`;
         ctx.fill();
       });
-      t += 0.016;
       raf = requestAnimationFrame(draw);
     }
     draw();
@@ -712,7 +744,6 @@ function AvatarOrb({ participant, isSpeaking, canControl, onMute, onKick, onProm
           {onPromote && participant.role === "listener" && participant.handRaised && <button className="btn btn-gold btn-icon btn-sm" onClick={() => onPromote(participant.id, participant.backendId)}>⬆</button>}
         </div>
       )}
-      {/* ← NEW: Upvote button — visible to listeners on speakers only */}
       {!isMe && participant.role === "speaker" && myRole === "listener" && onUpvote && (
         <button
           className="btn btn-gold btn-icon btn-sm"
@@ -726,7 +757,7 @@ function AvatarOrb({ participant, isSpeaking, canControl, onMute, onKick, onProm
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ← NEW: ONBOARDING SCREEN COMPONENT
+//  ONBOARDING SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 
 function OnboardingScreen({ onComplete }) {
@@ -763,45 +794,21 @@ function OnboardingScreen({ onComplete }) {
         <div className="onboard-card">
           <h2>PERSONALISE YOUR COSMOS</h2>
           <p>Takes 30 seconds. Panels will be recommended based on your answers.</p>
-
           <div className="stage-section-label" style={{ marginBottom: 8 }}>Which course are you studying?</div>
-          <select
-            className="cosmos-input"
-            value={course}
-            onChange={e => setCourse(e.target.value)}
-            style={{ marginBottom: 16 }}
-          >
+          <select className="cosmos-input" value={course} onChange={e => setCourse(e.target.value)} style={{ marginBottom: 16 }}>
             <option value="">Select your course (optional)</option>
             {COURSES.map(c => (
               <option key={c} value={c}>{c.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
             ))}
           </select>
-
           <div className="stage-section-label" style={{ marginBottom: 8 }}>What are you interested in?</div>
           <div className="interest-grid">
             {INTERESTS.map(i => (
-              <button
-                key={i.key}
-                className={`interest-chip ${selected.includes(i.key) ? 'selected' : ''}`}
-                onClick={() => toggle(i.key)}
-              >{i.label}</button>
+              <button key={i.key} className={`interest-chip ${selected.includes(i.key) ? 'selected' : ''}`} onClick={() => toggle(i.key)}>{i.label}</button>
             ))}
           </div>
-
-          <input
-            className="cosmos-input"
-            placeholder="College / University (optional)"
-            value={college}
-            onChange={e => setCollege(e.target.value)}
-            style={{ marginTop: 8 }}
-          />
-
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: 8 }}
-            onClick={submit}
-            disabled={busy}
-          >
+          <input className="cosmos-input" placeholder="College / University (optional)" value={college} onChange={e => setCollege(e.target.value)} style={{ marginTop: 8 }} />
+          <button className="btn btn-primary" style={{ marginTop: 8 }} onClick={submit} disabled={busy}>
             {busy ? "..." : "◈ ENTER THE COSMOS"}
           </button>
         </div>
@@ -811,7 +818,7 @@ function OnboardingScreen({ onComplete }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ← NEW: LEADERBOARD COMPONENT
+//  LEADERBOARD COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 function VCRLeaderboard({ userId }) {
@@ -850,52 +857,39 @@ function VCRLeaderboard({ userId }) {
         <button className={`lb-tab ${tab==="overall"?"active":""}`} onClick={()=>setTab("overall")}>🌍 OVERALL</button>
         <button className={`lb-tab ${tab==="college"?"active":""}`} onClick={()=>setTab("college")}>🎓 COLLEGE</button>
       </div>
-
       {tab==="college" && !college && (
         <div style={{ color:"var(--muted)",fontSize:"0.72rem",padding:"12px 4px",textAlign:"center" }}>
           Set your college in onboarding to see college rankings.
         </div>
       )}
-
       {loading ? (
         <div style={{ textAlign:"center",padding:30 }}><div className="spinner" /></div>
       ) : (
         <>
           {data.map(row => (
             <div key={row.rank} className={`lb-row ${row.user_id===userId?"me":""}`}>
-              <div className="lb-rank" style={{ background:rankColor(row.rank), color:rankText(row.rank) }}>
-                {row.rank}
-              </div>
+              <div className="lb-rank" style={{ background:rankColor(row.rank), color:rankText(row.rank) }}>{row.rank}</div>
               <div style={{ flex:1, minWidth:0 }}>
                 <div className="lb-name">{row.username}{row.user_id===userId?" (you)":""}</div>
                 {row.college && <div className="lb-college">{row.college}</div>}
               </div>
               <div style={{ textAlign:"right" }}>
                 <div className="lb-score">{row.score}</div>
-                <div style={{ fontSize:"0.52rem",color:"var(--muted)",marginTop:2 }}>
-                  {row.followers}f · {row.upvotes}⭐
-                </div>
+                <div style={{ fontSize:"0.52rem",color:"var(--muted)",marginTop:2 }}>{row.followers}f · {row.upvotes}⭐</div>
               </div>
             </div>
           ))}
-
           {data.length === 0 && (
             <div style={{ color:"var(--muted)",fontSize:"0.78rem",textAlign:"center",padding:"30px 0" }}>
               No rankings yet. Join panels to earn your score.
             </div>
           )}
-
-          {/* My rank if not in top 50 */}
           {myRank && !data.find(r=>r.user_id===userId) && (
             <>
               <div className="divider" />
               <div className="lb-row me">
-                <div className="lb-rank" style={{ background:"rgba(102,0,255,0.3)",color:"var(--violet)" }}>
-                  {myRank.rank}
-                </div>
-                <div style={{ flex:1 }}>
-                  <div className="lb-name">You</div>
-                </div>
+                <div className="lb-rank" style={{ background:"rgba(102,0,255,0.3)",color:"var(--violet)" }}>{myRank.rank}</div>
+                <div style={{ flex:1 }}><div className="lb-name">You</div></div>
                 <div className="lb-score">{myRank.score}</div>
               </div>
             </>
@@ -911,7 +905,6 @@ function VCRLeaderboard({ userId }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function VCRoom() {
-  // ── Inject styles ──
   useEffect(() => {
     if (document.getElementById("cosmos-styles")) return;
     const el = document.createElement("style");
@@ -922,7 +915,6 @@ export default function VCRoom() {
   const { user, loading, login, register, logout, authErr, setAuthErr } = useCosmosAuth();
   const { notifs, push } = useNotifications();
 
-  // ── Admin check ──
   const isAdmin = user?.email === "master@gmail.com";
 
   // ── Auth form state ──
@@ -936,16 +928,21 @@ export default function VCRoom() {
   // ── Screens ──
   const [screen, setScreen] = useState("rooms");
 
-  // ← NEW: Onboarding state
-  const [onboarded,        setOnboarded]        = useState(true);  // assume true until checked
+  // ── Onboarding ──
+  const [onboarded,         setOnboarded]         = useState(true);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
-  // ← NEW: Follow state — tracks who current user follows
+  // ── Follow state ──
   const [followedIds, setFollowedIds] = useState(new Set());
+
+  // ← NEW: DM chat state — addition only, no changes to existing chat state
+  const [dmMessages, setDmMessages] = useState({});   // { peerId: [{id,from,text,time,mine}] }
+  const [activeDM,   setActiveDM]   = useState(null); // peerId of active DM thread
+  const [dmInput,    setDmInput]    = useState('');
+  const [chatTab,    setChatTab]    = useState('group'); // 'group' | 'dm'
 
   // ── Room list ──
   const [rooms,        setRooms]        = useState([]);
-  // ← NEW: recommendation rows
   const [recRows,      setRecRows]      = useState({ because_your_course:[], others_also_joined:[], trending_now:[], labels:{} });
   const [roomsLoading, setRoomsLoading] = useState(false);
 
@@ -983,66 +980,40 @@ export default function VCRoom() {
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  // ← NEW: Start WebSocket notifications once user is loaded
-  useVCRNotifications(
-    user?.id,
-    push,
-    (panelData) => {
-      // A followed host created a panel — refresh rooms list
-      loadPanels();
-    }
-  );
+  // ── WebSocket notifications ──
+  useVCRNotifications(user?.id, push, () => loadPanels());
 
-  // ← NEW: Check onboarding status after login
+  // ── Check onboarding ──
   useEffect(() => {
     if (!user || onboardingChecked) return;
     apiFetch("/api/vcr/profile/")
       .then(({ ok, data }) => {
-        if (ok && data) {
-          setOnboarded(data.onboarded === true);
-        } else {
-          setOnboarded(false);
-        }
+        setOnboarded(ok && data ? data.onboarded === true : false);
         setOnboardingChecked(true);
       })
-      .catch(() => {
-        setOnboarded(true); // fail safe — don't block user
-        setOnboardingChecked(true);
-      });
+      .catch(() => { setOnboarded(true); setOnboardingChecked(true); });
   }, [user, onboardingChecked]);
 
-  // ─── Load panels from backend ────────────────────────────────────────────
+  // ─── Load panels ─────────────────────────────────────────────────────────
+
   async function loadPanels() {
     if (!user) return;
     setRoomsLoading(true);
     try {
       const { ok, data } = await apiFetch("/api/panels/");
       if (ok && data) {
-        // ← NEW: Handle both flat array (fallback) and recommendation rows
         if (Array.isArray(data)) {
-          // Flat fallback
           setRooms(data.map(p => ({
-            id:          p.id,
-            title:       p.title || p.name,
-            desc:        p.description || p.desc || "",
-            hostName:    p.host || "",
-            hostId:      p.host_id || p.created_by_id,
-            memberCount: p.member_count || p.participant_count || 0,
-            isActive:    p.is_active !== false,
-            peerId:      p.peer_id || null,
+            id: p.id, title: p.title || p.name, desc: p.description || "",
+            hostName: p.host || "", hostId: p.host_id || p.created_by_id,
+            memberCount: p.member_count || 0, isActive: p.is_active !== false, peerId: p.peer_id || null,
           })));
           setRecRows({ because_your_course:[], others_also_joined:[], trending_now:[], all_ranked:[], labels:{} });
         } else {
-          // ← NEW: YouTube-style rows
           const mapPanel = p => ({
-            id:          p.id,
-            title:       p.title || p.name,
-            desc:        "",
-            hostName:    p.host || "",
-            hostId:      p.host_id,
-            memberCount: p.member_count || 0,
-            isActive:    true,
-            peerId:      p.peer_id || null,
+            id: p.id, title: p.title || p.name, desc: "",
+            hostName: p.host || "", hostId: p.host_id,
+            memberCount: p.member_count || 0, isActive: true, peerId: p.peer_id || null,
           });
           setRecRows({
             because_your_course: (data.because_your_course || []).map(mapPanel),
@@ -1056,84 +1027,53 @@ export default function VCRoom() {
       } else {
         setRooms([]);
       }
-    } catch {
-      setRooms([]);
-    } finally {
-      setRoomsLoading(false);
-    }
+    } catch { setRooms([]); }
+    finally  { setRoomsLoading(false); }
   }
 
-  useEffect(() => {
-    if (user) loadPanels();
-  }, [user]);
-
+  useEffect(() => { if (user) loadPanels(); }, [user]);
   useEffect(() => {
     const urlRoom = getRoomFromURL();
     if (urlRoom && user) joinPanelById(urlRoom);
   }, [user]);
 
-  // ─── AUTH SUBMIT ──────────────────────────────────────────────────────────
+  // ─── AUTH ────────────────────────────────────────────────────────────────
 
   async function handleAuth() {
     setAuthBusy(true);
-    let ok;
-    if (authMode === "login") {
-      ok = await login(authEmail, authPass);
-    } else {
-      ok = await register(authName, authEmail, authPass, authUserType);
-    }
+    const ok = authMode === "login"
+      ? await login(authEmail, authPass)
+      : await register(authName, authEmail, authPass, authUserType);
     setAuthBusy(false);
     if (ok) push(`Welcome to the cosmos! 🌌`, "cyan");
   }
 
-  // ← NEW: Onboarding complete handler
   async function handleOnboardingComplete(data) {
-    const { ok } = await apiFetch("/api/vcr/onboarding/", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-    if (ok) {
-      setOnboarded(true);
-      push("Profile saved! Panels are now personalised for you ✨", "cyan");
-    } else {
-      // Don't block user if onboarding fails
-      setOnboarded(true);
-    }
+    const { ok } = await apiFetch("/api/vcr/onboarding/", { method: "POST", body: JSON.stringify(data) });
+    setOnboarded(true);
+    if (ok) push("Profile saved! Panels are now personalised for you ✨", "cyan");
   }
 
-  // ← NEW: Follow / Unfollow
   async function handleFollow(targetUserId) {
     const { ok, data } = await apiFetch(`/api/vcr/follow/${targetUserId}/`, { method: "POST" });
     if (ok) {
       const newSet = new Set(followedIds);
-      if (data.status === "followed") {
-        newSet.add(targetUserId);
-        push(`✅ Following ${data.username}`, "cyan");
-      } else {
-        newSet.delete(targetUserId);
-        push(`Unfollowed ${data.username}`, "default");
-      }
+      if (data.status === "followed") { newSet.add(targetUserId); push(`✅ Following ${data.username}`, "cyan"); }
+      else                            { newSet.delete(targetUserId); push(`Unfollowed ${data.username}`, "default"); }
       setFollowedIds(newSet);
     }
   }
 
-  // ← NEW: Upvote speaker
   async function handleUpvote(toUserId) {
     const { ok, data } = await apiFetch("/api/vcr/upvote/", {
       method: "POST",
-      body: JSON.stringify({
-        to_user_id: toUserId,
-        panel_id:   panelRef.current?.id,
-      }),
+      body: JSON.stringify({ to_user_id: toUserId, panel_id: panelRef.current?.id }),
     });
-    if (ok && data.status === "upvoted") {
-      push(`⭐ Upvoted! Their score: ${data.new_score}`, "gold");
-    } else if (data?.status === "already_upvoted") {
-      push("You already upvoted this speaker", "default");
-    }
+    if (ok && data.status === "upvoted") push(`⭐ Upvoted! Their score: ${data.new_score}`, "gold");
+    else if (data?.status === "already_upvoted") push("You already upvoted this speaker", "default");
   }
 
-  // ─── CREATE PANEL ─────────────────────────────────────────────────────────
+  // ─── CREATE PANEL ────────────────────────────────────────────────────────
 
   async function handleCreatePanel() {
     if (!panelTitle.trim()) { push("Enter a panel title"); return; }
@@ -1141,32 +1081,19 @@ export default function VCRoom() {
 
     let PeerJS;
     try { PeerJS = await loadPeerJS(); }
-    catch { push("Could not load PeerJS from CDN. Check your internet connection.", "err"); setCreateBusy(false); return; }
-
-    const tempCode   = genCode(8);
-    const tempPeerId = makePeerId(tempCode, user.id);
+    catch { push("Could not load PeerJS from CDN.", "err"); setCreateBusy(false); return; }
 
     const { ok, data } = await apiFetch("/api/panels/create/", {
       method: "POST",
-      body: JSON.stringify({
-        title:       panelTitle.trim(),
-        description: panelDesc.trim(),
-        topic:       "general",
-        max_members: 4,
-      }),
+      body: JSON.stringify({ title: panelTitle.trim(), description: panelDesc.trim(), topic: "general", max_members: 4 }),
     });
 
-    if (!ok) {
-      push(data?.detail || data?.error || JSON.stringify(data) || "Could not create panel", "err");
-      setCreateBusy(false);
-      return;
-    }
+    if (!ok) { push(data?.detail || data?.error || "Could not create panel", "err"); setCreateBusy(false); return; }
 
     const panel   = data;
     const panelId = panel.id;
     const peerId  = makePeerId(panelId, user.id);
-
-    const peer = new PeerJS(peerId, PEER_CONFIG);
+    const peer    = new PeerJS(peerId, PEER_CONFIG);
     myPeer.current    = peer;
     myRoleRef.current = "host";
     myUserRef.current = { id: user.id, name: user.name };
@@ -1185,14 +1112,7 @@ export default function VCRoom() {
       setPanelTitle(""); setPanelDesc("");
       setRoomInURL(panelId);
       push("Panel live! Share the link.", "cyan");
-
-      try {
-        await apiFetch(`/api/panels/${panelId}/update-peer/`, {
-          method: "POST",
-          body: JSON.stringify({ peer_id: myActualPeerId }),
-        });
-      } catch {}
-
+      try { await apiFetch(`/api/panels/${panelId}/update-peer/`, { method: "POST", body: JSON.stringify({ peer_id: myActualPeerId }) }); } catch {}
       panelRef.current.peerId = myActualPeerId;
       await startMic();
     });
@@ -1200,13 +1120,7 @@ export default function VCRoom() {
     peer.on("connection", conn => {
       conn.on("open", () => {
         setupDataConn(conn);
-        setTimeout(() => {
-          sendToConn(conn, {
-            type:         "room_state",
-            panel:        panelRef.current,
-            participants: getParticipantsSnapshot(),
-          });
-        }, 300);
+        setTimeout(() => sendToConn(conn, { type: "room_state", panel: panelRef.current, participants: getParticipantsSnapshot() }), 300);
       });
     });
 
@@ -1220,17 +1134,14 @@ export default function VCRoom() {
     setCreateBusy(false);
   }
 
-  // ─── JOIN PANEL ───────────────────────────────────────────────────────────
+  // ─── JOIN PANEL ──────────────────────────────────────────────────────────
 
   async function joinPanelById(panelId) {
     const { ok, data: joinData } = await apiFetch(`/api/panels/${panelId}/join/`, { method: "POST" });
     if (!ok) { push(joinData?.detail || joinData?.error || "Could not join panel", "err"); return; }
 
     const hostPeerId = joinData?.host_peer_id || joinData?.peer_id;
-    if (!hostPeerId) {
-      push("Host is not connected yet. Ask them to reshare the link.", "err");
-      return;
-    }
+    if (!hostPeerId) { push("Host is not connected yet. Ask them to reshare the link.", "err"); return; }
 
     let PeerJS;
     try { PeerJS = await loadPeerJS(); }
@@ -1246,17 +1157,14 @@ export default function VCRoom() {
       const conn = peer.connect(hostPeerId, { reliable: true });
       conn.on("open", () => {
         setupDataConn(conn);
-        sendToConn(conn, {
-          type:      "announce",
-          from:      { id: user.id, name: user.name },
-          backendId: user.id,
-          peerId:    myPeerId,
-        });
+        sendToConn(conn, { type: "announce", from: { id: user.id, name: user.name }, backendId: user.id, peerId: myPeerId });
         setMyRole("listener");
         setConnected(true);
         setScreen("panel");
         setRoomInURL(panelId);
         push("Joined panel as listener 🎧");
+        // ← NEW: Start mic so host can call us for group audio
+        startMic().then(() => {}).catch(() => {});
       });
       conn.on("error", () => push("Could not reach host. Panel may have ended.", "err"));
     });
@@ -1273,11 +1181,9 @@ export default function VCRoom() {
     });
   }
 
-  async function handleJoinRoom(room) {
-    await joinPanelById(room.id);
-  }
+  async function handleJoinRoom(room) { await joinPanelById(room.id); }
 
-  // ─── DATA CONN SETUP ──────────────────────────────────────────────────────
+  // ─── DATA CONN ───────────────────────────────────────────────────────────
 
   function setupDataConn(conn) {
     dataConns.current[conn.peer] = conn;
@@ -1286,9 +1192,7 @@ export default function VCRoom() {
     conn.on("error", e  => console.error("DataConn err", e));
   }
 
-  function sendToConn(conn, data) {
-    if (conn?.open) conn.send(data);
-  }
+  function sendToConn(conn, data) { if (conn?.open) conn.send(data); }
 
   function broadcast(data, excludePeer = null) {
     Object.entries(dataConns.current).forEach(([pid, conn]) => {
@@ -1296,11 +1200,9 @@ export default function VCRoom() {
     });
   }
 
-  function getParticipantsSnapshot() {
-    return _participantsRef.current || [];
-  }
+  function getParticipantsSnapshot() { return _participantsRef.current || []; }
 
-  // ─── MESSAGE HANDLER ──────────────────────────────────────────────────────
+  // ─── MESSAGE HANDLER ─────────────────────────────────────────────────────
 
   const handleMessage = useCallback((data, fromPeer) => {
     switch (data.type) {
@@ -1321,6 +1223,8 @@ export default function VCRoom() {
           };
           const updated = [...prev, newP];
           setTimeout(() => broadcastUpdate(updated), 120);
+          // ← NEW: Host calls new listener so everyone hears everyone (WhatsApp group call style)
+          setTimeout(() => { if (myStream.current) callPeer(fromPeer); }, 500);
           return updated;
         });
         break;
@@ -1337,6 +1241,23 @@ export default function VCRoom() {
           mine: data.from.id === myUserRef.current?.id,
         }]);
         break;
+
+      // ← NEW: Direct message handler — uses existing DataChannel, filtered by type
+      case "dm": {
+        setDmMessages(prev => ({
+          ...prev,
+          [fromPeer]: [...(prev[fromPeer] || []), {
+            id:   Date.now() + Math.random(),
+            from: data.from,
+            text: data.text,
+            time: data.time,
+            mine: false,
+          }],
+        }));
+        const sender = _participantsRef.current.find(p => p.peerId === fromPeer);
+        push(`💬 DM from ${sender?.name || data.from.name}: ${data.text.substring(0,30)}${data.text.length>30?"...":""}`, "cyan", 5000);
+        break;
+      }
 
       case "raise_hand": {
         if (myRoleRef.current !== "host" && myRoleRef.current !== "cohost") break;
@@ -1401,8 +1322,6 @@ export default function VCRoom() {
     broadcast({ type: "participants_update", participants: pts });
     setParticipants([...pts]);
   }
-
-  // ─── PEER LEFT ───────────────────────────────────────────────────────────
 
   function handlePeerLeft(peerId) {
     delete dataConns.current[peerId];
@@ -1477,7 +1396,7 @@ export default function VCRoom() {
     myStream.current?.getAudioTracks().forEach(t => { t.enabled = false; });
   }
 
-  // ─── CHAT ─────────────────────────────────────────────────────────────────
+  // ─── CHAT ────────────────────────────────────────────────────────────────
 
   function sendChat() {
     if (!chatInput.trim()) return;
@@ -1487,14 +1406,30 @@ export default function VCRoom() {
     setChatInput("");
   }
 
-  // ─── HOST/COHOST ACTIONS ──────────────────────────────────────────────────
+  // ← NEW: Send direct message — uses existing DataChannel with type:'dm'
+  function sendDM(toPeerId) {
+    if (!dmInput.trim() || !toPeerId) return;
+    const msg = {
+      type: 'dm',
+      from: { id: user.id, name: user.name },
+      text: dmInput.trim(),
+      time: timeStr(),
+    };
+    const conn = dataConns.current[toPeerId];
+    if (conn?.open) conn.send(msg);
+    setDmMessages(prev => ({
+      ...prev,
+      [toPeerId]: [...(prev[toPeerId] || []), { ...msg, id: Date.now() + Math.random(), mine: true }],
+    }));
+    setDmInput('');
+  }
+
+  // ─── HOST ACTIONS ─────────────────────────────────────────────────────────
 
   async function approveHandRaise(participantId, backendId) {
     const target = participants.find(p => p.id === participantId);
     if (!target) return;
-    if (participants.filter(p=>p.role==="speaker").length >= MAX_SPEAKERS) {
-      push(`Max ${MAX_SPEAKERS} speakers on stage`); return;
-    }
+    if (participants.filter(p=>p.role==="speaker").length >= MAX_SPEAKERS) { push(`Max ${MAX_SPEAKERS} speakers on stage`); return; }
     await apiFetch(`/api/panels/${panelRef.current?.id}/promote/${backendId}/`, { method:"POST" }).catch(()=>{});
     const conn = dataConns.current[target.peerId];
     if (conn?.open) conn.send({ type:"speak_approved" });
@@ -1543,7 +1478,7 @@ export default function VCRoom() {
     push(`${target.name} removed`, "default");
   }
 
-  // ─── MY CONTROLS ─────────────────────────────────────────────────────────
+  // ─── MY CONTROLS ──────────────────────────────────────────────────────────
 
   function toggleMute() {
     if (!myStream.current) return;
@@ -1560,15 +1495,13 @@ export default function VCRoom() {
   async function toggleHand() {
     const newVal = !handRaised;
     setHandRaised(newVal);
-    const path = newVal
-      ? `/api/panels/${panelRef.current?.id}/raise-hand/`
-      : `/api/panels/${panelRef.current?.id}/lower-hand/`;
+    const path = newVal ? `/api/panels/${panelRef.current?.id}/raise-hand/` : `/api/panels/${panelRef.current?.id}/lower-hand/`;
     await apiFetch(path, { method:"POST" }).catch(()=>{});
     broadcast({ type: newVal?"raise_hand":"lower_hand", from:{ id:user.id, name:user.name } });
     setParticipants(prev => prev.map(p => p.id===String(user.id) ? {...p, handRaised:newVal} : p));
   }
 
-  // ─── END / LEAVE ─────────────────────────────────────────────────────────
+  // ─── END / LEAVE ──────────────────────────────────────────────────────────
 
   async function endPanel() {
     if (myRoleRef.current !== "host") return;
@@ -1594,9 +1527,11 @@ export default function VCRoom() {
     setPanelInfo(null); setParticipants([]); setMessages([]);
     setMyRole("listener"); setConnected(false); setMuted(false);
     setHandRaised(false); setSpeakingIds(new Set()); setRoomInURL(null);
+    // ← NEW: Clear DM state on leave
+    setDmMessages({}); setActiveDM(null); setDmInput(''); setChatTab('group');
   }
 
-  // ─── DERIVED ─────────────────────────────────────────────────────────────
+  // ─── DERIVED ──────────────────────────────────────────────────────────────
 
   const stageParticipants    = useMemo(()=>participants.filter(p=>["host","cohost","speaker"].includes(p.role)),[participants]);
   const audienceParticipants = useMemo(()=>participants.filter(p=>p.role==="listener"),[participants]);
@@ -1618,7 +1553,7 @@ export default function VCRoom() {
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  //  RENDER: AUTH (not logged in)
+  //  RENDER: AUTH
   // ─────────────────────────────────────────────────────────────────────────
 
   if (!user) return (
@@ -1630,15 +1565,12 @@ export default function VCRoom() {
           <h1>COSMOS</h1>
           <p>Philosophy · Spirituality · AI · Innovation · Seekers</p>
         </div>
-
         <div className="entry-card">
           <div className="auth-tabs">
             <button className={`auth-tab ${authMode==="login"?"active":""}`} onClick={()=>{ setAuthMode("login"); setAuthErr(""); }}>SIGN IN</button>
             <button className={`auth-tab ${authMode==="register"?"active":""}`} onClick={()=>{ setAuthMode("register"); setAuthErr(""); }}>REGISTER</button>
           </div>
-
           {authErr && <div className="err-msg">{authErr}</div>}
-
           <input
             className="cosmos-input"
             placeholder={authMode === "login" ? "Email" : "Display Name"}
@@ -1648,7 +1580,6 @@ export default function VCRoom() {
             onKeyDown={e => e.key==="Enter" && !authBusy && handleAuth()}
             autoFocus
           />
-
           {authMode==="register" && (
             <>
               <input className="cosmos-input" placeholder="Email" type="email" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} />
@@ -1665,21 +1596,11 @@ export default function VCRoom() {
               </div>
             </>
           )}
-
-          <input
-            className="cosmos-input"
-            placeholder="Password"
-            type="password"
-            value={authPass}
-            onChange={e=>setAuthPass(e.target.value)}
-            onKeyDown={e=>e.key==="Enter" && !authBusy && handleAuth()}
-          />
-
+          <input className="cosmos-input" placeholder="Password" type="password" value={authPass} onChange={e=>setAuthPass(e.target.value)} onKeyDown={e=>e.key==="Enter" && !authBusy && handleAuth()} />
           <button className="btn btn-primary" onClick={handleAuth} disabled={authBusy}>
             {authBusy ? "..." : authMode==="login" ? "◈ ENTER THE VOID" : "◈ CREATE ACCOUNT"}
           </button>
         </div>
-
         <p style={{ color:"var(--muted)", fontSize:"0.7rem", textAlign:"center" }}>
           Only trainers can host panels · Seekers join and explore
         </p>
@@ -1687,7 +1608,7 @@ export default function VCRoom() {
     </div>
   );
 
-  // ← NEW: RENDER: ONBOARDING (first login only)
+  // RENDER: ONBOARDING
   if (user && onboardingChecked && !onboarded) return (
     <OnboardingScreen onComplete={handleOnboardingComplete} />
   );
@@ -1754,12 +1675,9 @@ export default function VCRoom() {
           </div>
         ) : (
           <>
-            {/* ← NEW: YouTube-style 3 labelled rows */}
             {recRows.because_your_course?.length > 0 && (
               <>
-                <div className="row-label">
-                  ✨ {recRows.labels?.because_your_course || "Because of your course"}
-                </div>
+                <div className="row-label">✨ {recRows.labels?.because_your_course || "Because of your course"}</div>
                 {recRows.because_your_course.map(room => (
                   <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
                     <div className="room-card-info">
@@ -1778,9 +1696,7 @@ export default function VCRoom() {
 
             {recRows.others_also_joined?.length > 0 && (
               <>
-                <div className="row-label">
-                  🔗 {recRows.labels?.others_also_joined || "Others also joined"}
-                </div>
+                <div className="row-label">🔗 {recRows.labels?.others_also_joined || "Others also joined"}</div>
                 {recRows.others_also_joined.map(room => (
                   <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
                     <div className="room-card-info">
@@ -1799,9 +1715,7 @@ export default function VCRoom() {
 
             {recRows.trending_now?.length > 0 && (
               <>
-                <div className="row-label">
-                  🔥 {recRows.labels?.trending_now || "Trending now"}
-                </div>
+                <div className="row-label">🔥 {recRows.labels?.trending_now || "Trending now"}</div>
                 {recRows.trending_now.map(room => (
                   <div key={room.id} className="room-card" onClick={()=>handleJoinRoom(room)}>
                     <div className="room-card-info">
@@ -1818,7 +1732,6 @@ export default function VCRoom() {
               </>
             )}
 
-            {/* All panels fallback — shows when no rows have content yet */}
             {recRows.because_your_course?.length === 0 &&
              recRows.others_also_joined?.length  === 0 &&
              recRows.trending_now?.length        === 0 && (
@@ -1965,33 +1878,140 @@ export default function VCRoom() {
           <div className="sidebar-tabs">
             <button className={`sidebar-tab ${sidebarTab==="chat"?"active":""}`} onClick={()=>setSidebarTab("chat")}>CHAT</button>
             <button className={`sidebar-tab ${sidebarTab==="people"?"active":""}`} onClick={()=>setSidebarTab("people")}>PEOPLE</button>
-            {/* ← NEW: Leaderboard tab */}
             <button className={`sidebar-tab ${sidebarTab==="ranks"?"active":""}`} onClick={()=>setSidebarTab("ranks")}>RANKS</button>
             {myRole==="host"&&<button className={`sidebar-tab ${sidebarTab==="host"?"active":""}`} onClick={()=>setSidebarTab("host")}>HOST</button>}
           </div>
 
           <div className="sidebar-content">
 
+            {/* ─── CHAT TAB ─── */}
             {sidebarTab==="chat"&&(
               <>
-                <div className="chat-messages">
-                  {messages.length===0&&<div style={{ color:"var(--muted)",fontSize:"0.82rem",textAlign:"center",padding:"28px 0" }}>The conversation begins here...</div>}
-                  {messages.map(m=>(
-                    <div key={m.id} className={`chat-msg ${m.mine?"mine":""}`}>
-                      {!m.mine&&<div className="chat-msg-header"><span className="chat-msg-name" style={{ color:"var(--violet)" }}>{m.from.name}</span><span className="chat-msg-time">{m.time}</span></div>}
-                      <div className="chat-msg-text">{m.text}</div>
-                      {m.mine&&<div className="chat-msg-header"><span className="chat-msg-time">{m.time}</span></div>}
+                {/* ← NEW: GROUP / DM subtabs */}
+                <div className="chat-subtabs">
+                  <button
+                    className={`chat-subtab ${chatTab==="group"?"active":""}`}
+                    onClick={()=>{ setChatTab("group"); setActiveDM(null); }}
+                  >
+                    💬 GROUP
+                  </button>
+                  <button
+                    className={`chat-subtab ${chatTab==="dm"?"active":""}`}
+                    onClick={()=>setChatTab("dm")}
+                  >
+                    🔒 PRIVATE DM
+                    {/* Show unread count badge */}
+                    {Object.values(dmMessages).reduce((a,b)=>a+b.filter(m=>!m.mine).length,0) > 0 && (
+                      <span style={{
+                        marginLeft:4, background:"var(--rose)", color:"#fff",
+                        borderRadius:"50%", width:14, height:14, fontSize:"0.5rem",
+                        display:"inline-flex", alignItems:"center", justifyContent:"center",
+                        fontFamily:"var(--font-display)", fontWeight:700,
+                      }}>
+                        {Object.values(dmMessages).reduce((a,b)=>a+b.filter(m=>!m.mine).length,0)}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* GROUP CHAT — unchanged from original */}
+                {chatTab==="group" && (
+                  <>
+                    <div className="chat-messages">
+                      {messages.length===0&&<div style={{ color:"var(--muted)",fontSize:"0.82rem",textAlign:"center",padding:"28px 0" }}>The conversation begins here...</div>}
+                      {messages.map(m=>(
+                        <div key={m.id} className={`chat-msg ${m.mine?"mine":""}`}>
+                          {!m.mine&&<div className="chat-msg-header"><span className="chat-msg-name" style={{ color:"var(--violet)" }}>{m.from.name}</span><span className="chat-msg-time">{m.time}</span></div>}
+                          <div className="chat-msg-text">{m.text}</div>
+                          {m.mine&&<div className="chat-msg-header"><span className="chat-msg-time">{m.time}</span></div>}
+                        </div>
+                      ))}
+                      <div ref={chatEndRef} />
                     </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-                <div className="chat-input-area">
-                  <input placeholder="Say something..." value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChat()} />
-                  <button className="btn btn-primary btn-icon" onClick={sendChat}>→</button>
-                </div>
+                    <div className="chat-input-area">
+                      <input placeholder="Say something to everyone..." value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChat()} />
+                      <button className="btn btn-primary btn-icon" onClick={sendChat}>→</button>
+                    </div>
+                  </>
+                )}
+
+                {/* ← NEW: DM — person list */}
+                {chatTab==="dm" && !activeDM && (
+                  <div className="dm-list">
+                    <div style={{ color:"var(--muted)",fontSize:"0.62rem",padding:"8px 4px",fontFamily:"var(--font-display)",letterSpacing:"0.1em" }}>
+                      SELECT PERSON TO MESSAGE PRIVATELY
+                    </div>
+                    {participants
+                      .filter(p => p.id !== String(user.id))
+                      .map(p => {
+                        const unread = (dmMessages[p.peerId] || []).filter(m => !m.mine).length;
+                        const lastMsg = (dmMessages[p.peerId] || []).slice(-1)[0];
+                        return (
+                          <div
+                            key={p.id}
+                            className={`dm-person ${activeDM===p.peerId?"active":""}`}
+                            onClick={() => setActiveDM(p.peerId)}
+                          >
+                            <div className="p-avatar" style={{ flexShrink:0 }}>{(p.name||"?")[0].toUpperCase()}</div>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontFamily:"var(--font-display)",fontSize:"0.62rem",color:"var(--text)" }}>{p.name}</div>
+                              {lastMsg && (
+                                <div style={{ fontSize:"0.58rem",color:"var(--muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+                                  {lastMsg.mine?"You: ":""}{lastMsg.text}
+                                </div>
+                              )}
+                              {!lastMsg && (
+                                <div style={{ fontSize:"0.55rem",color:"var(--muted)" }}>{p.role}</div>
+                              )}
+                            </div>
+                            {unread > 0 && <div className="dm-unread">{unread}</div>}
+                          </div>
+                        );
+                      })
+                    }
+                    {participants.filter(p=>p.id!==String(user.id)).length===0 && (
+                      <div style={{ color:"var(--muted)",fontSize:"0.78rem",textAlign:"center",padding:"30px 0" }}>
+                        No other participants yet
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ← NEW: DM — conversation thread */}
+                {chatTab==="dm" && activeDM && (
+                  <>
+                    <button className="dm-back" onClick={()=>setActiveDM(null)}>
+                      ← {participants.find(p=>p.peerId===activeDM)?.name || "Back to DMs"}
+                    </button>
+                    <div className="chat-messages">
+                      {(dmMessages[activeDM]||[]).length===0 && (
+                        <div style={{ color:"var(--muted)",fontSize:"0.82rem",textAlign:"center",padding:"28px 0" }}>
+                          Start a private conversation...
+                        </div>
+                      )}
+                      {(dmMessages[activeDM]||[]).map((m,i)=>(
+                        <div key={m.id||i} className={`chat-msg ${m.mine?"mine":""}`}>
+                          {!m.mine&&<div className="chat-msg-header"><span className="chat-msg-name" style={{ color:"var(--violet)" }}>{m.from.name}</span><span className="chat-msg-time">{m.time}</span></div>}
+                          <div className="chat-msg-text" style={{ background: m.mine?"rgba(0,245,255,0.08)":undefined, borderColor: m.mine?"var(--border2)":undefined }}>{m.text}</div>
+                          {m.mine&&<div className="chat-msg-header"><span className="chat-msg-time">{m.time}</span></div>}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="chat-input-area">
+                      <input
+                        placeholder={`Message ${participants.find(p=>p.peerId===activeDM)?.name||"privately"}...`}
+                        value={dmInput}
+                        onChange={e=>setDmInput(e.target.value)}
+                        onKeyDown={e=>e.key==="Enter"&&sendDM(activeDM)}
+                      />
+                      <button className="btn btn-cyan btn-icon" onClick={()=>sendDM(activeDM)}>→</button>
+                    </div>
+                  </>
+                )}
               </>
             )}
 
+            {/* ─── PEOPLE TAB ─── */}
             {sidebarTab==="people"&&(
               <div className="participants-list">
                 {participants.map(p=>(
@@ -2006,14 +2026,23 @@ export default function VCRoom() {
                       </div>
                     </div>
                     <div className="p-actions">
-                      {/* ← NEW: Follow button — only for others */}
                       {p.id !== String(user.id) && (
                         <button
                           className={`btn btn-sm ${followedIds.has(p.backendId) ? "btn-cyan" : "btn-ghost"}`}
                           onClick={() => handleFollow(p.backendId)}
                           title={followedIds.has(p.backendId) ? "Unfollow" : "Follow"}
                         >
-                          {followedIds.has(p.backendId) ? "✓ Following" : "+ Follow"}
+                          {followedIds.has(p.backendId) ? "✓" : "+ Follow"}
+                        </button>
+                      )}
+                      {/* ← NEW: DM button in people tab */}
+                      {p.id !== String(user.id) && p.peerId && (
+                        <button
+                          className="btn btn-ghost btn-sm btn-icon"
+                          title="Send private message"
+                          onClick={() => { setSidebarTab("chat"); setChatTab("dm"); setActiveDM(p.peerId); }}
+                        >
+                          💬
                         </button>
                       )}
                       {isController&&p.id!==String(user.id)&&p.role!=="host"&&(
@@ -2028,11 +2057,12 @@ export default function VCRoom() {
               </div>
             )}
 
-            {/* ← NEW: Leaderboard tab content */}
+            {/* ─── RANKS TAB ─── */}
             {sidebarTab==="ranks"&&(
               <VCRLeaderboard userId={user.id} />
             )}
 
+            {/* ─── HOST TAB ─── */}
             {sidebarTab==="host"&&myRole==="host"&&(
               <div className="participants-list">
                 <div className="stage-section-label" style={{ margin:"12px 0 8px",padding:"0 4px" }}>SHARE PANEL</div>
