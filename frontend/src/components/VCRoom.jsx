@@ -1242,6 +1242,19 @@ export default function VCRoom() {
         }]);
         break;
 
+      // ← NEW: chat relay — host rebroadcasts to all so everyone sees group chat
+      case "chat_relay": {
+        const relayMsg = { type: "chat", from: data.from, text: data.text, time: data.time };
+        if (myRoleRef.current === "host" || myRoleRef.current === "cohost") {
+          broadcast(relayMsg, fromPeer);
+        }
+        setMessages(m => [...m, {
+          id: Date.now() + Math.random(),
+          from: data.from, text: data.text, time: data.time, mine: false,
+        }]);
+        break;
+      }
+
       // ← NEW: Direct message handler — uses existing DataChannel, filtered by type
       case "dm": {
         setDmMessages(prev => ({
@@ -1401,7 +1414,13 @@ export default function VCRoom() {
   function sendChat() {
     if (!chatInput.trim()) return;
     const msg = { type:"chat", from:{ id:user.id, name:user.name }, text:chatInput.trim(), time:timeStr() };
+    // Send to all direct P2P connections
     broadcast(msg);
+    // If not host/cohost, also relay through host so peers without direct connections see it
+    if (myRoleRef.current !== "host" && myRoleRef.current !== "cohost") {
+      const conns = Object.values(dataConns.current);
+      if (conns.length > 0 && conns[0]?.open) conns[0].send({ ...msg, type: "chat_relay" });
+    }
     setMessages(m => [...m, { ...msg, id:Date.now(), mine:true }]);
     setChatInput("");
   }
