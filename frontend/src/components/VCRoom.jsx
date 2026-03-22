@@ -64,7 +64,7 @@
  *
  *  ── ENV VARIABLE ─────────────────────────────────────────────────────────
  *  Set in frontend/.env:
- *    VITE_API_URL=https://django-react-ml-app.onrender.com
+ *    VITE_API_URL=https://api.seekhowithrua.com
  *  For local dev:
  *    VITE_API_URL=http://127.0.0.1:8000
  * ═══════════════════════════════════════════════════════════════════════════
@@ -79,28 +79,76 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL)
     ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
-    : "'https://django-react-ml-app.onrender.com'";
+    : "https://api.seekhowithrua.com";
 
-const MAX_PANELS   = 10;
-const MAX_COHOSTS  = 2;
-const MAX_SPEAKERS = 3;
-const PEERJS_CDN   = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
-const PEER_CONFIG  = {
-  host: "0.peerjs.com", port: 443, secure: true,
-  config: {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-      { urls: "stun:stun2.l.google.com:19302" },
-      // FREE TURN servers — required for public internet (symmetric NAT, mobile, corp WiFi)
-      // Without TURN, ~30% of real-world P2P connections fail silently
-      { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
-      { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-      { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject", transport: "tcp" },
-    ],
-    iceCandidatePoolSize: 10,
-  },
+const MAX_PANELS     = 10;
+const MAX_PER_PANEL  = 10;  // hard ceiling per CTO report — re-evaluate at 20+
+const MAX_COHOSTS    = 2;   // host + 2 cohosts = 3 on stage minimum
+const MAX_SPEAKERS   = 7;   // host(1) + cohosts(2) + speakers(7) = 10 total
+
+const PEERJS_CDN          = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+const PEERJS_CDN_FALLBACK = "https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js";
+
+// TURN credentials are fetched dynamically from backend per session
+// Never hardcode TURN credentials — SSRF / C2 abuse risk (see CTO report §2.1)
+// Falls back to public openrelay ONLY if backend endpoint unavailable
+const PUBLIC_STUN_ONLY = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+  ],
+  iceCandidatePoolSize: 10,
+  bundlePolicy:   "max-bundle",
+  rtcpMuxPolicy:  "require",
 };
+
+async function buildPeerConfig() {
+  try {
+    const token = getToken();
+    if (!token) throw new Error("no token");
+    const res = await fetch(`${API_BASE}/api/turn-credentials/`, {
+      headers: { Authorization: `Token ${token}` },
+    });
+    if (!res.ok) throw new Error("turn endpoint not ready");
+    const creds = await res.json();
+    // Backend returns: { username, credential, uris: [...], ttl }
+    return {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        {
+          urls:       creds.uris || [
+            "turn:openrelay.metered.ca:80",
+            "turn:openrelay.metered.ca:443",
+            "turns:openrelay.metered.ca:443?transport=tcp",
+          ],
+          username:   creds.username   || "openrelayproject",
+          credential: creds.credential || "openrelayproject",
+        },
+      ],
+      iceCandidatePoolSize: 10,
+      bundlePolicy:  "max-bundle",
+      rtcpMuxPolicy: "require",
+    };
+  } catch {
+    // Graceful fallback — public openrelay if backend TURN not yet deployed
+    // TODO: replace with self-hosted coturn before scaling past 50 users
+    console.warn("[TURN] backend not available, using public openrelay fallback");
+    return {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "turn:openrelay.metered.ca:80",  username: "openrelayproject", credential: "openrelayproject" },
+        { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+        { urls: "turns:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+      ],
+      iceCandidatePoolSize: 10,
+      bundlePolicy:  "max-bundle",
+      rtcpMuxPolicy: "require",
+    };
+  }
+}
 
 const WS_BASE = API_BASE.replace(/^https/, "wss").replace(/^http/, "ws");
 
@@ -280,11 +328,16 @@ function useVCRNotifications(userId, push, onPanelCreated) {
 function loadPeerJS() {
   return new Promise((resolve, reject) => {
     if (window.Peer) return resolve(window.Peer);
-    const s = document.createElement("script");
-    s.src     = PEERJS_CDN;
-    s.onload  = () => resolve(window.Peer);
-    s.onerror = () => reject(new Error("PeerJS CDN load failed"));
-    document.head.appendChild(s);
+    const tryLoad = (src, fallback) => {
+      const s = document.createElement("script");
+      s.src     = src;
+      s.onload  = () => window.Peer ? resolve(window.Peer) : reject(new Error("PeerJS loaded but Peer undefined"));
+      s.onerror = () => fallback
+        ? tryLoad(fallback, null)   // try fallback CDN
+        : reject(new Error("PeerJS CDN load failed on both primary and fallback"));
+      document.head.appendChild(s);
+    };
+    tryLoad(PEERJS_CDN, PEERJS_CDN_FALLBACK);
   });
 }
 
@@ -979,12 +1032,42 @@ export default function VCRoom() {
   const myRoleRef    = useRef("listener");
   const myUserRef    = useRef(null);
   const analyserRefs = useRef({});
+  const micPendingRef = useRef(null); // race guard for startMicMuted
 
   const _participantsRef = useRef([]);
   useEffect(() => { _participantsRef.current = participants; }, [participants]);
 
   const chatEndRef = useRef(null);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // Handle tab/window close — notify peers before disconnecting
+  useEffect(() => {
+    const handleUnload = () => {
+      if (!myPeer.current) return;
+      try {
+        if (myRoleRef.current === "host") broadcast({ type: "room_ended" });
+        else broadcast({ type: "peer_left", peerId: myPeer.current.id });
+        // Synchronously stop all tracks so mic light turns off
+        myStream.current?.getTracks().forEach(t => t.stop());
+      } catch {}
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, []);
+
+  // Handle mobile background — iOS Safari revokes mic, reconnect when returning
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && myPeer.current) {
+        // Re-enable audio elements that may have been paused by browser
+        document.querySelectorAll("audio[id^='audio_']").forEach(el => {
+          if (el.paused) el.play().catch(() => {});
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   // ── WebSocket notifications ──
   useVCRNotifications(user?.id, push, () => loadPanels());
@@ -1091,15 +1174,18 @@ export default function VCRoom() {
 
     const { ok, data } = await apiFetch("/api/panels/create/", {
       method: "POST",
-      body: JSON.stringify({ title: panelTitle.trim(), description: panelDesc.trim(), topic: "general", max_members: 4 }),
+      body: JSON.stringify({ title: panelTitle.trim(), description: panelDesc.trim(), topic: "general", max_members: MAX_PER_PANEL }),
     });
 
     if (!ok) { push(data?.detail || data?.error || "Could not create panel", "err"); setCreateBusy(false); return; }
 
+    // Build ICE config with dynamic TURN credentials
+    const peerConfig = await buildPeerConfig();
+
     const panel   = data;
     const panelId = panel.id;
     const peerId  = makePeerId(panelId, user.id);
-    const peer    = new PeerJS(peerId, PEER_CONFIG);
+    const peer    = new PeerJS(peerId, { host: "0.peerjs.com", port: 443, secure: true, config: peerConfig });
     myPeer.current    = peer;
     myRoleRef.current = "host";
     myUserRef.current = { id: user.id, name: user.name };
@@ -1142,11 +1228,27 @@ export default function VCRoom() {
       if (myStream.current) doAnswer(myStream.current);
       else startMic().then(s => doAnswer(s));
     });
+
+    peer.on("error", e => push(`Connection error: ${e.type}`, "err"));
+
+    // Auto-reconnect signaling if network blinks (does NOT affect active audio calls)
+    peer.on("disconnected", () => {
+      setTimeout(() => {
+        if (myPeer.current && !myPeer.current.destroyed) {
+          myPeer.current.reconnect();
+        }
+      }, 2000);
+    });
+
+    setCreateBusy(false);
   }
 
-  // ─── JOIN PANEL ──────────────────────────────────────────────────────────
-
   async function joinPanelById(panelId) {
+    // Hard ceiling FIRST — before API call to prevent ghost backend joins
+    if (_participantsRef.current.length >= MAX_PER_PANEL) {
+      push(`Panel is full (max ${MAX_PER_PANEL} participants)`, "err"); return;
+    }
+
     const { ok, data: joinData } = await apiFetch(`/api/panels/${panelId}/join/`, { method: "POST" });
     if (!ok) { push(joinData?.detail || joinData?.error || "Could not join panel", "err"); return; }
 
@@ -1157,8 +1259,11 @@ export default function VCRoom() {
     try { PeerJS = await loadPeerJS(); }
     catch { push("Could not load PeerJS CDN", "err"); return; }
 
+    // Build ICE config with dynamic TURN credentials
+    const peerConfig = await buildPeerConfig();
+
     const myPeerId = makePeerId(genCode(6), user.id);
-    const peer     = new PeerJS(myPeerId, PEER_CONFIG);
+    const peer     = new PeerJS(myPeerId, { host: "0.peerjs.com", port: 443, secure: true, config: peerConfig });
     myPeer.current    = peer;
     myRoleRef.current = "listener";
     myUserRef.current = { id: user.id, name: user.name };
@@ -1173,14 +1278,22 @@ export default function VCRoom() {
         setScreen("panel");
         setRoomInURL(panelId);
         push("Joined panel as listener 🎧");
-        // ← NEW: Start mic so host can call us for group audio
-        startMic().then(() => {}).catch(() => {});
+        // Start mic in MUTED state — required so host can call us (WebRTC needs a stream)
+        // but listener cannot speak until promoted. Mic track is disabled until speak_approved.
+        startMicMuted().then(() => {}).catch(() => {});
       });
       conn.on("error", () => push("Could not reach host. Panel may have ended.", "err"));
     });
 
+    // Accept incoming data connections from other peers (mesh via peer_list)
+    peer.on("connection", conn => {
+      conn.on("open", () => { setupDataConn(conn); });
+      conn.on("error", () => {});
+    });
+
     peer.on("call", call => {
-      // Wait for mic if not ready yet — fixes null-stream audio bug
+      // Listener answers with their muted stream — receives audio from caller but sends nothing
+      // Only host/cohost/speaker should send real audio
       const doAnswer = (stream) => {
         call.answer(stream || new MediaStream());
         callConns.current[call.peer] = call;
@@ -1188,13 +1301,32 @@ export default function VCRoom() {
         call.on("error",  e => { console.warn("call err", e); delete callConns.current[call.peer]; });
         call.on("close",  () => { delete callConns.current[call.peer]; document.getElementById(`audio_${call.peer}`)?.remove(); });
       };
-      if (myStream.current) doAnswer(myStream.current);
-      else startMic().then(s => doAnswer(s));
+      // Use muted stream if listener, full stream if speaker/host/cohost
+      if (myStream.current) {
+        doAnswer(myStream.current);
+      } else {
+        // Get a muted stream for listeners, full stream for elevated roles
+        const isElevated = myRoleRef.current === "host" || myRoleRef.current === "cohost" || myRoleRef.current === "speaker";
+        if (isElevated) {
+          startMic().then(s => doAnswer(s));
+        } else {
+          startMicMuted().then(s => doAnswer(s));
+        }
+      }
     });
 
     peer.on("error", e => {
       if (e.type === "peer-unavailable") push("Host not reachable. Room may have ended.", "err");
       else push(`PeerJS: ${e.type}`, "err");
+    });
+
+    // Auto-reconnect signaling if network blinks
+    peer.on("disconnected", () => {
+      setTimeout(() => {
+        if (myPeer.current && !myPeer.current.destroyed) {
+          myPeer.current.reconnect();
+        }
+      }, 2000);
     });
   }
 
@@ -1242,17 +1374,34 @@ export default function VCRoom() {
           setTimeout(() => broadcastUpdate(updated), 120);
 
           // Send new joiner the list of ALL existing peer IDs so they can connect directly
-          // This enables true mesh audio — everyone hears everyone, not just through host
+          // This enables true mesh data connections — everyone can chat directly
           const existingPeerIds = Object.keys(dataConns.current).filter(p => p !== fromPeer);
           const newConn = dataConns.current[fromPeer];
           if (newConn?.open && existingPeerIds.length > 0) {
             newConn.send({ type: "peer_list", peers: existingPeerIds });
           }
 
-          // Host calls new listener for group audio
+          // Host calls new listener for audio (host → listener)
           setTimeout(() => { if (myStream.current) callPeer(fromPeer); }, 500);
+
+          // Tell all existing SPEAKERS/COHOSTS to also call new listener
+          // This creates full mesh audio — new listener hears everyone, not just host
+          setTimeout(() => {
+            broadcast({ type: "call_new_peer", targetPeerId: fromPeer }, fromPeer);
+          }, 700);
+
           return updated;
         });
+        break;
+      }
+
+      // Host broadcasts this to all speakers/cohosts when someone new joins
+      // Each speaker calls the new joiner — full mesh audio, everyone hears everyone
+      case "call_new_peer": {
+        const role = myRoleRef.current;
+        if ((role === "speaker" || role === "cohost") && myStream.current && data.targetPeerId) {
+          setTimeout(() => callPeer(data.targetPeerId), 200);
+        }
         break;
       }
 
@@ -1276,24 +1425,31 @@ export default function VCRoom() {
         break;
       }
 
-      case "chat":
-        setMessages(m => [...m, {
-          id: Date.now() + Math.random(),
-          from: data.from, text: data.text, time: data.time,
-          mine: data.from.id === myUserRef.current?.id,
-        }]);
+      case "chat": {
+        const msgId = data.id || `${data.from?.id}_${data.time}_${data.text?.substring(0,10)}`;
+        setMessages(m => {
+          if (m.some(x => x.id === msgId)) return m; // deduplicate
+          return [...m, {
+            id: msgId,
+            from: data.from, text: data.text, time: data.time,
+            mine: data.from.id === myUserRef.current?.id,
+          }];
+        });
         break;
+      }
 
-      // ← NEW: chat relay — host rebroadcasts to all so everyone sees group chat
       case "chat_relay": {
-        const relayMsg = { type: "chat", from: data.from, text: data.text, time: data.time };
+        // Forward the original id so receivers can deduplicate
+        const relayMsg = { type: "chat", id: data.id, from: data.from, text: data.text, time: data.time };
         if (myRoleRef.current === "host" || myRoleRef.current === "cohost") {
           broadcast(relayMsg, fromPeer);
         }
-        setMessages(m => [...m, {
-          id: Date.now() + Math.random(),
-          from: data.from, text: data.text, time: data.time, mine: false,
-        }]);
+        // Show it locally too — use same dedup logic
+        const relayId = data.id || `${data.from?.id}_${data.time}_${data.text?.substring(0,10)}`;
+        setMessages(m => {
+          if (m.some(x => x.id === relayId)) return m;
+          return [...m, { id: relayId, from: data.from, text: data.text, time: data.time, mine: false }];
+        });
         break;
       }
 
@@ -1334,38 +1490,63 @@ export default function VCRoom() {
         break;
 
       case "speak_approved": {
+        // Security: only accept from host/cohost data connection — verify sender is in participants as host/cohost
+        const senderIsController = _participantsRef.current.some(
+          p => p.peerId === fromPeer && (p.role === "host" || p.role === "cohost")
+        );
+        if (!senderIsController) break;
         setMyRole("speaker"); myRoleRef.current = "speaker";
         setHandRaised(false);
         push("🎙️ You're on stage! Mic is live.", "cyan");
-        startMic().then(() => {
-          // Call ALL connected peers so everyone hears the new speaker
-          callAllPeers();
-        });
+        unmuteMicForSpeaker();
+        setTimeout(() => callAllPeers(), 300);
         setParticipants(prev =>
           prev.map(p => p.id === String(myUserRef.current?.id) ? { ...p, role: "speaker", handRaised: false } : p)
         );
         break;
       }
 
-      case "assign_cohost":
+      case "assign_cohost": {
+        const senderIsHost = _participantsRef.current.some(
+          p => p.peerId === fromPeer && p.role === "host"
+        );
+        if (!senderIsHost) break;
         setMyRole("cohost"); myRoleRef.current = "cohost";
         push("⭐ You are now a Co-Host", "gold");
+        unmuteMicForSpeaker();
+        setTimeout(() => callAllPeers(), 300);
         break;
+      }
 
-      case "force_mute":
+      case "force_mute": {
+        const senderIsCtrl = _participantsRef.current.some(
+          p => p.peerId === fromPeer && (p.role === "host" || p.role === "cohost")
+        );
+        if (!senderIsCtrl) break;
         muteLocalStream(); setMuted(true);
         push("🔇 Muted by host", "default");
         break;
+      }
 
-      case "kick":
+      case "kick": {
+        const senderCanKick = _participantsRef.current.some(
+          p => p.peerId === fromPeer && (p.role === "host" || p.role === "cohost")
+        );
+        if (!senderCanKick) break;
         push("You were removed from the panel", "err");
         leavePanel();
         break;
+      }
 
-      case "room_ended":
+      case "room_ended": {
+        const senderIsHostEnd = _participantsRef.current.some(
+          p => p.peerId === fromPeer && p.role === "host"
+        );
+        if (!senderIsHostEnd) break;
         push("Host ended this panel", "default");
         cleanup(); setScreen("rooms");
         break;
+      }
 
       default: break;
     }
@@ -1383,6 +1564,15 @@ export default function VCRoom() {
     callConns.current[peerId]?.close();
     delete callConns.current[peerId];
     document.getElementById(`audio_${peerId}`)?.remove();
+    // Properly stop RAF loop and close AudioContext (CTO report §3.1)
+    const state = analyserRefs.current[peerId];
+    if (state) {
+      state.active = false;
+      if (state.rafId) cancelAnimationFrame(state.rafId);
+      try { state.ctx?.close(); } catch {}
+      delete analyserRefs.current[peerId];
+    }
+    setSpeakingIds(prev => { const s = new Set(prev); s.delete(peerId); return s; });
     if (myRoleRef.current === "host" || myRoleRef.current === "cohost") {
       setParticipants(prev => {
         const u = prev.filter(p => p.peerId !== peerId);
@@ -1396,10 +1586,23 @@ export default function VCRoom() {
 
   // ─── AUDIO ───────────────────────────────────────────────────────────────
 
+  // Atomic getUserMedia constraints — same for host and listener
+  const GUM_CONSTRAINTS = {
+    audio: {
+      echoCancellation: true,  // prevents speaker feedback
+      noiseSuppression: true,  // removes background noise
+      autoGainControl:  true,  // normalises volume across mics
+      sampleRate:       48000, // high quality
+      channelCount:     1,     // mono — halves bandwidth for voice
+      latency:          0.01,  // low-latency hint to browser
+    },
+    video: false,
+  };
+
   async function startMic() {
     if (myStream.current) return myStream.current;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia(GUM_CONSTRAINTS);
       myStream.current = stream;
       monitorSpeaking("__me__", stream);
       return stream;
@@ -1407,6 +1610,61 @@ export default function VCRoom() {
       push("Mic access denied — check browser permissions", "err");
       return null;
     }
+  }
+
+  // For listeners — proper atomic mutex so concurrent calls produce exactly 1 stream
+  // CTO report §2.3: non-atomic check-then-act pattern creates ghost streams
+  async function startMicMuted() {
+    // Fast path — stream already exists
+    if (myStream.current) return myStream.current;
+    // Atomic mutex: micPendingRef holds the in-flight promise
+    // Any concurrent caller awaits the same promise — only 1 getUserMedia fires
+    if (micPendingRef.current) return micPendingRef.current;
+
+    micPendingRef.current = (async () => {
+      // Double-check inside the lock in case stream was set between check and lock
+      if (myStream.current) return myStream.current;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(GUM_CONSTRAINTS);
+        stream.getAudioTracks().forEach(t => { t.enabled = false; }); // muted until promoted
+        myStream.current = stream;
+        return stream;
+      } catch {
+        // Mic denied — empty stream lets listener still receive audio via WebRTC
+        const silent = new MediaStream();
+        myStream.current = silent;
+        return silent;
+      } finally {
+        micPendingRef.current = null; // release lock
+      }
+    })();
+
+    return micPendingRef.current;
+  }
+
+  // Unmute mic — called when listener is promoted to speaker or cohost
+  function unmuteMicForSpeaker() {
+    if (!myStream.current) {
+      // Mic was denied — need to request full mic now
+      startMic().then(() => {
+        monitorSpeaking("__me__", myStream.current);
+        setMuted(false);
+      });
+      return;
+    }
+    const tracks = myStream.current.getAudioTracks();
+    if (tracks.length === 0) {
+      // Silent empty stream (mic was denied) — need real mic now
+      startMic().then(stream => {
+        if (stream) { monitorSpeaking("__me__", stream); setMuted(false); }
+      });
+      return;
+    }
+    // Normal case: re-enable the muted track
+    tracks.forEach(t => { t.enabled = true; });
+    setMuted(false);
+    // Now monitor speaking since they can talk
+    monitorSpeaking("__me__", myStream.current);
   }
 
   function callPeer(peerId) {
@@ -1450,20 +1708,34 @@ export default function VCRoom() {
   }
 
   function monitorSpeaking(peerId, stream) {
+    // Cancel + close any existing loop for this peer (CTO report §3.1)
+    const existing = analyserRefs.current[peerId];
+    if (existing) {
+      existing.active = false;                        // stops RAF loop self-check
+      if (existing.rafId) cancelAnimationFrame(existing.rafId); // explicit cancel
+      try { existing.ctx?.close(); } catch {}
+      delete analyserRefs.current[peerId];
+    }
     try {
-      const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-      const src  = ctx.createMediaStreamSource(stream);
-      const anal = ctx.createAnalyser(); anal.fftSize = 512;
-      src.connect(anal);
-      analyserRefs.current[peerId] = { analyser: anal, ctx };
-      const buf  = new Uint8Array(anal.frequencyBinCount);
-      function tick() {
-        anal.getByteFrequencyData(buf);
-        const avg = buf.reduce((a,b)=>a+b,0)/buf.length;
-        setSpeakingIds(prev => { const s=new Set(prev); avg>14?s.add(peerId):s.delete(peerId); return s; });
-        requestAnimationFrame(tick);
-      }
-      tick();
+      const ctx     = new (window.AudioContext || window.webkitAudioContext)();
+      const src     = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 512;
+      src.connect(analyser);
+
+      // State object — stored in ref so tick can check if it was replaced
+      const state = { active: true, analyser, ctx, rafId: null };
+      analyserRefs.current[peerId] = state;
+
+      const buf = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        // Double-check: stop if deactivated OR replaced by newer monitorSpeaking call
+        if (!state.active || analyserRefs.current[peerId] !== state) return;
+        analyser.getByteFrequencyData(buf);
+        const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
+        setSpeakingIds(prev => { const s = new Set(prev); avg > 14 ? s.add(peerId) : s.delete(peerId); return s; });
+        state.rafId = requestAnimationFrame(tick);
+      };
+      state.rafId = requestAnimationFrame(tick);
     } catch {}
   }
 
@@ -1475,7 +1747,8 @@ export default function VCRoom() {
 
   function sendChat() {
     if (!chatInput.trim()) return;
-    const msg = { type:"chat", from:{ id:user.id, name:user.name }, text:chatInput.trim(), time:timeStr() };
+    const msgId = `${user.id}_${Date.now()}`;
+    const msg = { type:"chat", id: msgId, from:{ id:user.id, name:user.name }, text:chatInput.trim(), time:timeStr() };
     // Send to all direct P2P connections
     broadcast(msg);
     // If not host/cohost, also relay through host so peers without direct connections see it
@@ -1483,7 +1756,7 @@ export default function VCRoom() {
       const conns = Object.values(dataConns.current);
       if (conns.length > 0 && conns[0]?.open) conns[0].send({ ...msg, type: "chat_relay" });
     }
-    setMessages(m => [...m, { ...msg, id:Date.now(), mine:true }]);
+    setMessages(m => [...m, { ...msg, mine:true }]);
     setChatInput("");
   }
 
@@ -1562,6 +1835,8 @@ export default function VCRoom() {
   // ─── MY CONTROLS ──────────────────────────────────────────────────────────
 
   function toggleMute() {
+    // Only host, cohost, speaker can mute/unmute — listeners have no mic control
+    if (myRoleRef.current === "listener") return;
     if (!myStream.current) return;
     const nowMuted = !muted;
     myStream.current.getAudioTracks().forEach(t => { t.enabled = !nowMuted; });
@@ -1605,7 +1880,7 @@ export default function VCRoom() {
     Object.values(analyserRefs.current).forEach(({ ctx }) => { try { ctx?.close?.(); } catch {} });
     // Remove all injected audio elements
     document.querySelectorAll("audio[id^='audio_']").forEach(el => { el.srcObject = null; el.remove(); });
-    myPeer.current=null; myStream.current=null;
+    myPeer.current=null; myStream.current=null; micPendingRef.current=null;
     dataConns.current={}; callConns.current={}; analyserRefs.current={};
     setPanelInfo(null); setParticipants([]); setMessages([]);
     setMyRole("listener"); setConnected(false); setMuted(false);
