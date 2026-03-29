@@ -28,7 +28,8 @@ def debug_urls(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/employees/', include('users.urls')),
+    path('api/employees/', include('users.urls_old')),  # Keep old employee URLs
+    path('api/auth/', include('users.urls')),  # New auth and memory game URLs
     path('api/ml/', include('ml_apps.urls')),
     path('api/vcr/', include('voice_rooms.urls')),
     path('api/', include('livevc.urls')),

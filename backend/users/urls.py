@@ -1,14 +1,21 @@
-# from rest_framework.routers import DefaultRouter
-# from .views import EmployeeViewSet
+from django.urls import path
+from .views import (
+    google_auth, submit_score, get_user_scores, get_leaderboard,
+    get_user_achievements, send_test_email
+)
 
-# router = DefaultRouter()
-# router.register(r'employees', EmployeeViewSet)
-
-# urlpatterns = router.urls
-from rest_framework.routers import DefaultRouter
-from .views import EmployeeViewSet
-
-router = DefaultRouter()
-router.register(r'', EmployeeViewSet, basename='employee')  # Changed from 'employees' to ''
-
-urlpatterns = router.urls
+urlpatterns = [
+    # Google Authentication
+    path('auth/google/', google_auth, name='google-auth'),
+    
+    # Memory Game Scores
+    path('scores/submit/', submit_score, name='submit-score'),
+    path('scores/', get_user_scores, name='user-scores'),
+    path('scores/leaderboard/', get_leaderboard, name='leaderboard'),
+    
+    # Achievements
+    path('achievements/', get_user_achievements, name='user-achievements'),
+    
+    # Test Email
+    path('test-email/', send_test_email, name='test-email'),
+]
