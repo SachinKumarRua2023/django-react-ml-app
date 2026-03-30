@@ -1,4 +1,5 @@
 import "./App.css";
+import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
@@ -44,27 +45,34 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Navbar user={user} />
-      <div className="main-wrapper">
-        <Routes>
-          <Route path="/login"      element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
+    <HelmetProvider>
+      <Router>
+        <Navbar user={user} />
+        <div className="main-wrapper">
+          <Routes>
+            <Route path="/login"      element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
 
-          {/* VCRoom handles its own auth — no ProtectedRoute wrapper needed */}
-          <Route path="/live-voice" element={<VCRoom />} />
+            {/* VCRoom handles its own auth — no ProtectedRoute wrapper needed */}
+            <Route path="/live-voice" element={<VCRoom />} />
 
-          <Route path="/"                element={<MasterRua />} />
-          <Route path="/employees"       element={<Employees />} />
-          <Route path="/ml"              element={<MLPredictor />} />
-          <Route path="/syllabus"        element={<SyllabusPage />} />
-          <Route path="/trainer-kpi"     element={<TrainerDashboard />} />
-          <Route path="/mnemonic-system" element={<MnemonicSystem />} />
-          <Route path="/talk-with-rua"   element={<TalkWithRua />} />
+            <Route path="/"                element={<MasterRua />} />
+            <Route path="/employees"       element={<Employees />} />
+            <Route path="/ml"              element={<MLPredictor />} />
+            <Route path="/syllabus"        element={<SyllabusPage />} />
+            <Route path="/trainer-kpi"     element={<TrainerDashboard />} />
+            <Route path="/mnemonic-system" element={<MnemonicSystem />} />
+            <Route path="/talk-with-rua"   element={<TalkWithRua />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </Router>
+            {/* New SEO-friendly routes */}
+            <Route path="/courses"       element={<SyllabusPage />} />
+            <Route path="/whiteboard"      element={<WhiteBoard />} />
+            <Route path="/ml/:algorithm" element={<MLPredictor />} />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </HelmetProvider>
   );
 }
 

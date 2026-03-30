@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
+import SEO from "../components/SEO";
 import MLVisuals from "./MLVisuals";
 import PythonVisuals from "./PythonVisuals";
 import WhiteBoard from "./WhiteBoard";
@@ -929,7 +931,14 @@ export default function SyllabusPage() {
   const masterUser = isMasterUser;
 
   return (
-    <div className="courses-page">
+    <>
+      <SEO 
+        title="Seekhowithrua Courses - Data Science, AI, Full Stack & Game Development"
+        description="Master Data Science, AI, Machine Learning, Full Stack Development, Game Development and Robotics with Seekhowithrua's comprehensive online courses."
+        keywords="Data Science Courses, AI Training, Machine Learning, Full Stack Development, Game Development, Robotics Courses, Online Learning, Python, React, Unity"
+        url="https://app.seekhowithrua.com/courses"
+      />
+      <div className="courses-page">
       {masterUser && contentEditorOpen && editingTopic && (
         <ContentEditorModal
           topic={editingTopic}
