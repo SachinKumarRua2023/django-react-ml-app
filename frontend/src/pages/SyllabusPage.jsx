@@ -8,10 +8,10 @@ import {
   saveSyllabusData,
   resetSyllabusData,
   generateDefaultContent,
-} from "./SyllabusData"; // Updated 2025-03-30
-import "./SyllabusCourses.css"; // Updated 2025-03-30
+} from "./SyllabusData"; // Updated 2025-03-31
+import "./SyllabusCourses.css"; // Updated 2025-03-31
 
-// API base URL - Updated 2025-03-30
+// API base URL - Updated 2025-03-31 v2
 const API_URL = import.meta.env.VITE_API_URL || "https://django-react-ml-app.onrender.com/api/ml";
 
 // ── Read user from localStorage ──
