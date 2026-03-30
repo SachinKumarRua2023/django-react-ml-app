@@ -79,7 +79,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL)
     ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
-    : "https://api.seekhowithrua.com";
+    : "https://django-react-ml-app.onrender.com";
 
 const MAX_PANELS     = 10;
 const MAX_PER_PANEL  = 10;  // hard ceiling per CTO report — re-evaluate at 20+

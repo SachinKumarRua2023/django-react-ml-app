@@ -240,7 +240,7 @@ function CosmosAuthCanvas() {
   return <canvas id="cosmos-auth-canvas" ref={ref} />;
 }
 
-const API_URL = 'https://api.seekhowithrua.com' || 'http://localhost:8000/api';
+const API_URL = 'https://django-react-ml-app.onrender.com' || 'http://localhost:8000/api';
 
 const api = axios.create({
   baseURL: API_URL,
