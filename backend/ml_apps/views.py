@@ -46,43 +46,56 @@ def is_master_user(user):
 @permission_classes([AllowAny])
 def get_courses(request):
     """Get all courses with their modules and topics"""
-    courses = Course.objects.filter(is_active=True).prefetch_related(
-        'modules__topics'
-    )
-    
-    data = []
-    for course in courses:
-        course_data = {
-            'id': course.id,
-            'title': course.title,
-            'icon': course.icon,
-            'color': course.color,
-            'description': course.description,
-            'order': course.order,
-            'modules': []
-        }
+    try:
+        courses = Course.objects.filter(is_active=True).prefetch_related(
+            'modules__topics'
+        )
         
-        for module in course.modules.filter(is_active=True):
-            module_data = {
-                'id': module.id,
-                'title': module.title,
-                'order': module.order,
-                'topics': []
+        data = []
+        for course in courses:
+            course_data = {
+                'id': course.id,
+                'title': course.title,
+                'icon': course.icon,
+                'color': course.color,
+                'description': course.description,
+                'order': course.order,
+                'modules': []
             }
             
-            for topic in module.topics.filter(is_active=True):
-                module_data['topics'].append({
-                    'id': topic.id,
-                    'title': topic.title,
-                    'order': topic.order,
-                    'content': topic.get_content()
-                })
+            for module in course.modules.filter(is_active=True):
+                module_data = {
+                    'id': module.id,
+                    'title': module.title,
+                    'order': module.order,
+                    'topics': []
+                }
+                
+                for topic in module.topics.filter(is_active=True):
+                    module_data['topics'].append({
+                        'id': topic.id,
+                        'title': topic.title,
+                        'order': topic.order,
+                        'content': topic.get_content()
+                    })
+                
+                course_data['modules'].append(module_data)
             
-            course_data['modules'].append(module_data)
+            data.append(course_data)
         
-        data.append(course_data)
-    
-    return Response(data)
+        return Response(data)
+    except Exception as e:
+        # Auto-run migrations if table doesn't exist
+        if 'relation' in str(e).lower() and 'does not exist' in str(e).lower():
+            try:
+                call_command('migrate', '--noinput')
+                # Try again after migration
+                return get_courses(request)
+            except Exception as migrate_error:
+                return Response({
+                    'error': f'Database not ready. Please try again in 1 minute.'
+                }, status=503)
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['POST'])
