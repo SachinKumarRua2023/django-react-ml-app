@@ -923,12 +923,10 @@ export default function SyllabusPage() {
   ];
 
   const isT = userRole === 'trainer';
-  const isMaster = getLoggedInUser()?.email === 'master@gmail.com';
-
 
   return (
     <div className="courses-page">
-      {isMaster && contentEditorOpen && editingTopic && (
+      {masterUser && contentEditorOpen && editingTopic && (
         <ContentEditorModal
           topic={editingTopic}
           content={editingContent}
