@@ -1161,7 +1161,7 @@ export default function SyllabusPage() {
                           </button>
                           <button className="action-btn" title="Bookmark">🔖</button>
                           <button className="action-btn" title="Share">↗</button>
-                          {isMaster && (
+                          {masterUser && (
                           <button
                             className="action-btn trainer-content-edit-btn"
                             title="Edit topic content"
