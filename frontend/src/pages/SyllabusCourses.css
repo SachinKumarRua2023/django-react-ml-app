@@ -187,14 +187,15 @@
     font-size: 12px;
   }
   
-  /* Mobile sidebar and content */
+  /* Mobile sidebar and content - only on small screens */
   .course-layout-root {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   
   .course-sidebar-wrap {
-    width: 100%;
-    border-right: none;
+    width: 100% !important;
+    min-width: unset !important;
+    border-right: none !important;
     border-bottom: 1px solid rgba(255,255,255,0.1);
     max-height: 50vh;
   }
