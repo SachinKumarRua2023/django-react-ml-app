@@ -715,7 +715,8 @@ export default function SyllabusPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/syllabus/courses/`);
+        // Hardcoded URL to bypass env variable issues
+        const response = await axios.get('https://django-react-ml-app.onrender.com/api/ml/syllabus/courses/');
         setCourses(response.data);
         setError(null);
       } catch (err) {
