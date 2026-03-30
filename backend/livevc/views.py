@@ -27,8 +27,8 @@ import hashlib
 import time
 import base64
 
-from django.contrib.auth              import authenticate
-from django.contrib.auth.models       import User
+from django.contrib.auth              import authenticate, get_user_model
+User = get_user_model()
 from django.core.exceptions           import ValidationError
 from django.http                      import JsonResponse          # FIX [CRIT-2]
 from django.shortcuts                 import get_object_or_404
