@@ -5,69 +5,36 @@
 // ============================================================
 
 export const defaultSyllabusData = {
-  mysql: {
-    title: "MySQL Database",
-    icon: "🗄️",
-    color: "#00758f",
-    modules: {
-      "Basics": ["Introduction to RDBMS", "SQL Syntax & Data Types", "SELECT Statement Deep Dive", "WHERE Clause & Operators", "ORDER BY & Sorting", "LIMIT & Pagination"],
-      "Intermediate": ["JOINS (INNER, LEFT, RIGHT, FULL)", "GROUP BY & HAVING Clauses", "Subqueries & Nested Queries", "Indexes & Query Optimization", "Views & Virtual Tables", "Stored Procedures"],
-      "Advanced": ["Triggers & Events", "Transactions & ACID", "Database Normalization", "Query Performance Tuning", "Replication & Scaling", "Backup & Recovery"]
-    },
-    topicContent: {}
-  },
-  python: {
-    title: "Python Programming",
-    icon: "🐍",
-    color: "#ffd43b",
-    modules: {
-      "Core Python": ["Variables & Data Types", "Control Flow & Loops", "Functions & Scope", "OOP Concepts", "Exception Handling", "File Operations"],
-      "Advanced Python": ["Decorators & Closures", "Generators & Iterators", "Multithreading & Multiprocessing", "Async Programming (asyncio)", "Memory Management", "Metaclasses"],
-      "Backend Development": ["Django Framework Basics", "Django REST Framework", "Authentication & JWT", "API Development", "Testing & Debugging", "Deployment Strategies"]
-    },
-    topicContent: {}
-  },
-  react: {
-    title: "React Development",
-    icon: "⚛️",
-    color: "#61dafb",
-    modules: {
-      "Fundamentals": ["JSX & Component Structure", "Props & State Management", "Hooks (useState, useEffect)", "Event Handling", "Conditional Rendering", "Lists & Keys"],
-      "Advanced React": ["Context API", "Redux Toolkit & RTK Query", "Performance Optimization", "Code Splitting & Lazy Loading", "Custom Hooks", "Error Boundaries"],
-      "Production Ready": ["Authentication Flows", "Protected Routes", "API Integration Patterns", "Vite & Build Optimization", "Testing (Jest, React Testing Library)", "Deployment on Vercel"]
-    },
-    topicContent: {}
-  },
-  ml: {
-    title: "Machine Learning",
+  datascience: {
+    title: "Data Science & AI",
     icon: "🤖",
-    color: "#ff6b6b",
-    modules: {
-      "Foundations": ["Linear Regression", "Logistic Regression", "K-Nearest Neighbors", "Decision Trees", "Support Vector Machines", "Naive Bayes"],
-      "Advanced ML": ["Random Forest & Bagging", "Gradient Boosting (XGBoost, LightGBM)", "Feature Engineering", "Hyperparameter Tuning", "Cross Validation", "Ensemble Methods"],
-      "Production ML": ["Model Evaluation Metrics", "Model Serialization (Pickle, Joblib)", "ML APIs with Django/FastAPI", "Docker Containerization", "Clustering (KMeans, DBSCAN)", "Real-world End-to-End Projects"]
-    },
-    topicContent: {}
-  },
-  genai: {
-    title: "Generative AI",
-    icon: "🧠",
     color: "#a855f7",
     modules: {
-      "LLM Fundamentals": ["Transformer Architecture", "Tokenization (BPE, WordPiece)", "Word Embeddings & Attention", "Prompt Engineering Basics", "Context Windows & Limits"],
-      "Advanced LLM": ["Fine-Tuning Strategies", "RAG Architecture & Implementation", "Vector Databases (Pinecone, Chroma)", "LangChain & LlamaIndex", "PEFT & LoRA", "Model Quantization"],
-      "Production AI": ["Local LLM Deployment (llama.cpp, Ollama)", "Building AI Chatbots", "Voice AI Integration (Whisper, TTS)", "Scaling AI Systems", "Cost Optimization", "Ethical AI Considerations"]
+      "Data Science Fundamentals": ["Python for Data Science", "NumPy & Pandas", "Data Visualization (Matplotlib, Seaborn)", "Statistical Analysis", "Data Cleaning & Preprocessing", "Feature Engineering"],
+      "Machine Learning": ["Supervised Learning", "Unsupervised Learning", "Model Evaluation", "Hyperparameter Tuning", "Ensemble Methods", "ML Pipelines"],
+      "Deep Learning & AI": ["Neural Networks", "TensorFlow & PyTorch", "Computer Vision", "Natural Language Processing", "LLMs & Transformers", "Generative AI Applications"]
     },
     topicContent: {}
   },
-  django: {
-    title: "Django Full Stack",
-    icon: "🎯",
-    color: "#092e20",
+  fullstack: {
+    title: "Full Stack Development",
+    icon: "💻",
+    color: "#22d3ee",
     modules: {
-      "Django Basics": ["MTV Architecture", "Models & ORM", "Views & URL Routing", "Templates & Forms", "Admin Interface", "Static & Media Files"],
-      "Django Advanced": ["Class-Based Views", "Middleware & Signals", "Caching Strategies", "Celery & Background Tasks", "WebSockets & Channels", "Security Best Practices"],
-      "Full Stack Integration": ["REST API Development", "React-Django Integration", "Authentication (OAuth, JWT)", "Database Optimization", "Testing & CI/CD", "AWS/Render Deployment"]
+      "Frontend Development": ["HTML5, CSS3, JavaScript", "React.js & Hooks", "State Management (Redux)", "Responsive Design", "Tailwind CSS", "TypeScript"],
+      "Backend Development": ["Node.js & Express", "Django Framework", "REST API Design", "Authentication & Security", "Database Design", "Microservices"],
+      "Mobile & Deployment": ["React Native", "Flutter Basics", "Docker & Kubernetes", "AWS/Cloud Services", "CI/CD Pipelines", "Production Deployment"]
+    },
+    topicContent: {}
+  },
+  gamerobotics: {
+    title: "Game & Robotics",
+    icon: "🎮",
+    color: "#ff6b6b",
+    modules: {
+      "Game Development": ["Unity Basics", "C# for Game Dev", "3D Modeling", "Physics & Animation", "Game AI", "Multiplayer Systems"],
+      "Robotics": ["Arduino Programming", "Raspberry Pi", "Sensors & Actuators", "ROS (Robot OS)", "Computer Vision for Robotics", "Autonomous Navigation"],
+      "IoT & Embedded": ["Embedded C/C++", "IoT Protocols", "Smart Device Integration", "PCB Design", "Real-time Systems", "Project Building"]
     },
     topicContent: {}
   }

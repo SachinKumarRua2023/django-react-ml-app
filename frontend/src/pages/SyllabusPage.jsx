@@ -754,6 +754,8 @@ export default function SyllabusPage() {
     };
     checkRole();
     window.addEventListener('storage', checkRole);
+    // Clear old syllabus data to show new 3 courses
+    localStorage.removeItem('cosmos_syllabus_data');
     return () => window.removeEventListener('storage', checkRole);
   }, []);
 
@@ -793,7 +795,7 @@ export default function SyllabusPage() {
   const [viewMode, setViewMode] = useState('courses');
   const [orbOpen, setOrbOpen] = useState(false);
   const [quizOrbOpen, setQuizOrbOpen] = useState(false);
-  const [activeSubject, setActiveSubject] = useState("python");
+  const [activeSubject, setActiveSubject] = useState("datascience");
   const [activeModule, setActiveModule] = useState(null);
   const [activeTopic, setActiveTopic] = useState("");
   const [content, setContent] = useState(null);
