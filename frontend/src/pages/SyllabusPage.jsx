@@ -25,7 +25,7 @@ const getLoggedInUser = () => {
 };
 
 // ── Check if user is master@gmail.com ──
-const isMaster = () => {
+const checkMaster = () => {
   const user = getLoggedInUser();
   return user?.email === "master@gmail.com" && !!user?.token;
 };
@@ -746,7 +746,7 @@ export default function SyllabusPage() {
   useEffect(() => {
     const checkRole = () => {
       const trainer = isTrainer();
-      const master = isMaster();
+      const master = checkMaster();
       setTrainerMode(trainer);
       setIsMasterUser(master);
       setUserRole(trainer ? 'trainer' : getLoggedInUser() ? 'learner' : 'guest');
@@ -923,6 +923,7 @@ export default function SyllabusPage() {
   ];
 
   const isT = userRole === 'trainer';
+  const masterUser = isMasterUser;
 
   return (
     <div className="courses-page">
