@@ -46,10 +46,6 @@ def is_master_user(user):
 @permission_classes([AllowAny])
 def get_courses(request):
     """Get all courses with their modules and topics"""
-    # Prevent infinite recursion - check if we already tried migration
-    if getattr(request, '_migration_attempted', False):
-        return Response({'error': 'Database migration failed. Please contact support.'}, status=500)
-    
     try:
         courses = Course.objects.filter(is_active=True).prefetch_related(
             'modules__topics'
@@ -89,17 +85,13 @@ def get_courses(request):
         
         return Response(data)
     except Exception as e:
-        # Auto-run migrations if table doesn't exist
+        # Check if tables don't exist
         if 'relation' in str(e).lower() and 'does not exist' in str(e).lower():
-            try:
-                call_command('migrate', '--noinput')
-                # Mark that we attempted migration and retry once
-                request._migration_attempted = True
-                return get_courses(request)
-            except Exception as migrate_error:
-                return Response({
-                    'error': f'Migration failed: {str(migrate_error)}'
-                }, status=500)
+            return Response({
+                'error': 'Database tables not created. Please run migrations first.',
+                'migration_endpoint': '/api/ml/migrate/',
+                'message': 'Visit /api/ml/migrate/ to create database tables'
+            }, status=503)
         return Response({'error': str(e)}, status=500)
 
 
