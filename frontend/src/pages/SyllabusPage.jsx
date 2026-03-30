@@ -1822,7 +1822,7 @@ export default function SyllabusPage() {
         /* ─────────────────────────────────────────────────────────
            RESPONSIVE
         ───────────────────────────────────────────────────────── */
-        @media (max-width: 900px) {
+        @media (max-width: 768px) {
           .courses-page {
             height: auto;
             overflow: visible;
