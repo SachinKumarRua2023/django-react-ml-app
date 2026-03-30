@@ -27,7 +27,8 @@ const getLoggedInUser = () => {
 // ── Check if user is master@gmail.com ──
 const checkMaster = () => {
   const user = getLoggedInUser();
-  return user?.email === "master@gmail.com" && !!user?.token;
+  const masterEmails = ["master@gmail.com", "seekhowithrua@gmail.com"];
+  return masterEmails.includes(user?.email) && !!user?.token;
 };
 
 // ── Tiny unique id helper ──
