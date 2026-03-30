@@ -135,40 +135,46 @@ def register(request):
 @permission_classes([AllowAny])
 def login(request):
     """Login with email + password."""
-    data     = request.data
-    email    = data.get('email', '').lower().strip()
-    password = data.get('password')
-
-    if not email or not password:
-        return Response({'error': 'Email and password are required'}, status=400)
-
     try:
-        user_obj = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return Response({'error': 'Invalid email or password'}, status=401)
-    except User.MultipleObjectsReturned:
-        # Two accounts share same email — treat as auth failure, log for ops
-        return Response({'error': 'Invalid email or password'}, status=401)
+        data     = request.data
+        email    = data.get('email', '').lower().strip()
+        password = data.get('password')
 
-    user = authenticate(username=user_obj.username, password=password)
-    if user is None:
-        return Response({'error': 'Invalid email or password'}, status=401)
+        if not email or not password:
+            return Response({'error': 'Email and password are required'}, status=400)
 
-    token, _ = Token.objects.get_or_create(user=user)
-    profile  = user.profile
+        try:
+            user_obj = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid email or password'}, status=401)
+        except User.MultipleObjectsReturned:
+            # Two accounts share same email — treat as auth failure, log for ops
+            return Response({'error': 'Invalid email or password'}, status=401)
 
-    return Response({
-        'token': token.key,
-        'user': {
-            'id': user.id, 'email': user.email, 'username': user.username,
-            'first_name': user.first_name, 'last_name': user.last_name,
-            'profile': {
-                'role':       profile.role,
-                'is_premium': profile.is_premium,
-                'avatar_url': getattr(profile, 'avatar_url', None),
+        user = authenticate(username=user_obj.username, password=password)
+        if user is None:
+            return Response({'error': 'Invalid email or password'}, status=401)
+
+        token, _ = Token.objects.get_or_create(user=user)
+        profile  = user.profile
+
+        return Response({
+            'token': token.key,
+            'user': {
+                'id': user.id, 'email': user.email, 'username': user.username,
+                'first_name': user.first_name, 'last_name': user.last_name,
+                'profile': {
+                    'role':       profile.role,
+                    'is_premium': profile.is_premium,
+                    'avatar_url': getattr(profile, 'avatar_url', None),
+                },
             },
-        },
-    })
+        })
+    except Exception as e:
+        import traceback
+        print("LOGIN ERROR:", str(e))
+        print(traceback.format_exc())
+        return Response({'error': f'Server error: {str(e)}'}, status=500)
 
 
 @api_view(['POST'])
@@ -247,36 +253,42 @@ def google_login(request):
     Body: { "token": "<Google ID token>", "role": "learner" }
     Verifies Google token, creates/finds user, returns Django auth token.
     """
-    token_str = request.data.get('token', '')
-    role      = request.data.get('role', 'learner')
-
-    if not token_str:
-        return Response({'error': 'Google token is required'}, status=400)
-
     try:
-        id_info = verify_google_token(token_str)
-    except ValueError as e:
-        return Response({'error': str(e)}, status=401)
+        token_str = request.data.get('token', '')
+        role      = request.data.get('role', 'learner')
 
-    try:
-        user, token, created = get_or_create_google_user(id_info, role)
-    except ValueError as e:
-        return Response({'error': str(e)}, status=400)
+        if not token_str:
+            return Response({'error': 'Google token is required'}, status=400)
 
-    profile = user.profile
-    return Response({
-        'token':   token.key,
-        'created': created,
-        'user': {
-            'id': user.id, 'email': user.email, 'username': user.username,
-            'first_name': user.first_name, 'last_name': user.last_name,
-            'profile': {
-                'role':       profile.role,
-                'is_premium': profile.is_premium,
-                'avatar_url': getattr(profile, 'avatar_url', None),
+        try:
+            id_info = verify_google_token(token_str)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=401)
+
+        try:
+            user, token, created = get_or_create_google_user(id_info, role)
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
+
+        profile = user.profile
+        return Response({
+            'token':   token.key,
+            'created': created,
+            'user': {
+                'id': user.id, 'email': user.email, 'username': user.username,
+                'first_name': user.first_name, 'last_name': user.last_name,
+                'profile': {
+                    'role':       profile.role,
+                    'is_premium': profile.is_premium,
+                    'avatar_url': getattr(profile, 'avatar_url', None),
+                },
             },
-        },
-    }, status=201 if created else 200)
+        }, status=201 if created else 200)
+    except Exception as e:
+        import traceback
+        print("GOOGLE LOGIN ERROR:", str(e))
+        print(traceback.format_exc())
+        return Response({'error': f'Server error: {str(e)}'}, status=500)
 
 
 @api_view(['POST'])
