@@ -6,7 +6,253 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from sklearn.preprocessing import StandardScaler
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import get_user_model
+
+from .models import Course, Module, Topic
+
+User = get_user_model()
+
+# -------------------------
+# SYLLABUS API ENDPOINTS
+# -------------------------
+
+def is_master_user(user):
+    """Check if user is master@gmail.com"""
+    return user.is_authenticated and user.email == 'master@gmail.com'
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_courses(request):
+    """Get all courses with their modules and topics"""
+    courses = Course.objects.filter(is_active=True).prefetch_related(
+        'modules__topics'
+    )
+    
+    data = []
+    for course in courses:
+        course_data = {
+            'id': course.id,
+            'title': course.title,
+            'icon': course.icon,
+            'color': course.color,
+            'description': course.description,
+            'order': course.order,
+            'modules': []
+        }
+        
+        for module in course.modules.filter(is_active=True):
+            module_data = {
+                'id': module.id,
+                'title': module.title,
+                'order': module.order,
+                'topics': []
+            }
+            
+            for topic in module.topics.filter(is_active=True):
+                module_data['topics'].append({
+                    'id': topic.id,
+                    'title': topic.title,
+                    'order': topic.order,
+                    'content': topic.get_content()
+                })
+            
+            course_data['modules'].append(module_data)
+        
+        data.append(course_data)
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_course(request):
+    """Create a new course - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can create courses'}, status=403)
+    
+    data = request.data
+    course = Course.objects.create(
+        id=data.get('id'),
+        title=data.get('title'),
+        icon=data.get('icon', '📚'),
+        color=data.get('color', '#00d9ff'),
+        description=data.get('description', ''),
+        order=data.get('order', 0)
+    )
+    
+    return Response({
+        'id': course.id,
+        'title': course.title,
+        'message': 'Course created successfully'
+    }, status=201)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_course(request, course_id):
+    """Update a course - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can update courses'}, status=403)
+    
+    try:
+        course = Course.objects.get(id=course_id)
+        data = request.data
+        
+        course.title = data.get('title', course.title)
+        course.icon = data.get('icon', course.icon)
+        course.color = data.get('color', course.color)
+        course.description = data.get('description', course.description)
+        course.order = data.get('order', course.order)
+        course.is_active = data.get('is_active', course.is_active)
+        course.save()
+        
+        return Response({'message': 'Course updated successfully'})
+    except Course.DoesNotExist:
+        return Response({'error': 'Course not found'}, status=404)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_course(request, course_id):
+    """Delete a course - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can delete courses'}, status=403)
+    
+    try:
+        course = Course.objects.get(id=course_id)
+        course.delete()
+        return Response({'message': 'Course deleted successfully'})
+    except Course.DoesNotExist:
+        return Response({'error': 'Course not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_module(request, course_id):
+    """Create a module in a course - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can create modules'}, status=403)
+    
+    try:
+        course = Course.objects.get(id=course_id)
+        data = request.data
+        
+        module = Module.objects.create(
+            course=course,
+            title=data.get('title'),
+            order=data.get('order', 0)
+        )
+        
+        return Response({
+            'id': module.id,
+            'title': module.title,
+            'message': 'Module created successfully'
+        }, status=201)
+    except Course.DoesNotExist:
+        return Response({'error': 'Course not found'}, status=404)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_module(request, module_id):
+    """Update a module - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can update modules'}, status=403)
+    
+    try:
+        module = Module.objects.get(id=module_id)
+        data = request.data
+        
+        module.title = data.get('title', module.title)
+        module.order = data.get('order', module.order)
+        module.is_active = data.get('is_active', module.is_active)
+        module.save()
+        
+        return Response({'message': 'Module updated successfully'})
+    except Module.DoesNotExist:
+        return Response({'error': 'Module not found'}, status=404)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_module(request, module_id):
+    """Delete a module - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can delete modules'}, status=403)
+    
+    try:
+        module = Module.objects.get(id=module_id)
+        module.delete()
+        return Response({'message': 'Module deleted successfully'})
+    except Module.DoesNotExist:
+        return Response({'error': 'Module not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_topic(request, module_id):
+    """Create a topic in a module - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can create topics'}, status=403)
+    
+    try:
+        module = Module.objects.get(id=module_id)
+        data = request.data
+        
+        topic = Topic.objects.create(
+            module=module,
+            title=data.get('title'),
+            order=data.get('order', 0),
+            content=data.get('content', {})
+        )
+        
+        return Response({
+            'id': topic.id,
+            'title': topic.title,
+            'message': 'Topic created successfully'
+        }, status=201)
+    except Module.DoesNotExist:
+        return Response({'error': 'Module not found'}, status=404)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_topic(request, topic_id):
+    """Update a topic - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can update topics'}, status=403)
+    
+    try:
+        topic = Topic.objects.get(id=topic_id)
+        data = request.data
+        
+        topic.title = data.get('title', topic.title)
+        topic.order = data.get('order', topic.order)
+        topic.content = data.get('content', topic.content)
+        topic.is_active = data.get('is_active', topic.is_active)
+        topic.save()
+        
+        return Response({'message': 'Topic updated successfully'})
+    except Topic.DoesNotExist:
+        return Response({'error': 'Topic not found'}, status=404)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_topic(request, topic_id):
+    """Delete a topic - only master@gmail.com"""
+    if not is_master_user(request.user):
+        return Response({'error': 'Only master can delete topics'}, status=403)
+    
+    try:
+        topic = Topic.objects.get(id=topic_id)
+        topic.delete()
+        return Response({'message': 'Topic deleted successfully'})
+    except Topic.DoesNotExist:
+        return Response({'error': 'Topic not found'}, status=404)
+
 
 # -------------------------
 # Load Data

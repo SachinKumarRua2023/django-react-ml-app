@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
 import MLVisuals from "./MLVisuals";
 import PythonVisuals from "./PythonVisuals";
 import WhiteBoard from "./WhiteBoard";
@@ -7,10 +8,13 @@ import {
   saveSyllabusData,
   resetSyllabusData,
   generateDefaultContent,
-  SYLLABUS_STORAGE_KEY,
 } from "./SyllabusData";
+import "./SyllabusCourses.css";
 
-// ── Read trainer role from JWT user stored by LoginSignupLogout ──
+// API base URL
+const API_URL = import.meta.env.VITE_API_URL || "https://api.seekhowithrua.com/api";
+
+// ── Read user from localStorage ──
 const getLoggedInUser = () => {
   try {
     const raw = localStorage.getItem("cosmos_user");
@@ -20,6 +24,16 @@ const getLoggedInUser = () => {
   }
 };
 
+// ── Check if user is master@gmail.com ──
+const isMaster = () => {
+  const user = getLoggedInUser();
+  return user?.email === "master@gmail.com" && !!user?.token;
+};
+
+// ── Tiny unique id helper ──
+const uid = () => Math.random().toString(36).slice(2, 8);
+
+// ── Check if user is trainer ──
 const isTrainer = () => {
   const user = getLoggedInUser();
   if (!user) return false;
@@ -27,8 +41,59 @@ const isTrainer = () => {
   return role === "trainer";
 };
 
-// ── Tiny unique id helper ──
-const uid = () => Math.random().toString(36).slice(2, 8);
+// ============================================================
+// COURSE LISTING COMPONENT - Beautiful grid layout
+// ============================================================
+const CourseCard = ({ course, onClick, isActive }) => {
+  const topicCount = course.modules?.reduce((acc, mod) => acc + (mod.topics?.length || 0), 0) || 0;
+  return (
+    <div 
+      className={`course-card ${isActive ? 'active' : ''}`}
+      onClick={onClick}
+      style={{ 
+        borderColor: course.color,
+        background: isActive ? `${course.color}20` : 'rgba(20, 20, 40, 0.8)'
+      }}
+    >
+      <div className="course-icon" style={{ color: course.color }}>
+        {course.icon}
+      </div>
+      <div className="course-info">
+        <h3 className="course-title">{course.title}</h3>
+        <p className="course-description">{course.description || 'Learn with hands-on projects'}</p>
+        <div className="course-modules-count">
+          <span>{course.modules?.length || 0} modules • {topicCount} topics</span>
+        </div>
+      </div>
+      <div className="course-glow" style={{ background: course.color }} />
+    </div>
+  );
+};
+
+const CourseListing = ({ courses, activeCourseId, onSelect, isMasterUser }) => {
+  if (!courses || courses.length === 0) {
+    return (
+      <div className="no-courses">
+        <span className="no-courses-icon">📚</span>
+        <p>No courses available yet.</p>
+        {isMasterUser && <p className="master-hint">As master, you can add courses from the Edit panel.</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="courses-grid">
+      {courses.map(course => (
+        <CourseCard 
+          key={course.id}
+          course={course}
+          isActive={course.id === activeCourseId}
+          onClick={() => onSelect(course.id)}
+        />
+      ))}
+    </div>
+  );
+};
 
 // ============================================================
 // QUIZ DATA (unchanged — not touched)
@@ -633,18 +698,56 @@ const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, o
     </div>
   );
 };
-
-// ============================================================
 // MAIN SYLLABUS PAGE
 // ============================================================
 export default function SyllabusPage() {
   const [trainerMode, setTrainerMode] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [isMasterUser, setIsMasterUser] = useState(false);
+
+  // API state
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_URL}/syllabus/courses/`);
+        setCourses(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch courses:', err);
+        setError('Failed to load courses');
+        // Fallback to local data
+        const localData = loadSyllabusData();
+        const fallbackCourses = Object.entries(localData).map(([id, data]) => ({
+          id,
+          ...data,
+          modules: Object.entries(data.modules || {}).map(([title, topics], idx) => ({
+            id: idx,
+            title,
+            order: idx,
+            topics: topics.map((t, tIdx) => ({ id: tIdx, title: t, order: tIdx }))
+          }))
+        }));
+        setCourses(fallbackCourses);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   useEffect(() => {
     const checkRole = () => {
       const trainer = isTrainer();
-      setTrainerMode(false);
+      const master = isMaster();
+      setTrainerMode(trainer);
+      setIsMasterUser(master);
       setUserRole(trainer ? 'trainer' : getLoggedInUser() ? 'learner' : 'guest');
     };
     checkRole();
@@ -654,6 +757,26 @@ export default function SyllabusPage() {
 
   const [syllabusData, setSyllabusData] = useState(() => loadSyllabusData());
   const [savedIndicator, setSavedIndicator] = useState(false);
+
+  // Convert API courses to syllabus format
+  const apiSyllabusData = useCallback(() => {
+    const data = {};
+    courses.forEach(course => {
+      const modules = {};
+      course.modules?.forEach(mod => {
+        modules[mod.title] = mod.topics?.map(t => t.title) || [];
+      });
+      data[course.id] = {
+        title: course.title,
+        icon: course.icon,
+        color: course.color,
+        description: course.description,
+        modules,
+        topicContent: {}
+      };
+    });
+    return data;
+  }, [courses]);
 
   const updateSyllabus = useCallback((updater) => {
     setSyllabusData(prev => {
@@ -847,196 +970,257 @@ export default function SyllabusPage() {
       {/* ── COURSE MODE ── */}
       {viewMode === 'courses' && (
         <>
-          {showCelebration && <Celebration onClose={() => setShowCelebration(false)} />}
+          {/* ── SYLLABUS HEADER ── */}
+          <div className="syllabus-header">
+            <h1>📚 Learning Paths</h1>
+            <p>Explore our comprehensive courses designed to take you from beginner to expert</p>
+          </div>
 
-          <div className="subject-tabs">
-            <div className="tabs-container">
-              {Object.entries(syllabusData).map(([key, data]) => (
-                <button key={key} className={`subject-tab ${activeSubject === key ? 'active' : ''}`} onClick={() => handleSubjectChange(key)} style={{ '--subject-color': data.color }}>
-                  <span className="tab-icon">{data.icon}</span>
-                  <span className="tab-text">{data.title}</span>
-                  {activeSubject === key && <div className="tab-glow" />}
-                </button>
-              ))}
+          {/* ── MASTER EDIT BUTTON ── */}
+          {isMasterUser && (
+            <button 
+              className="master-edit-btn"
+              onClick={() => setTrainerPanelOpen(p => !p)}
+            >
+              ✏️ {trainerPanelOpen ? 'Close Editor' : 'Edit Courses'}
+            </button>
+          )}
+
+          {/* ── COURSE GRID ── */}
+          {loading ? (
+            <div className="courses-loading">
+              <div className="courses-loading-spinner"></div>
+              <p>Loading courses...</p>
             </div>
-          </div>
+          ) : (
+            <CourseListing 
+              courses={courses} 
+              activeCourseId={activeSubject}
+              onSelect={(courseId) => {
+                setActiveSubject(courseId);
+                // Find the course and update syllabus data
+                const selectedCourse = courses.find(c => c.id === courseId);
+                if (selectedCourse) {
+                  const modules = {};
+                  selectedCourse.modules?.forEach(mod => {
+                    modules[mod.title] = mod.topics?.map(t => t.title) || [];
+                  });
+                  setSyllabusData(prev => ({
+                    ...prev,
+                    [courseId]: {
+                      title: selectedCourse.title,
+                      icon: selectedCourse.icon,
+                      color: selectedCourse.color,
+                      description: selectedCourse.description,
+                      modules,
+                      topicContent: prev[courseId]?.topicContent || {}
+                    }
+                  }));
+                }
+              }}
+              isMasterUser={isMasterUser}
+            />
+          )}
 
-          <div className="course-progress-bar">
-            <div className="progress-fill" style={{ width: `${progress}%` }} />
-            <span className="progress-text">{progress}% Complete</span>
-          </div>
+          {/* ── TRAINER PANEL ── */}
+          {isMasterUser && trainerPanelOpen && (
+            <div className="trainer-panel-wrap" style={{position: 'fixed', top: '120px', right: '20px', width: '350px', maxHeight: '70vh', zIndex: 1000}}>
+              <TrainerSyllabusPanel
+                syllabusData={syllabusData}
+                activeSubject={activeSubject}
+                onUpdateSyllabus={updateSyllabus}
+                onClose={() => setTrainerPanelOpen(false)}
+              />
+            </div>
+          )}
 
-          {/* ── LAYOUT ROOT — flex row so everything is visible ── */}
-          <div className="course-layout-root">
+          {/* ── DETAILED COURSE VIEW (when a topic is selected) ── */}
+          {activeSubject && syllabusData[activeSubject] && (
+            <>
+              {showCelebration && <Celebration onClose={() => setShowCelebration(false)} />}
 
-            {/* Trainer panel — fixed width, full height, scrollable */}
-            {isT && trainerPanelOpen && (
-              <div className="trainer-panel-wrap">
-                <TrainerSyllabusPanel
-                  syllabusData={syllabusData}
-                  activeSubject={activeSubject}
-                  onUpdateSyllabus={updateSyllabus}
-                  onClose={() => setTrainerPanelOpen(false)}
-                />
+              <div className="subject-tabs">
+                <div className="tabs-container">
+                  {courses.map(course => (
+                    <button 
+                      key={course.id} 
+                      className={`subject-tab ${activeSubject === course.id ? 'active' : ''}`} 
+                      onClick={() => handleSubjectChange(course.id)} 
+                      style={{ '--subject-color': course.color }}
+                    >
+                      <span className="tab-icon">{course.icon}</span>
+                      <span className="tab-text">{course.title}</span>
+                      {activeSubject === course.id && <div className="tab-glow" />}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
 
-            {/* Course sidebar — fixed width, full height, scrollable */}
-            {!sidebarCollapsed && (
-              <aside className="course-sidebar-wrap">
-                <div className="sidebar-header">
-                  <h3 className="sidebar-title">
-                    <span>{currentSubject.icon}</span>
-                    {currentSubject.title}
-                  </h3>
-                  <button className="collapse-btn" onClick={() => setSidebarCollapsed(true)}>←</button>
-                </div>
-                <div className="modules-list">
-                  {Object.entries(currentSubject.modules).map(([moduleName, topics]) => {
-                    const isModuleComplete = completedModules.has(moduleName);
-                    const isModuleActive = activeModule === moduleName;
-                    return (
-                      <div key={moduleName} className="module-group">
-                        <button className={`module-header ${isModuleActive ? 'active' : ''} ${isModuleComplete ? 'completed' : ''}`} onClick={() => setActiveModule(isModuleActive ? null : moduleName)}>
-                          <span className="module-icon">{isModuleComplete ? '✓' : isModuleActive ? '▼' : '▶'}</span>
-                          <span className="module-name">{moduleName}</span>
-                          <span className={`topic-count ${isModuleComplete ? 'done' : ''}`}>
-                            {isModuleComplete ? 'Done' : `${topics.filter(t => completedTopics.has(t)).length}/${topics.length}`}
-                          </span>
-                        </button>
-                        {isModuleActive && (
-                          <div className="topics-list">
-                            {topics.map((topic, idx) => {
-                              const isCompleted = completedTopics.has(topic);
-                              const isActive = activeTopic === topic;
-                              const hasCustomContent = !!currentSubject.topicContent?.[topic];
-                              return (
-                                <button key={topic} className={`topic-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} onClick={() => handleTopicClick(topic, moduleName)} style={{ animationDelay: `${idx * 0.05}s` }}>
-                                  <span className="topic-bullet">{isCompleted ? '✓' : isActive ? '◆' : '◇'}</span>
-                                  <span className="topic-text">{topic}</span>
-                                  {isT && hasCustomContent && <span className="custom-content-dot" title="Has custom content">●</span>}
-                                  {isActive && <span className="topic-active-indicator" />}
-                                </button>
-                              );
-                            })}
+              <div className="course-progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }} />
+                <span className="progress-text">{progress}% Complete</span>
+              </div>
+
+              {/* ── LAYOUT ROOT ── */}
+              <div className="course-layout-root">
+                {/* Course sidebar */}
+                {!sidebarCollapsed && (
+                  <aside className="course-sidebar-wrap">
+                    <div className="sidebar-header">
+                      <h3 className="sidebar-title">
+                        <span>{currentSubject.icon}</span>
+                        {currentSubject.title}
+                      </h3>
+                      <button className="collapse-btn" onClick={() => setSidebarCollapsed(true)}>←</button>
+                    </div>
+                    <div className="modules-list">
+                      {Object.entries(currentSubject.modules).map(([moduleName, topics]) => {
+                        const isModuleComplete = completedModules.has(moduleName);
+                        const isModuleActive = activeModule === moduleName;
+                        return (
+                          <div key={moduleName} className="module-group">
+                            <button className={`module-header ${isModuleActive ? 'active' : ''} ${isModuleComplete ? 'completed' : ''}`} onClick={() => setActiveModule(isModuleActive ? null : moduleName)}>
+                              <span className="module-icon">{isModuleComplete ? '✓' : isModuleActive ? '▼' : '▶'}</span>
+                              <span className="module-name">{moduleName}</span>
+                              <span className={`topic-count ${isModuleComplete ? 'done' : ''}`}>
+                                {isModuleComplete ? 'Done' : `${topics.filter(t => completedTopics.has(t)).length}/${topics.length}`}
+                              </span>
+                            </button>
+                            {isModuleActive && (
+                              <div className="topics-list">
+                                {topics.map((topic, idx) => {
+                                  const isCompleted = completedTopics.has(topic);
+                                  const isActive = activeTopic === topic;
+                                  const hasCustomContent = !!currentSubject.topicContent?.[topic];
+                                  return (
+                                    <button key={topic} className={`topic-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} onClick={() => handleTopicClick(topic, moduleName)} style={{ animationDelay: `${idx * 0.05}s` }}>
+                                      <span className="topic-bullet">{isCompleted ? '✓' : isActive ? '◆' : '◇'}</span>
+                                      <span className="topic-text">{topic}</span>
+                                      {isMasterUser && hasCustomContent && <span className="custom-content-dot" title="Has custom content">●</span>}
+                                      {isActive && <span className="topic-active-indicator" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        );
+                      })}
+                    </div>
+                    <div className="sidebar-footer">
+                      <div className="ueep-mini">
+                        <span>Course Progress</span>
+                        <div className="ueep-progress">
+                          <div className="progress-bar" style={{ width: `${progress}%` }} />
+                        </div>
+                        <span className="progress-percent">{progress}%</span>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="sidebar-footer">
-                  <div className="ueep-mini">
-                    <span>Course Progress</span>
-                    <div className="ueep-progress">
-                      <div className="progress-bar" style={{ width: `${progress}%` }} />
                     </div>
-                    <span className="progress-percent">{progress}%</span>
-                  </div>
-                </div>
-              </aside>
-            )}
+                  </aside>
+                )}
 
-            {/* Collapsed sidebar toggle button */}
-            {sidebarCollapsed && (
-              <button className="sidebar-expand-btn" onClick={() => setSidebarCollapsed(false)}>
-                →
-              </button>
-            )}
+                {/* Collapsed sidebar toggle */}
+                {sidebarCollapsed && (
+                  <button className="sidebar-expand-btn" onClick={() => setSidebarCollapsed(false)}>
+                    →
+                  </button>
+                )}
 
-            {/* Main content — takes all remaining space */}
-            <main className="content-area">
-              {showModuleComplete ? (
-                <ModuleComplete moduleName={currentModuleComplete} onNext={handleNextModule} />
-              ) : !content ? (
-                <div className="welcome-screen">
-                  <div className="welcome-icon">{currentSubject.icon}</div>
-                  <h1>{currentSubject.title}</h1>
-                  <p>Select a topic from the sidebar to start learning</p>
-                  <div className="quick-stats">
-                    <div className="stat"><span className="stat-value">{allTopics.length}</span><span className="stat-label">Topics</span></div>
-                    <div className="stat"><span className="stat-value">{allModules.length}</span><span className="stat-label">Modules</span></div>
-                    <div className="stat"><span className="stat-value">{completedTopics.size}</span><span className="stat-label">Completed</span></div>
-                  </div>
-                  {isT && (
-                    <div className="trainer-welcome-hint">
-                      <span>⚙️ Trainer:</span> Use <strong>✏️ Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
-                    </div>
-                  )}
-                  <div className="start-hint"><span className="hint-arrow">←</span><span>Choose a module to begin</span></div>
-                </div>
-              ) : (
-                <div className="content-display">
-                  <div className="content-header">
-                    <div className="breadcrumb">
-                      <span>{currentSubject.title}</span><span>›</span><span>{activeModule}</span><span>›</span>
-                      <span className="active">{activeTopic}</span>
-                    </div>
-                    <div className="content-actions">
-                      <button className={`action-btn ${completedTopics.has(activeTopic) ? 'completed' : ''}`} title="Mark Complete"
-                        onClick={() => { const s = new Set(completedTopics); s.add(activeTopic); setCompletedTopics(s); }}>
-                        {completedTopics.has(activeTopic) ? '✓' : '○'}
-                      </button>
-                      <button className="action-btn" title="Bookmark">🔖</button>
-                      <button className="action-btn" title="Share">↗</button>
-                      {isMaster && (
-                      <button
-                        className="action-btn trainer-content-edit-btn"
-                        title="Edit topic content"
-                        onClick={() => {
-                          setEditingTopic(activeTopic);
-                          setEditingContent(getTopicContent(activeTopic));
-                          setContentEditorOpen(true);
-                        }}
-                        >
-                          ✏️ Edit Content
-                        </button>
+                {/* Main content */}
+                <main className="content-area">
+                  {showModuleComplete ? (
+                    <ModuleComplete moduleName={currentModuleComplete} onNext={handleNextModule} />
+                  ) : !content ? (
+                    <div className="welcome-screen">
+                      <div className="welcome-icon">{currentSubject.icon}</div>
+                      <h1>{currentSubject.title}</h1>
+                      <p>Select a topic from the sidebar to start learning</p>
+                      <div className="quick-stats">
+                        <div className="stat"><span className="stat-value">{allTopics.length}</span><span className="stat-label">Topics</span></div>
+                        <div className="stat"><span className="stat-value">{allModules.length}</span><span className="stat-label">Modules</span></div>
+                        <div className="stat"><span className="stat-value">{completedTopics.size}</span><span className="stat-label">Completed</span></div>
+                      </div>
+                      {isT && (
+                        <div className="trainer-welcome-hint">
+                          <span>⚙️ Trainer:</span> Use <strong>✏️ Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
+                        </div>
                       )}
+                      <div className="start-hint"><span className="hint-arrow">←</span><span>Choose a module to begin</span></div>
                     </div>
-                  </div>
-
-                  <article className="content-body">
-                    <h1 className="content-title">{content.title}</h1>
-                    <p className="content-description">{content.description}</p>
-                    {content.sections.map((section, idx) => (
-                      <section key={idx} className="content-section">
-                        <h3 className="section-heading">{section.heading}</h3>
-                        <p className="section-text">{section.text}</p>
-                      </section>
-                    ))}
-                    <div className="code-playground-teaser">
-                      <div className="teaser-header"><span>💻</span><span>Practice Code</span></div>
-                      <div className="teaser-body">
-                        <p>Interactive Python compiler coming soon...</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <button className="btn btn-primary">Open IDE</button>
-                          <button
-                            className="quiz-orb-fan-btn"
-                            style={{ '--qitem-color': '#22d3ee', width: '44px', height: '44px', fontSize: '20px', cursor: 'pointer' }}
-                            onClick={() => { setViewMode('quiz-python'); }}
-                            title="Take Quiz"
-                          >
-                            🧠
+                  ) : (
+                    <div className="content-display">
+                      <div className="content-header">
+                        <div className="breadcrumb">
+                          <span>{currentSubject.title}</span><span>›</span><span>{activeModule}</span><span>›</span>
+                          <span className="active">{activeTopic}</span>
+                        </div>
+                        <div className="content-actions">
+                          <button className={`action-btn ${completedTopics.has(activeTopic) ? 'completed' : ''}`} title="Mark Complete"
+                            onClick={() => { const s = new Set(completedTopics); s.add(activeTopic); setCompletedTopics(s); }}>
+                            {completedTopics.has(activeTopic) ? '✓' : '○'}
                           </button>
+                          <button className="action-btn" title="Bookmark">🔖</button>
+                          <button className="action-btn" title="Share">↗</button>
+                          {isMaster && (
+                          <button
+                            className="action-btn trainer-content-edit-btn"
+                            title="Edit topic content"
+                            onClick={() => {
+                              setEditingTopic(activeTopic);
+                              setEditingContent(getTopicContent(activeTopic));
+                              setContentEditorOpen(true);
+                            }}
+                            >
+                              ✏️ Edit Content
+                            </button>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </article>
 
-                  <div className="content-footer">
-                    <button className="nav-btn prev" onClick={handlePrevious} disabled={!canGoPrevious}>← Previous</button>
-                    <div className="progress-info">
-                      <span>{completedTopics.size} / {allTopics.length} completed</span>
-                      <div className="mini-progress"><div style={{ width: `${progress}%` }} /></div>
+                      <article className="content-body">
+                        <h1 className="content-title">{content.title}</h1>
+                        <p className="content-description">{content.description}</p>
+                        {content.sections.map((section, idx) => (
+                          <section key={idx} className="content-section">
+                            <h3 className="section-heading">{section.heading}</h3>
+                            <p className="section-text">{section.text}</p>
+                          </section>
+                        ))}
+                        <div className="code-playground-teaser">
+                          <div className="teaser-header"><span>💻</span><span>Practice Code</span></div>
+                          <div className="teaser-body">
+                            <p>Interactive Python compiler coming soon...</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <button className="btn btn-primary">Open IDE</button>
+                              <button
+                                className="quiz-orb-fan-btn"
+                                style={{ '--qitem-color': '#22d3ee', width: '44px', height: '44px', fontSize: '20px', cursor: 'pointer' }}
+                                onClick={() => { setViewMode('quiz-python'); }}
+                                title="Take Quiz"
+                              >
+                                🧠
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+
+                      <div className="content-footer">
+                        <button className="nav-btn prev" onClick={handlePrevious} disabled={!canGoPrevious}>← Previous</button>
+                        <div className="progress-info">
+                          <span>{completedTopics.size} / {allTopics.length} completed</span>
+                          <div className="mini-progress"><div style={{ width: `${progress}%` }} /></div>
+                        </div>
+                        <button className="nav-btn next" onClick={handleNext} disabled={!canGoNext}>
+                          {completedTopics.size === allTopics.length - 1 ? 'Finish 🎉' : 'Next →'}
+                        </button>
+                      </div>
                     </div>
-                    <button className="nav-btn next" onClick={handleNext} disabled={!canGoNext}>
-                      {completedTopics.size === allTopics.length - 1 ? 'Finish 🎉' : 'Next →'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </main>
-          </div>
+                  )}
+                </main>
+              </div>
+            </>
+          )}
         </>
       )}
 
