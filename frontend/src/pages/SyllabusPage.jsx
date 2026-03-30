@@ -1379,9 +1379,10 @@ export default function SyllabusPage() {
           flex-direction: row;
           align-items: stretch;
           width: 100%;
-          flex: 1;           /* takes ALL remaining height — the key fix */
-          overflow: hidden;  /* clips children, forces them to scroll internally */
-          min-height: 0;     /* critical: flex children don't shrink below content by default */
+          flex: 1;
+          overflow: hidden;
+          min-height: 0;
+          height: calc(100vh - 140px); /* Full height minus header space */
         }
 
         /* ─────────────────────────────────────────────────────────
