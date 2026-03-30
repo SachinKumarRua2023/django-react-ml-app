@@ -12,6 +12,7 @@ import LoginSignupLogout from "./components/Login_Signup_Logout";
 import VCRoom from "./components/VCRoom";
 import MnemonicSystem from "./components/MnemonicSystem";
 import TalkWithRua from "./components/TalkWithRua";
+import WhiteBoard from "./seekhowithrua-animation/WhiteBoard";
 
 export const TOKEN_KEY = "cosmos_token";
 
