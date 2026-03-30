@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 
 
@@ -8,7 +8,7 @@ class VoiceRoomProfile(models.Model):
     SeekhoWithRua-specific fields for VCR ranking.
     Separate from your existing UserProfile in livevc — no conflict.
     """
-    user           = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vcr_profile')
+    user           = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='vcr_profile')
     college        = models.CharField(max_length=200, blank=True)
     current_course = models.CharField(max_length=60, blank=True)
     # e.g. "data-science-course", "ai-course" — matches SEO slug
@@ -27,7 +27,7 @@ class PanelSession(models.Model):
     Hooks into your existing VoicePanel via panel_id (UUID stored as string).
     Does NOT modify VoicePanel model.
     """
-    user             = models.ForeignKey(User, on_delete=models.CASCADE, related_name='panel_sessions')
+    user             = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='panel_sessions')
     panel_id         = models.CharField(max_length=100)  # stores VoicePanel UUID
     panel_title      = models.CharField(max_length=200)
     role             = models.CharField(max_length=20)   # host / speaker / listener
@@ -52,7 +52,7 @@ class UserPanelHistory(models.Model):
     Which panels each user has ever joined.
     Used for co-occurrence recommendation (YouTube signal).
     """
-    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='panel_history')
+    user      = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='panel_history')
     panel_id  = models.CharField(max_length=100)  # VoicePanel UUID
     joined_at = models.DateTimeField(auto_now_add=True)
 
@@ -94,8 +94,8 @@ class Follow(models.Model):
     """
     User A follows User B inside voice rooms.
     """
-    from_user  = models.ForeignKey(User, related_name='vcr_following', on_delete=models.CASCADE)
-    to_user    = models.ForeignKey(User, related_name='vcr_followers', on_delete=models.CASCADE)
+    from_user  = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='vcr_following', on_delete=models.CASCADE)
+    to_user    = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='vcr_followers', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -110,8 +110,8 @@ class Upvote(models.Model):
     Listener upvotes a speaker inside a panel.
     One upvote per user per panel — prevents spam.
     """
-    from_user  = models.ForeignKey(User, related_name='upvotes_given', on_delete=models.CASCADE)
-    to_user    = models.ForeignKey(User, related_name='upvotes_received', on_delete=models.CASCADE)
+    from_user  = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='upvotes_given', on_delete=models.CASCADE)
+    to_user    = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='upvotes_received', on_delete=models.CASCADE)
     panel_id   = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -127,7 +127,7 @@ class UserRankScore(models.Model):
     Formula: (total_time × 1) + (upvotes × 3) + (followers × 2)
     Recalculated every time a user leaves a panel.
     """
-    user           = models.OneToOneField(User, on_delete=models.CASCADE, related_name='rank_score')
+    user           = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rank_score')
     total_time     = models.FloatField(default=0)
     upvote_count   = models.IntegerField(default=0)
     follower_count = models.IntegerField(default=0)

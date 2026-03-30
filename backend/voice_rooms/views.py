@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -10,6 +10,8 @@ from .models import (
     VoiceRoomProfile, PanelSession, UserPanelHistory
 )
 from livevc.models import VoicePanel
+
+User = get_user_model()
 
 
 # ─── 1. FOLLOW A USER ────────────────────────────────────────────────────────

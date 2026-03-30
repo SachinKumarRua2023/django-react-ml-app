@@ -7,12 +7,12 @@ import json
 import urllib.request
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from .models import UserProfile
 
+User = get_user_model()
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
-
 
 def verify_google_token(token_str):
     try:

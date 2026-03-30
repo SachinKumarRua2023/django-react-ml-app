@@ -1873,19 +1873,44 @@ export default function VCRoom() {
   }
 
   function cleanup() {
+    // STEP 1: Stop all media stream tracks FIRST (turns off mic light)
+    if (myStream.current) {
+      myStream.current.getTracks().forEach(t => { try { t.stop(); } catch {} });
+      myStream.current = null;
+    }
+
+    // STEP 2: Stop all audio elements and remove them
+    document.querySelectorAll("audio[id^='audio_']").forEach(el => {
+      try { el.pause(); el.srcObject = null; } catch {}
+      el.remove();
+    });
+
+    // STEP 3: Close all call connections
     Object.values(callConns.current).forEach(c => { try { c.close?.(); } catch {} });
+    callConns.current = {};
+
+    // STEP 4: Close all data connections
     Object.values(dataConns.current).forEach(c => { try { c.close?.(); } catch {} });
+    dataConns.current = {};
+
+    // STEP 5: Close all analyser contexts
+    Object.values(analyserRefs.current).forEach(({ ctx, rafId }) => {
+      try {
+        if (rafId) cancelAnimationFrame(rafId);
+        ctx?.close?.();
+      } catch {}
+    });
+    analyserRefs.current = {};
+
+    // STEP 6: Destroy peer LAST (after all connections closed)
     try { myPeer.current?.destroy(); } catch {}
-    myStream.current?.getTracks().forEach(t => t.stop());
-    Object.values(analyserRefs.current).forEach(({ ctx }) => { try { ctx?.close?.(); } catch {} });
-    // Remove all injected audio elements
-    document.querySelectorAll("audio[id^='audio_']").forEach(el => { el.srcObject = null; el.remove(); });
-    myPeer.current=null; myStream.current=null; micPendingRef.current=null;
-    dataConns.current={}; callConns.current={}; analyserRefs.current={};
+    myPeer.current = null;
+
+    // STEP 7: Reset refs and state
+    micPendingRef.current = null;
     setPanelInfo(null); setParticipants([]); setMessages([]);
     setMyRole("listener"); setConnected(false); setMuted(false);
     setHandRaised(false); setSpeakingIds(new Set()); setRoomInURL(null);
-    // ← NEW: Clear DM state on leave
     setDmMessages({}); setActiveDM(null); setDmInput(''); setChatTab('group');
   }
 
