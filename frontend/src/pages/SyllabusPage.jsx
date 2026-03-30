@@ -12,7 +12,7 @@ import {
 import "./SyllabusCourses.css"; // Updated 2025-03-30
 
 // API base URL - Updated 2025-03-30
-const API_URL = import.meta.env.VITE_API_URL || "https://django-react-ml-app.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://django-react-ml-app.onrender.com/api/ml";
 
 // ── Read user from localStorage ──
 const getLoggedInUser = () => {
