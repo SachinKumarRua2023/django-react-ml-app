@@ -8,10 +8,30 @@ from rest_framework import status
 from sklearn.preprocessing import StandardScaler
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 
 from .models import Course, Module, Topic
 
 User = get_user_model()
+
+# -------------------------
+# MIGRATION ENDPOINT
+# -------------------------
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def run_migrations_endpoint(request):
+    """Run database migrations - accessible via GET for easy triggering"""
+    try:
+        call_command('migrate', '--noinput')
+        return Response({
+            'status': 'success',
+            'message': 'Migrations completed successfully'
+        })
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 # -------------------------
 # SYLLABUS API ENDPOINTS

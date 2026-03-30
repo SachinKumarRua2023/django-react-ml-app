@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    recommend,
+    recommend, run_migrations_endpoint,
     get_courses, create_course, update_course, delete_course,
     create_module, update_module, delete_module,
     create_topic, update_topic, delete_topic
@@ -8,6 +8,8 @@ from .views import (
 
 urlpatterns = [
     path('recommend/', recommend, name='recommend'),
+    # Migration endpoint
+    path('migrate/', run_migrations_endpoint, name='run_migrations'),
     # Syllabus API
     path('syllabus/courses/', get_courses, name='get_courses'),
     path('syllabus/courses/create/', create_course, name='create_course'),
