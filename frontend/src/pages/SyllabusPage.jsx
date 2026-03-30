@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import SEO from "../components/SEO";
-import MLVisuals from "./MLVisuals";
-import PythonVisuals from "./PythonVisuals";
-import WhiteBoard from "./WhiteBoard";
+import MLVisuals from "../seekhowithrua-animation/MLVisuals";
+import PythonVisuals from "../seekhowithrua-animation/PythonVisuals";
+import WhiteBoard from "../seekhowithrua-animation/WhiteBoard";
+import { QuizPlatform, pythonQuizzes, mysqlQuizzes } from "../quizzes";
 import {
   loadSyllabusData,
   saveSyllabusData,
