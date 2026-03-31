@@ -3,6 +3,7 @@ import axios from "axios";
 import MLVisuals from "../seekhowithrua-animation/MLVisuals";
 import PythonVisuals from "../seekhowithrua-animation/PythonVisuals";
 import WhiteBoard from "../seekhowithrua-animation/WhiteBoard";
+import { loadPyodide, runPython } from "../quizzes/codeRunner";
 import {
   loadSyllabusData,
   saveSyllabusData,
@@ -615,7 +616,14 @@ const CourseQuizPlatform = ({ courseId, isMasterUser }) => {
         try {
           await py.loadPackage('numpy');
           await py.loadPackage('pandas');
-          console.log('Data Science packages loaded');
+          await py.loadPackage('matplotlib');
+          await py.loadPackage('scikit-learn');
+          // micropip for additional packages
+          await py.runPythonAsync(`
+import micropip
+await micropip.install('seaborn')
+`);
+          console.log('Data Science packages loaded: numpy, pandas, matplotlib, sklearn, seaborn');
         } catch(e) {
           console.log('Package loading error:', e);
         }
