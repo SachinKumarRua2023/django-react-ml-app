@@ -323,30 +323,8 @@ const courseQuizzes = {
 };
 
 // ============================================================
-// PYODIDE RUNNER (unchanged)
+// MySQL Runner
 // ============================================================
-let pyodideInstance = null;
-let pyodideLoading = false;
-let pyodideCallbacks = [];
-
-const loadPyodide = () => new Promise((resolve, reject) => {
-  if (pyodideInstance) { resolve(pyodideInstance); return; }
-  pyodideCallbacks.push({ resolve, reject });
-  if (pyodideLoading) return;
-  pyodideLoading = true;
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
-  script.onload = async () => {
-    try {
-      const py = await window.loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/' });
-      pyodideInstance = py;
-      pyodideCallbacks.forEach(cb => cb.resolve(py));
-    } catch(e) { pyodideCallbacks.forEach(cb => cb.reject(e)); }
-  };
-  script.onerror = (e) => pyodideCallbacks.forEach(cb => cb.reject(e));
-  document.head.appendChild(script);
-});
-
 const runMySQL = (sql) => {
   const s = sql.trim().toLowerCase().replace(/\s+/g,' ');
   if (s.includes('create database')) return "Database 'school' created successfully.";
