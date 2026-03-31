@@ -1120,9 +1120,9 @@ export default function SyllabusPage() {
     return () => window.removeEventListener('storage', checkRole);
   }, []);
 
-  const currentSubject = syllabusData[activeSubject];
-  const allModules = Object.keys(currentSubject.modules);
-  const allTopics = allModules.flatMap(m => currentSubject.modules[m]);
+  const currentSubject = syllabusData[activeSubject] || { modules: {}, title: '', icon: '📚' };
+  const allModules = Object.keys(currentSubject.modules || {});
+  const allTopics = allModules.flatMap(m => currentSubject.modules?.[m] || []);
 
   const getTopicContent = (topic) => {
     const custom = currentSubject.topicContent?.[topic];
