@@ -1746,50 +1746,35 @@ export default function SyllabusPage() {
         .tp-add-module-btn { display: flex; align-items: center; gap: 8px; padding: 10px; margin-top: 6px; border: 1px dashed rgba(255,165,0,0.3); border-radius: 8px; background: rgba(255,165,0,0.05); color: rgba(255,165,0,0.7); cursor: pointer; font-size: 13px; font-weight: 600; width: 100%; transition: all 0.2s; }
         .tp-add-module-btn:hover { border-color: rgba(255,165,0,0.5); color: #ffa500; background: rgba(255,165,0,0.1); }
         .trainer-editable { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; border-radius: 4px; padding: 1px 4px; transition: background 0.15s; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .trainer-editable:hover { background: rgba(0,217,255,0.08); }
+        .trainer-edit-hint { font-size: 10px; opacity: 0; transition: opacity 0.2s; flex-shrink: 0; }
+        .trainer-editable:hover .trainer-edit-hint { opacity: 0.6; }
+        .trainer-inline-input { background: rgba(0,0,0,0.4); border: 1px solid #00d9ff; border-radius: 4px; color: white; padding: 3px 8px; font-size: inherit; width: 100%; outline: none; font-family: inherit; }
+        .trainer-inline-input.multiline { resize: vertical; min-height: 60px; }
+        .tp-title-edit { font-size: 14px; font-weight: 700; color: white; }
 
-/* Content body — this is the ONLY scroll zone */
-.content-body {
-  flex: 1;            /* takes all space between header and footer */
-  min-height: 0;      /* allows shrinking below content size */
-  overflow-y: auto;   /* THIS scrolls */
-  overflow-x: hidden;
-  padding: 28px 40px 32px;
-  width: 100%;
-}
-.content-body::-webkit-scrollbar { width: 4px; }
-.content-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-.content-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-.content-title { font-size: 28px; font-weight: 800; color: white; margin: 0 0 12px; line-height: 1.3; }
-.content-description { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.6; margin: 0 0 30px; }
-.content-section { margin-bottom: 28px; }
-.section-heading { font-size: 17px; font-weight: 700; color: #00d9ff; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(0,217,255,0.15); }
-.section-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.7; margin: 0; }
-.code-playground-teaser { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; margin-top: 32px; }
-.teaser-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: rgba(0,0,0,0.3); font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7); border-bottom: 1px solid rgba(255,255,255,0.08); }
-.teaser-body { padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.teaser-body p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; }
+        /* ─────────────────────────────────────────────────────────
+           COURSE SIDEBAR — fixed width, full height, scrollable
+        ───────────────────────────────────────────────────────── */
+        .course-sidebar-wrap {
+          width: 280px;
+          min-width: 280px;
+          flex-shrink: 0;
+          height: 100%;
+          max-height: 100vh;
+          min-height: 0;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: rgba(0,0,0,0.25);
+        }
 
-/* Content footer — ALWAYS visible, pinned at bottom of flex column */
-.content-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 28px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  background: rgba(6, 0, 20, 0.97);
-  flex-shrink: 0;    /* never shrink — always takes its full height */
-  flex-wrap: wrap; gap: 12px;
-  /* NOT position:sticky — that requires scroll parent to have overflow:auto */
-  /* Being the last flex child in a flex column IS the pin */
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(0, 217, 255, 0.12);
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
-}
-.nav-btn { padding: 10px 22px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
-.nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: white; transform: translateY(-1px); }
-.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-.nav-btn.next { background: linear-gradient(135deg, rgba(0,217,255,0.15), rgba(168,85,247,0.15)); border-color: rgba(0,217,255,0.3); color: #00d9ff; }
-.nav-btn.next:hover:not(:disabled) { background: linear-gradient(135deg, rgba(0,217,255,0.25), rgba(168,85,247,0.25)); box-shadow: 0 4px 15px rgba(0,217,255,0.2); }
-.progress-info { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,0.4); }
-.mini-progress { width: 120px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+        /* Sidebar header — fixed at top of sidebar */
+        .sidebar-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 16px 16px 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
           flex-shrink: 0;
           background: rgba(0,0,0,0.2);
         }
