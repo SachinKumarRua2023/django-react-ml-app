@@ -1258,9 +1258,9 @@ export default function SyllabusPage() {
           </button>
         ))}
 
-        {isT && viewMode === 'courses' && (
+        {(isT || isMasterUser) && viewMode === 'courses' && (
           <div className="trainer-badge-row">
-            <span className="trainer-badge">⚙️ Trainer Mode</span>
+            <span className="trainer-badge">⚙️ {isMasterUser ? 'Master' : 'Trainer'} Mode</span>
             <button
               className={`trainer-edit-toggle ${trainerPanelOpen ? 'active' : ''}`}
               onClick={() => setTrainerPanelOpen(p => !p)}
@@ -1447,9 +1447,9 @@ export default function SyllabusPage() {
                         <div className="stat"><span className="stat-value">{allModules.length}</span><span className="stat-label">Modules</span></div>
                         <div className="stat"><span className="stat-value">{completedTopics.size}</span><span className="stat-label">Completed</span></div>
                       </div>
-                      {isT && (
+                      {(isT || isMasterUser) && (
                         <div className="trainer-welcome-hint">
-                          <span>⚙️ Trainer:</span> Use <strong>✏️ Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
+                          <span>⚙️ {isMasterUser ? 'Master' : 'Trainer'}:</span> Use <strong>✏️ Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
                         </div>
                       )}
                       <div className="start-hint"><span className="hint-arrow">←</span><span>Choose a module to begin</span></div>
