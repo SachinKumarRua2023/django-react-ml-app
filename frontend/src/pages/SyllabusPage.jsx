@@ -213,23 +213,33 @@ const courseQuizzes = {
         topics: [
           { id: 'dataframes', name: 'DataFrames', type: 'python' },
           { id: 'data-cleaning', name: 'Data Cleaning', type: 'python' },
-          { id: 'grouping', name: 'Grouping & Aggregation', type: 'python' }
+          { id: 'grouping', name: 'Grouping & Aggregation', type: 'python' },
+          { id: 'merging', name: 'Merging Data', type: 'python' }
         ]
       }
     ],
     quizzes: {
       'variables': [
-        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: '# Create variables and print sum\na = 10\nb = 20\nprint(a + b)', expectedOutput: '30' },
-        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: "x = 3.14\n# Print the type of x\nprint(type(x))", expectedOutput: "<class 'float'>" }
+        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: '# Create variables and print sum
+a = 10
+b = 20
+print(a + b)', expectedOutput: '30' },
+        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: "x = 3.14
+# Print the type of x
+print(type(x))", expectedOutput: "<class 'float'>" }
       ],
       'arrays': [
-        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: 'import numpy as np\narr = np.array([1, 2, 3, 4, 5])\nprint(arr)', expectedOutput: '[1 2 3 4 5]' },
-        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: 'import numpy as np\narr = np.array([10, 20, 30])\nprint(np.sum(arr))', expectedOutput: '60' }
+        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: 'import numpy as np
+arr = np.array([1, 2, 3, 4, 5])
+print(arr)', expectedOutput: '[1 2 3 4 5]' },
+        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: 'import numpy as np
+arr = np.array([10, 20, 30])
+print(np.sum(arr))', expectedOutput: '60' }
       ]
     }
   },
   fullstack: {
-    // ...
+    name: 'Full Stack Development',
     icon: '💻',
     modules: [
       {
@@ -362,10 +372,6 @@ const runMySQL = (sql) => {
   const s = sql.trim().toLowerCase().replace(/\s+/g,' ');
   if (s.includes('create database')) return "Database 'school' created successfully.";
   if (s.includes('create table') && s.includes('students')) return "Table 'students' created successfully.";
-  if (s.includes('inner join')) return "Alice | 90\nBob | 85\nCharlie | 92";
-  if (s.includes('explain')) return "id|select_type|table|type|key|rows\n1|SIMPLE|students|ALL|NULL|3";
-  return "Query executed successfully.";
-};
 
 // ============================================================
 // HTML/CSS/JS COMPILER (for Full Stack)
@@ -504,6 +510,11 @@ const compileMobile = (code) => {
   return mobileHTML;
 };
 
+  if (s.includes('inner join')) return "Alice | 90\nBob | 85\nCharlie | 92";
+  if (s.includes('explain')) return "id|select_type|table|type|key|rows\n1|SIMPLE|students|ALL|NULL|3";
+  return "Query executed successfully.";
+};
+
 // ============================================================
 // CODE EDITOR (unchanged)
 // ============================================================
@@ -614,10 +625,7 @@ const CourseQuizPlatform = ({ courseId, isMasterUser }) => {
         try {
           await py.loadPackage('numpy');
           await py.loadPackage('pandas');
-          await py.loadPackage('matplotlib');
-          await py.loadPackage('scikit-learn');
-          await py.runPythonAsync(`import micropip; await micropip.install('seaborn')`);
-          console.log('Data Science packages loaded: numpy, pandas, matplotlib, sklearn, seaborn');
+          console.log('Data Science packages loaded');
         } catch(e) {
           console.log('Package loading error:', e);
         }
@@ -3289,8 +3297,17 @@ export default function SyllabusPage() {
           height: 44px;
           font-size: 18px;
         }
+        
+        .quiz-orb-fan-label {
+        left: -100px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: -1;
+        animation: ambientGlow 4s ease-in-out infinite alternate;
       }
-      
+
       @keyframes ambientGlow {
         from {
           opacity: 0.5;
@@ -3324,7 +3341,6 @@ export default function SyllabusPage() {
           <span className="orb-tooltip">{orbOpen ? 'close' : 'tools'}</span>
         </button>
       </div>
-
       {/* ── QUIZ ORB — bottom-left floating brain orb ── */}
       <div className="quiz-orb-wrap">
         <div className={`quiz-orb-fan ${quizOrbOpen ? 'open' : ''}`}>
