@@ -219,21 +219,12 @@ const courseQuizzes = {
     ],
     quizzes: {
       'variables': [
-        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: '# Create variables and print sum
-a = 10
-b = 20
-print(a + b)', expectedOutput: '30' },
-        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: "x = 3.14
-# Print the type of x
-print(type(x))", expectedOutput: "<class 'float'>" }
+        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: `# Create variables and print sum\na = 10\nb = 20\nprint(a + b)`, expectedOutput: '30' },
+        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: `x = 3.14\n# Print the type of x\nprint(type(x))`, expectedOutput: "<class 'float'>" }
       ],
       'arrays': [
-        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: 'import numpy as np
-arr = np.array([1, 2, 3, 4, 5])
-print(arr)', expectedOutput: '[1 2 3 4 5]' },
-        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: 'import numpy as np
-arr = np.array([10, 20, 30])
-print(np.sum(arr))', expectedOutput: '60' }
+        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: `import numpy as np\narr = np.array([1, 2, 3, 4, 5])\nprint(arr)`, expectedOutput: '[1 2 3 4 5]' },
+        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: `import numpy as np\narr = np.array([10, 20, 30])\nprint(np.sum(arr))`, expectedOutput: '60' }
       ]
     }
   },
@@ -289,8 +280,8 @@ print(np.sum(arr))', expectedOutput: '60' }
     ],
     quizzes: {
       'html-basics': [
-        { id: 'fs-html-1', title: 'Basic Page', question: 'Create a heading with "Hello World"', starterCode: '<h1>Hello World</h1>', expectedOutput: 'visual' },
-        { id: 'fs-html-2', title: 'Paragraph', question: 'Create a paragraph with some text', starterCode: '<p>This is a paragraph</p>', expectedOutput: 'visual' }
+        { id: 'fs-html-1', title: 'Basic Page', question: 'Create a heading with "Hello World"', starterCode: `<h1>Hello World</h1>`, expectedOutput: 'visual' },
+        { id: 'fs-html-2', title: 'Paragraph', question: 'Create a paragraph with some text', starterCode: `<p>This is a paragraph</p>`, expectedOutput: 'visual' }
       ],
       'js-basics': [
         { id: 'fs-js-1', title: 'Alert Box', question: 'Show an alert with message', starterCode: '<script>alert("Hello!")</script>', expectedOutput: 'visual' }
@@ -640,11 +631,11 @@ const CourseQuizPlatform = ({ courseId, isMasterUser }) => {
     } else {
       // Default starter code based on topic type
       if (topic.type === 'python') {
-        setCode('# Write your Python code here\nprint("Hello Data Science!")');
+        setCode(`# Write your Python code here\nprint("Hello Data Science!")`);
       } else if (topic.type === 'html') {
-        setCode('<!-- Write your HTML here -->\n<h1>Hello Web!</h1>');
+        setCode(`<!-- Write your HTML here -->\n<h1>Hello Web!</h1>`);
       } else if (topic.type === 'mobile') {
-        setCode('<!-- React Native Style Mobile UI -->\n<div class="View">\n  <div class="Text">Hello Mobile!</div>\n</div>');
+        setCode(`<!-- React Native Style Mobile UI -->\n<div class="View">\n  <div class="Text">Hello Mobile!</div>\n</div>`);
       }
     }
     setOutput('');
