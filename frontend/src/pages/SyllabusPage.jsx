@@ -914,61 +914,9 @@ export default function SyllabusPage() {
   const [trainerMode, setTrainerMode] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [isMasterUser, setIsMasterUser] = useState(false);
-
-  // API state
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch courses from API
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        // Hardcoded URL to bypass env variable issues
-        const response = await axios.get('https://django-react-ml-app.onrender.com/api/ml/syllabus/courses/');
-        setCourses(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch courses:', err);
-        setError('Failed to load courses');
-        // Fallback to local data
-        const localData = loadSyllabusData();
-        const fallbackCourses = Object.entries(localData).map(([id, data]) => ({
-          id,
-          ...data,
-          modules: Object.entries(data.modules || {}).map(([title, topics], idx) => ({
-            id: idx,
-            title,
-            order: idx,
-            topics: topics.map((t, tIdx) => ({ id: tIdx, title: t, order: tIdx }))
-          }))
-        }));
-        setCourses(fallbackCourses);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
-
-  useEffect(() => {
-    const checkRole = () => {
-      const trainer = isTrainer();
-      const master = checkMaster();
-      setTrainerMode(trainer);
-      setIsMasterUser(master);
-      setUserRole(trainer ? 'trainer' : getLoggedInUser() ? 'learner' : 'guest');
-    };
-    checkRole();
-    window.addEventListener('storage', checkRole);
-    // Clear old syllabus data to show new 3 courses
-    localStorage.removeItem('cosmos_syllabus_data');
-    return () => window.removeEventListener('storage', checkRole);
-  }, []);
-
-  const [syllabusData, setSyllabusData] = useState(() => loadSyllabusData());
+  const [syllabusData, setSyllabusData] = useState({});
   const [savedIndicator, setSavedIndicator] = useState(false);
 
   // Convert API courses to syllabus format
@@ -1018,6 +966,159 @@ export default function SyllabusPage() {
   const [contentEditorOpen, setContentEditorOpen] = useState(false);
   const [editingTopic, setEditingTopic] = useState(null);
   const [editingContent, setEditingContent] = useState(null);
+
+  // Hardcoded 3 courses - Seekhowithrua Bundle Pack
+  useEffect(() => {
+    const bundleCourses = [
+      {
+        id: 'datascience',
+        title: 'Data Science & AI',
+        icon: '🤖',
+        color: '#a855f7',
+        description: 'Master Data Science, Machine Learning, and AI with Python',
+        modules: [
+          { id: 1, title: 'Module 1: Python for Data Science', order: 0, topics: [
+            { id: 0, title: 'Python Basics for Data Science', order: 0 },
+            { id: 1, title: 'NumPy and Pandas Fundamentals', order: 1 },
+            { id: 2, title: 'Data Manipulation Techniques', order: 2 }
+          ]},
+          { id: 2, title: 'Module 2: Data Science Libraries', order: 1, topics: [
+            { id: 0, title: 'Advanced Pandas Operations', order: 0 },
+            { id: 1, title: 'Matplotlib and Seaborn', order: 1 },
+            { id: 2, title: 'Data Visualization Techniques', order: 2 }
+          ]},
+          { id: 3, title: 'Module 3: Exploratory Data Analysis (EDA)', order: 2, topics: [
+            { id: 0, title: 'Understanding Data Distribution', order: 0 },
+            { id: 1, title: 'Statistical Summary and Correlation', order: 1 },
+            { id: 2, title: 'Data Cleaning and Preprocessing', order: 2 }
+          ]},
+          { id: 4, title: 'Module 4: SQL for Data Science', order: 3, topics: [
+            { id: 0, title: 'SQL Basics and Queries', order: 0 },
+            { id: 1, title: 'Joins and Subqueries', order: 1 },
+            { id: 2, title: 'Database Design for Data Science', order: 2 }
+          ]},
+          { id: 5, title: 'Module 5: Business Intelligence (PowerBI & Tableau)', order: 4, topics: [
+            { id: 0, title: 'PowerBI Fundamentals', order: 0 },
+            { id: 1, title: 'Tableau Dashboard Creation', order: 1 },
+            { id: 2, title: 'Data Storytelling and Reporting', order: 2 }
+          ]},
+          { id: 6, title: 'Module 6: Statistics & Probability for Data Science', order: 5, topics: [
+            { id: 0, title: 'Descriptive Statistics', order: 0 },
+            { id: 1, title: 'Probability Distributions', order: 1 },
+            { id: 2, title: 'Hypothesis Testing', order: 2 }
+          ]},
+          { id: 7, title: 'Module 7: Advanced Statistics for Data Science', order: 6, topics: [
+            { id: 0, title: 'Regression Analysis', order: 0 },
+            { id: 1, title: 'ANOVA and Chi-Square Tests', order: 1 },
+            { id: 2, title: 'Time Series Analysis', order: 2 }
+          ]},
+          { id: 8, title: 'Module 8: Machine Learning & Classification', order: 7, topics: [
+            { id: 0, title: 'Supervised Learning Algorithms', order: 0 },
+            { id: 1, title: 'Classification Models', order: 1 },
+            { id: 2, title: 'Model Evaluation Metrics', order: 2 }
+          ]},
+          { id: 9, title: 'Module 9: Model Optimization & Deep Learning', order: 8, topics: [
+            { id: 0, title: 'Hyperparameter Tuning', order: 0 },
+            { id: 1, title: 'Neural Network Fundamentals', order: 1 },
+            { id: 2, title: 'Deep Learning with TensorFlow', order: 2 }
+          ]},
+          { id: 10, title: 'Module 10: GenAI & MLOps', order: 9, topics: [
+            { id: 0, title: 'Generative AI Concepts', order: 0 },
+            { id: 1, title: 'LLMs and Prompt Engineering', order: 1 },
+            { id: 2, title: 'MLOps and Model Deployment', order: 2 }
+          ]}
+        ]
+      },
+      {
+        id: 'fullstack',
+        title: 'Full Stack Development',
+        icon: '💻',
+        color: '#00d9ff',
+        description: 'Django, React, Next.js, and React Native for cross-platform apps',
+        modules: [
+          { id: 1, title: 'Module 1: Django Backend Development', order: 0, topics: [
+            { id: 0, title: 'Django Setup and Project Structure', order: 0 },
+            { id: 1, title: 'Models and Database Design', order: 1 },
+            { id: 2, title: 'REST APIs with Django REST Framework', order: 2 }
+          ]},
+          { id: 2, title: 'Module 2: React Frontend Fundamentals', order: 1, topics: [
+            { id: 0, title: 'React Components and JSX', order: 0 },
+            { id: 1, title: 'Hooks and State Management', order: 1 },
+            { id: 2, title: 'React Router and Navigation', order: 2 }
+          ]},
+          { id: 3, title: 'Module 3: Next.js Full Stack Framework', order: 2, topics: [
+            { id: 0, title: 'Next.js App Router', order: 0 },
+            { id: 1, title: 'Server Components and API Routes', order: 1 },
+            { id: 2, title: 'Deployment and Optimization', order: 2 }
+          ]},
+          { id: 4, title: 'Module 4: React Native Cross-Platform', order: 3, topics: [
+            { id: 0, title: 'React Native Setup and Components', order: 0 },
+            { id: 1, title: 'Navigation and State in Mobile', order: 1 },
+            { id: 2, title: 'Building and Deploying Mobile Apps', order: 2 }
+          ]}
+        ]
+      },
+      {
+        id: 'gaming',
+        title: 'Gaming & Robotics IoT',
+        icon: '🎮',
+        color: '#ff6b6b',
+        description: 'Game development, Robotics, and Internet of Things',
+        modules: [
+          { id: 1, title: 'Module 1: Game Development Basics', order: 0, topics: [
+            { id: 0, title: 'Game Design Principles', order: 0 },
+            { id: 1, title: 'Unity or Unreal Engine Basics', order: 1 },
+            { id: 2, title: '2D and 3D Game Mechanics', order: 2 }
+          ]},
+          { id: 2, title: 'Module 2: Robotics Fundamentals', order: 1, topics: [
+            { id: 0, title: 'Introduction to Robotics', order: 0 },
+            { id: 1, title: 'Sensors and Actuators', order: 1 },
+            { id: 2, title: 'Robot Programming', order: 2 }
+          ]},
+          { id: 3, title: 'Module 3: IoT and Embedded Systems', order: 2, topics: [
+            { id: 0, title: 'IoT Architecture and Protocols', order: 0 },
+            { id: 1, title: 'Arduino and Raspberry Pi', order: 1 },
+            { id: 2, title: 'Smart Device Integration', order: 2 }
+          ]}
+        ]
+      }
+    ];
+    
+    setCourses(bundleCourses);
+    setLoading(false);
+    
+    // Set initial syllabus data
+    const initialSyllabus = {};
+    bundleCourses.forEach(course => {
+      const modules = {};
+      course.modules?.forEach(mod => {
+        modules[mod.title] = mod.topics?.map(t => t.title) || [];
+      });
+      initialSyllabus[course.id] = {
+        title: course.title,
+        icon: course.icon,
+        color: course.color,
+        description: course.description,
+        modules,
+        topicContent: {}
+      };
+    });
+    setSyllabusData(initialSyllabus);
+    
+    // Clear old data
+    localStorage.removeItem('cosmos_syllabus_data');
+    
+    const checkRole = () => {
+      const trainer = isTrainer();
+      const master = checkMaster();
+      setTrainerMode(trainer);
+      setIsMasterUser(master);
+      setUserRole(trainer ? 'trainer' : getLoggedInUser() ? 'learner' : 'guest');
+    };
+    checkRole();
+    window.addEventListener('storage', checkRole);
+    return () => window.removeEventListener('storage', checkRole);
+  }, []);
 
   const currentSubject = syllabusData[activeSubject];
   const allModules = Object.keys(currentSubject.modules);
@@ -1182,12 +1283,6 @@ export default function SyllabusPage() {
       {/* ── COURSE MODE ── */}
       {viewMode === 'courses' && (
         <>
-          {/* ── SYLLABUS HEADER ── */}
-          <div className="syllabus-header">
-            <h1>📚 Learning Paths</h1>
-            <p>Explore our comprehensive courses designed to take you from beginner to expert</p>
-          </div>
-
           {/* ── MASTER EDIT BUTTON ── */}
           {isMasterUser && (
             <button 
