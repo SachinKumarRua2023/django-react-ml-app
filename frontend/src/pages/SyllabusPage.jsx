@@ -3300,17 +3300,8 @@ export default function SyllabusPage() {
           height: 44px;
           font-size: 18px;
         }
-        
-        .quiz-orb-fan-label {
-        left: -100px;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: -1;
-        animation: ambientGlow 4s ease-in-out infinite alternate;
       }
-
+      
       @keyframes ambientGlow {
         from {
           opacity: 0.5;
@@ -3323,10 +3314,20 @@ export default function SyllabusPage() {
       }
       `}</style>
 
-      {/* ── FLOATING ORB ── */}
-      <div className="floating-orb-wrap">
-        <div className={`orb-fan ${orbOpen ? 'open' : ''}`}>
-          {toolTabs.map(t => (
+          {/* ── FLOATING ORB ── */}
+          <div className="floating-orb-wrap">
+            <div className={`orb-fan ${orbOpen ? 'open' : ''}`}>
+              {toolTabs.map(t => (
+                <div
+                  key={t.id}
+                  className={`orb-fan-item ${viewMode === t.id ? 'tool-active' : ''}`}
+                  style={{ '--item-color': t.color }}
+                  onClick={() => { setViewMode(viewMode === t.id ? 'courses' : t.id); setOrbOpen(false); }}
+                >
+                  <span className="orb-fan-label">{t.label}</span>
+                  <div className="orb-fan-btn">{t.icon}</div>
+                </div>
+              ))}
             <div
               key={t.id}
               className={`orb-fan-item ${viewMode === t.id ? 'tool-active' : ''}`}
