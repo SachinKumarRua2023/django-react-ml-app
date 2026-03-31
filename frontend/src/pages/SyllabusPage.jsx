@@ -220,21 +220,12 @@ const courseQuizzes = {
     ],
     quizzes: {
       'variables': [
-        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: '# Create variables and print sum
-a = 10
-b = 20
-print(a + b)', expectedOutput: '30' },
-        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: "x = 3.14
-# Print the type of x
-print(type(x))", expectedOutput: "<class 'float'>" }
+        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode:'# Create variables and print sum\\na = 10\\nb = 20\\nprint(a + b)', expectedOutput:'30' },
+        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode:"x = 3.14\\n# Print the type of x\\nprint(type(x))", expectedOutput:"<class 'float'>" }
       ],
       'arrays': [
-        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: 'import numpy as np
-arr = np.array([1, 2, 3, 4, 5])
-print(arr)', expectedOutput: '[1 2 3 4 5]' },
-        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: 'import numpy as np
-arr = np.array([10, 20, 30])
-print(np.sum(arr))', expectedOutput: '60' }
+        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode:'import numpy as np\\narr = np.array([1, 2, 3, 4, 5])\\nprint(arr)', expectedOutput:'[1 2 3 4 5]' },
+        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode:'import numpy as np\\narr = np.array([10, 20, 30])\\nprint(np.sum(arr))', expectedOutput:'60' }
       ]
     }
   },
@@ -356,22 +347,14 @@ const loadPyodide = () => new Promise((resolve, reject) => {
   document.head.appendChild(script);
 });
 
-const runPython = async (code) => {
-  const py = await loadPyodide();
-  await py.runPythonAsync(`import sys\nfrom io import StringIO\n_stdout = StringIO()\nsys.stdout = _stdout`);
-  try {
-    await py.runPythonAsync(code);
-    const output = await py.runPythonAsync(`sys.stdout.getvalue()`);
-    return output.toString().trim();
-  } finally {
-    await py.runPythonAsync(`sys.stdout = sys.__stdout__`);
-  }
-};
-
 const runMySQL = (sql) => {
   const s = sql.trim().toLowerCase().replace(/\s+/g,' ');
   if (s.includes('create database')) return "Database 'school' created successfully.";
   if (s.includes('create table') && s.includes('students')) return "Table 'students' created successfully.";
+  if (s.includes('inner join')) return "Alice | 90\nBob | 85\nCharlie | 92";
+  if (s.includes('explain')) return "id|select_type|table|type|key|rows\n1|SIMPLE|students|ALL|NULL|3";
+  return "Query executed successfully.";
+};
 
 // ============================================================
 // HTML/CSS/JS COMPILER (for Full Stack)
@@ -508,11 +491,6 @@ const compileMobile = (code) => {
 </html>
   `;
   return mobileHTML;
-};
-
-  if (s.includes('inner join')) return "Alice | 90\nBob | 85\nCharlie | 92";
-  if (s.includes('explain')) return "id|select_type|table|type|key|rows\n1|SIMPLE|students|ALL|NULL|3";
-  return "Query executed successfully.";
 };
 
 // ============================================================
