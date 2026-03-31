@@ -1583,12 +1583,10 @@ export default function SyllabusPage() {
         .course-layout-root {
           display: flex;
           flex-direction: row;
-          align-items: stretch;
           width: 100%;
           flex: 1;
           overflow: hidden;
           min-height: 0;
-          height: calc(100vh - 140px); /* Full height minus header space */
         }
 
         /* ─────────────────────────────────────────────────────────
