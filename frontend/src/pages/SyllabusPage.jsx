@@ -625,7 +625,10 @@ const CourseQuizPlatform = ({ courseId, isMasterUser }) => {
         try {
           await py.loadPackage('numpy');
           await py.loadPackage('pandas');
-          console.log('Data Science packages loaded');
+          await py.loadPackage('matplotlib');
+          await py.loadPackage('scikit-learn');
+          await py.runPythonAsync(`import micropip; await micropip.install('seaborn')`);
+          console.log('Data Science packages loaded: numpy, pandas, matplotlib, sklearn, seaborn');
         } catch(e) {
           console.log('Package loading error:', e);
         }
