@@ -157,6 +157,179 @@ const getAllQuizzes = (type) => {
   return merged;
 };
 
+
+// ============================================================
+// COURSE-BASED QUIZ DATA STRUCTURE
+// ============================================================
+const courseQuizzes = {
+  datascience: {
+    name: 'Data Science & AI',
+    icon: '🤖',
+    modules: [
+      {
+        id: 'python-basics',
+        name: 'Python Basics',
+        topics: [
+          { id: 'variables', name: 'Variables & Data Types', type: 'python' },
+          { id: 'operators', name: 'Operators', type: 'python' },
+          { id: 'control-flow', name: 'If/Else & Loops', type: 'python' },
+          { id: 'functions', name: 'Functions', type: 'python' }
+        ]
+      },
+      {
+        id: 'python-oop',
+        name: 'Python OOP',
+        topics: [
+          { id: 'classes', name: 'Classes & Objects', type: 'python' },
+          { id: 'inheritance', name: 'Inheritance', type: 'python' },
+          { id: 'polymorphism', name: 'Polymorphism', type: 'python' },
+          { id: 'encapsulation', name: 'Encapsulation', type: 'python' }
+        ]
+      },
+      {
+        id: 'file-handling',
+        name: 'File Handling',
+        topics: [
+          { id: 'read-files', name: 'Reading Files', type: 'python' },
+          { id: 'write-files', name: 'Writing Files', type: 'python' },
+          { id: 'csv-files', name: 'CSV Handling', type: 'python' },
+          { id: 'json-files', name: 'JSON Handling', type: 'python' }
+        ]
+      },
+      {
+        id: 'numpy',
+        name: 'NumPy',
+        topics: [
+          { id: 'arrays', name: 'Arrays & Operations', type: 'python' },
+          { id: 'array-manipulation', name: 'Array Manipulation', type: 'python' },
+          { id: 'linear-algebra', name: 'Linear Algebra', type: 'python' },
+          { id: 'statistical-ops', name: 'Statistical Operations', type: 'python' }
+        ]
+      },
+      {
+        id: 'pandas',
+        name: 'Pandas',
+        topics: [
+          { id: 'dataframes', name: 'DataFrames', type: 'python' },
+          { id: 'data-cleaning', name: 'Data Cleaning', type: 'python' },
+          { id: 'grouping', name: 'Grouping & Aggregation', type: 'python' },
+          { id: 'merging', name: 'Merging Data', type: 'python' }
+        ]
+      }
+    ],
+    quizzes: {
+      'variables': [
+        { id: 'ds-py-1', title: 'Variable Assignment', question: 'Create variables a=10, b=20 and print their sum.', starterCode: '# Create variables and print sum
+a = 10
+b = 20
+print(a + b)', expectedOutput: '30' },
+        { id: 'ds-py-2', title: 'Data Types', question: 'Print the type of variable x = 3.14', starterCode: "x = 3.14
+# Print the type of x
+print(type(x))", expectedOutput: "<class 'float'>" }
+      ],
+      'arrays': [
+        { id: 'ds-np-1', title: 'Create NumPy Array', question: 'Create a numpy array [1, 2, 3, 4, 5] and print it.', starterCode: 'import numpy as np
+arr = np.array([1, 2, 3, 4, 5])
+print(arr)', expectedOutput: '[1 2 3 4 5]' },
+        { id: 'ds-np-2', title: 'Array Sum', question: 'Create array [10, 20, 30] and print sum.', starterCode: 'import numpy as np
+arr = np.array([10, 20, 30])
+print(np.sum(arr))', expectedOutput: '60' }
+      ]
+    }
+  },
+  fullstack: {
+    name: 'Full Stack Development',
+    icon: '💻',
+    modules: [
+      {
+        id: 'html',
+        name: 'HTML',
+        topics: [
+          { id: 'html-basics', name: 'HTML Basics', type: 'html' },
+          { id: 'html-forms', name: 'Forms & Inputs', type: 'html' },
+          { id: 'html-semantic', name: 'Semantic HTML', type: 'html' }
+        ]
+      },
+      {
+        id: 'css',
+        name: 'CSS',
+        topics: [
+          { id: 'css-selectors', name: 'Selectors', type: 'html' },
+          { id: 'css-layout', name: 'Layout & Flexbox', type: 'html' },
+          { id: 'css-responsive', name: 'Responsive Design', type: 'html' }
+        ]
+      },
+      {
+        id: 'javascript',
+        name: 'JavaScript',
+        topics: [
+          { id: 'js-basics', name: 'JS Basics', type: 'html' },
+          { id: 'js-dom', name: 'DOM Manipulation', type: 'html' },
+          { id: 'js-events', name: 'Events', type: 'html' }
+        ]
+      },
+      {
+        id: 'react',
+        name: 'React',
+        topics: [
+          { id: 'react-components', name: 'Components', type: 'html' },
+          { id: 'react-hooks', name: 'Hooks', type: 'html' },
+          { id: 'react-state', name: 'State Management', type: 'html' }
+        ]
+      },
+      {
+        id: 'react-native',
+        name: 'React Native',
+        topics: [
+          { id: 'rn-components', name: 'Mobile Components', type: 'mobile' },
+          { id: 'rn-navigation', name: 'Navigation', type: 'mobile' },
+          { id: 'rn-styling', name: 'Mobile Styling', type: 'mobile' }
+        ]
+      }
+    ],
+    quizzes: {
+      'html-basics': [
+        { id: 'fs-html-1', title: 'Basic Page', question: 'Create a heading with "Hello World"', starterCode: '<h1>Hello World</h1>', expectedOutput: 'visual' },
+        { id: 'fs-html-2', title: 'Paragraph', question: 'Create a paragraph with some text', starterCode: '<p>This is a paragraph</p>', expectedOutput: 'visual' }
+      ],
+      'js-basics': [
+        { id: 'fs-js-1', title: 'Alert Box', question: 'Show an alert with message', starterCode: '<script>alert("Hello!")</script>', expectedOutput: 'visual' }
+      ]
+    }
+  },
+  gaming: {
+    name: 'Gaming & Robotics IoT',
+    icon: '🎮',
+    modules: [
+      {
+        id: 'game-dev',
+        name: 'Game Development',
+        topics: [
+          { id: 'unity-basics', name: 'Unity Basics', type: 'python' },
+          { id: 'game-physics', name: 'Physics', type: 'python' }
+        ]
+      },
+      {
+        id: 'robotics',
+        name: 'Robotics',
+        topics: [
+          { id: 'robot-sensors', name: 'Sensors', type: 'python' },
+          { id: 'robot-control', name: 'Control Systems', type: 'python' }
+        ]
+      },
+      {
+        id: 'iot',
+        name: 'IoT',
+        topics: [
+          { id: 'arduino', name: 'Arduino Programming', type: 'python' },
+          { id: 'sensors-iot', name: 'IoT Sensors', type: 'python' }
+        ]
+      }
+    ],
+    quizzes: {}
+  }
+};
+
 // ============================================================
 // PYODIDE RUNNER (unchanged)
 // ============================================================
@@ -198,6 +371,144 @@ const runMySQL = (sql) => {
   const s = sql.trim().toLowerCase().replace(/\s+/g,' ');
   if (s.includes('create database')) return "Database 'school' created successfully.";
   if (s.includes('create table') && s.includes('students')) return "Table 'students' created successfully.";
+
+// ============================================================
+// HTML/CSS/JS COMPILER (for Full Stack)
+// ============================================================
+const compileHTML = (code) => {
+  // Wrap user code in a complete HTML document
+  const fullHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px; 
+      background: #1a1a2e;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  ${code}
+  <script>
+    // Capture console output
+    const originalLog = console.log;
+    const logs = [];
+    console.log = (...args) => {
+      logs.push(args.join(' '));
+      originalLog.apply(console, args);
+    };
+    // Auto-run scripts
+    try {
+      const scripts = document.querySelectorAll('script:not([src])');
+      scripts.forEach(s => {
+        try { eval(s.textContent); } catch(e) { logs.push('Error: ' + e.message); }
+      });
+    } catch(e) { logs.push('Error: ' + e.message); }
+  <\/script>
+</body>
+</html>
+  `;
+  return fullHTML;
+};
+
+// ============================================================
+// MOBILE GUI SIMULATOR (for React Native)
+// ============================================================
+const compileMobile = (code) => {
+  // Convert React Native style to HTML for preview
+  const mobileHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      background: #0f0f23;
+    }
+    .phone-frame {
+      width: 375px;
+      height: 667px;
+      background: #000;
+      border-radius: 40px;
+      padding: 10px;
+      box-shadow: 0 0 50px rgba(0,217,255,0.3);
+      position: relative;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 30px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: #1a1a2e;
+      border-radius: 30px;
+      overflow: hidden;
+      position: relative;
+    }
+    .mobile-content {
+      padding: 50px 20px 20px;
+      height: 100%;
+      overflow-y: auto;
+    }
+    /* React Native style mappings */
+    .View { display: flex; flex-direction: column; }
+    .Text { color: white; font-size: 16px; margin: 5px 0; }
+    .Button { 
+      background: #00d9ff; 
+      color: black; 
+      padding: 12px 24px; 
+      border-radius: 8px; 
+      border: none;
+      margin: 10px 0;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .TextInput {
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 8px;
+      color: white;
+      margin: 5px 0;
+    }
+    .ScrollView { overflow-y: auto; max-height: 100%; }
+    .Image { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="mobile-content">
+        ${code}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+  return mobileHTML;
+};
+
   if (s.includes('inner join')) return "Alice | 90\nBob | 85\nCharlie | 92";
   if (s.includes('explain')) return "id|select_type|table|type|key|rows\n1|SIMPLE|students|ALL|NULL|3";
   return "Query executed successfully.";
@@ -288,6 +599,207 @@ const QuizCard = ({ quiz, quizType, onComplete, isCompleted }) => {
       </div>
       {result === 'correct' && <div className="correct-banner">🎉 100% Correct! Excellent work!</div>}
       {result === 'incorrect' && <div className="hint-banner">💡 Not matching expected output. Check your logic and try again!</div>}
+    </div>
+  );
+};
+
+
+// ============================================================
+// COURSE QUIZ PLATFORM (New - with module/topic structure)
+// ============================================================
+const CourseQuizPlatform = ({ courseId, isMasterUser }) => {
+  const course = courseQuizzes[courseId];
+  const [activeModule, setActiveModule] = useState(null);
+  const [activeTopic, setActiveTopic] = useState(null);
+  const [code, setCode] = useState('');
+  const [output, setOutput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [previewHTML, setPreviewHTML] = useState('');
+  const [completedQuizzes, setCompletedQuizzes] = useState(new Set());
+  
+  // Load Pyodide packages for Data Science
+  useEffect(() => {
+    if (courseId === 'datascience') {
+      loadPyodide().then(async (py) => {
+        try {
+          await py.loadPackage('numpy');
+          await py.loadPackage('pandas');
+          console.log('Data Science packages loaded');
+        } catch(e) {
+          console.log('Package loading error:', e);
+        }
+      });
+    }
+  }, [courseId]);
+
+  const handleTopicClick = (topic) => {
+    setActiveTopic(topic);
+    const quizzes = course.quizzes[topic.id] || [];
+    if (quizzes.length > 0) {
+      setCode(quizzes[0].starterCode || '');
+    } else {
+      // Default starter code based on topic type
+      if (topic.type === 'python') {
+        setCode('# Write your Python code here\nprint("Hello Data Science!")');
+      } else if (topic.type === 'html') {
+        setCode('<!-- Write your HTML here -->\n<h1>Hello Web!</h1>');
+      } else if (topic.type === 'mobile') {
+        setCode('<!-- React Native Style Mobile UI -->\n<div class="View">\n  <div class="Text">Hello Mobile!</div>\n</div>');
+      }
+    }
+    setOutput('');
+    setPreviewHTML('');
+  };
+
+  const runCode = async () => {
+    setIsRunning(true);
+    setOutput('Running...');
+    
+    try {
+      if (activeTopic?.type === 'python') {
+        const result = await runPython(code);
+        setOutput(result);
+      } else if (activeTopic?.type === 'html') {
+        const html = compileHTML(code);
+        setPreviewHTML(html);
+        setOutput('Preview rendered successfully!');
+      } else if (activeTopic?.type === 'mobile') {
+        const mobile = compileMobile(code);
+        setPreviewHTML(mobile);
+        setOutput('Mobile preview rendered!');
+      }
+    } catch (err) {
+      setOutput('Error: ' + err.message);
+    }
+    
+    setIsRunning(false);
+  };
+
+  const currentQuizzes = activeTopic ? (course.quizzes[activeTopic.id] || []) : [];
+
+  return (
+    <div className="course-quiz-platform">
+      <div className="quiz-header">
+        <h2>{course.icon} {course.name} - Interactive Labs</h2>
+      </div>
+      
+      <div className="quiz-layout">
+        {/* Sidebar with modules and topics */}
+        <div className="quiz-sidebar">
+          {course.modules.map((module) => (
+            <div key={module.id} className="quiz-module">
+              <button 
+                className={`quiz-module-header ${activeModule?.id === module.id ? 'active' : ''}`}
+                onClick={() => setActiveModule(activeModule?.id === module.id ? null : module)}
+              >
+                <span>{activeModule?.id === module.id ? '▼' : '▶'}</span>
+                {module.name}
+              </button>
+              
+              {activeModule?.id === module.id && (
+                <div className="quiz-topics">
+                  {module.topics.map((topic) => (
+                    <button
+                      key={topic.id}
+                      className={`quiz-topic ${activeTopic?.id === topic.id ? 'active' : ''}`}
+                      onClick={() => handleTopicClick(topic)}
+                    >
+                      <span className="topic-icon">
+                        {topic.type === 'python' ? '🐍' : topic.type === 'html' ? '🌐' : '📱'}
+                      </span>
+                      {topic.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Main content area */}
+        <div className="quiz-main">
+          {activeTopic ? (
+            <>
+              <div className="quiz-info">
+                <h3>{activeTopic.name}</h3>
+                {currentQuizzes.length > 0 && (
+                  <div className="quiz-question">
+                    <p>{currentQuizzes[0].question}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="quiz-workspace">
+                {/* Code Editor */}
+                <div className="code-panel">
+                  <div className="panel-header">
+                    <span>📝 Code Editor ({activeTopic.type})</span>
+                    <button 
+                      className="run-btn"
+                      onClick={runCode}
+                      disabled={isRunning}
+                    >
+                      {isRunning ? '⏳ Running...' : '▶️ Run Code'}
+                    </button>
+                  </div>
+                  <textarea
+                    className="code-editor"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    spellCheck={false}
+                  />
+                </div>
+                
+                {/* Output / Preview Panel */}
+                <div className="output-panel">
+                  <div className="panel-header">
+                    <span>
+                      {activeTopic.type === 'python' ? '📤 Output' : '👁️ Live Preview'}
+                    </span>
+                  </div>
+                  
+                  {activeTopic.type === 'python' ? (
+                    <pre className="output-display">{output || 'Click "Run Code" to see output...'}</pre>
+                  ) : (
+                    <div className="preview-container">
+                      {previewHTML ? (
+                        <iframe
+                          srcDoc={previewHTML}
+                          title="preview"
+                          className="preview-frame"
+                          sandbox="allow-scripts"
+                        />
+                      ) : (
+                        <div className="preview-placeholder">
+                          Click "Run Code" to see live preview...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="quiz-welcome">
+              <div className="welcome-icon">{course.icon}</div>
+              <h3>Welcome to {course.name} Labs</h3>
+              <p>Select a module and topic from the sidebar to start coding!</p>
+              <div className="course-stats">
+                <div className="stat">
+                  <span className="stat-value">{course.modules.length}</span>
+                  <span className="stat-label">Modules</span>
+                </div>
+                <div className="stat">
+                  <span className="stat-value">
+                    {course.modules.reduce((acc, m) => acc + m.topics.length, 0)}
+                  </span>
+                  <span className="stat-label">Topics</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
@@ -1225,8 +1737,9 @@ export default function SyllabusPage() {
 
   const topTabs = [
     { id: 'courses', label: '📚 Courses', icon: '📚' },
-    { id: 'quiz-python', label: '🐍 Python Quiz', icon: '🐍' },
-    { id: 'quiz-mysql', label: '🗄️ MySQL Quiz', icon: '🗄️' },
+    { id: 'quiz-datascience', label: '🤖 Data Science Labs', icon: '🤖' },
+    { id: 'quiz-fullstack', label: '💻 Full Stack Labs', icon: '💻' },
+    { id: 'quiz-gaming', label: '🎮 Gaming & IoT Labs', icon: '🎮' },
   ];
 
   const toolTabs = [
@@ -1274,8 +1787,9 @@ export default function SyllabusPage() {
         )}
       </div>
 
-      {viewMode === 'quiz-python' && <QuizPlatform quizType="python" isMasterUser={isMasterUser} />}
-      {viewMode === 'quiz-mysql' && <QuizPlatform quizType="mysql" isMasterUser={isMasterUser} />}
+      {viewMode === 'quiz-datascience' && <CourseQuizPlatform courseId="datascience" isMasterUser={isMasterUser} />}
+      {viewMode === 'quiz-fullstack' && <CourseQuizPlatform courseId="fullstack" isMasterUser={isMasterUser} />}
+      {viewMode === 'quiz-gaming' && <CourseQuizPlatform courseId="gaming" isMasterUser={isMasterUser} />}
       {viewMode === 'ml-visuals' && <MLVisuals />}
       {viewMode === 'py-visuals' && <PythonVisuals />}
       {viewMode === 'whiteboard' && <WhiteBoard />}
