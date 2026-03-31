@@ -1469,13 +1469,10 @@ export default function SyllabusPage() {
         .courses-page {
           display: flex;
           flex-direction: column;
-          width: 100%;
-          /* Exactly fill the viewport — no more, no less */
+          width: 100vw;
           height: 100vh;
           overflow: hidden;
-          /* Navbar is 52px — offset so we start below it */
-          padding-top: 52px;
-          margin-top: -52px;
+          background: #0a0a1a;
         }
 
         /* ─────────────────────────────────────────────────────────
