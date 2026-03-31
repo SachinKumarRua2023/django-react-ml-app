@@ -129,6 +129,34 @@ const mysqlQuizzes = {
   ]
 };
 
+// ── Quiz LocalStorage Helpers ──
+const QUIZ_STORAGE_KEY = 'cosmos_custom_quizzes';
+
+const loadCustomQuizzes = () => {
+  try {
+    const stored = localStorage.getItem(QUIZ_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : { python: {}, mysql: {} };
+  } catch { return { python: {}, mysql: {} }; }
+};
+
+const saveCustomQuizzes = (quizzes) => {
+  localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(quizzes));
+};
+
+const getAllQuizzes = (type) => {
+  const custom = loadCustomQuizzes();
+  const base = type === 'python' ? pythonQuizzes : mysqlQuizzes;
+  const customForType = custom[type] || {};
+  
+  // Merge base and custom quizzes
+  const merged = {
+    basics: [...(base.basics || []), ...(customForType.basics || [])],
+    intermediate: [...(base.intermediate || []), ...(customForType.intermediate || [])],
+    advanced: [...(base.advanced || []), ...(customForType.advanced || [])],
+  };
+  return merged;
+};
+
 // ============================================================
 // PYODIDE RUNNER (unchanged)
 // ============================================================
@@ -276,13 +304,15 @@ const Achievement = ({ message, icon, onClose }) => (
   </div>
 );
 
-const QuizPlatform = ({ quizType }) => {
+const QuizPlatform = ({ quizType, isMasterUser }) => {
   const [level, setLevel] = useState('basics');
   const [currentIdx, setCurrentIdx] = useState(0);
   const [completedQuizzes, setCompletedQuizzes] = useState(new Set());
   const [achievement, setAchievement] = useState(null);
+  const [quizData, setQuizData] = useState(() => getAllQuizzes(quizType));
+  const [quizEditorOpen, setQuizEditorOpen] = useState(false);
+  const [editingQuiz, setEditingQuiz] = useState(null);
 
-  const quizData = quizType === 'python' ? pythonQuizzes : mysqlQuizzes;
   const questions = quizData[level] || [];
   const current = questions[currentIdx];
   const totalCompleted = completedQuizzes.size;
@@ -301,17 +331,83 @@ const QuizPlatform = ({ quizType }) => {
     else if (total === 25) setAchievement({ icon: '💎', msg: 'Quarter Century! 25 Problems Done!' });
   };
 
+  const handleSaveQuiz = (quiz) => {
+    const custom = loadCustomQuizzes();
+    const typeKey = quizType;
+    if (!custom[typeKey]) custom[typeKey] = {};
+    if (!custom[typeKey][quiz.level]) custom[typeKey][quiz.level] = [];
+    
+    if (editingQuiz) {
+      // Update existing
+      const idx = custom[typeKey][quiz.level].findIndex(q => q.id === quiz.id);
+      if (idx >= 0) {
+        custom[typeKey][quiz.level][idx] = quiz;
+      } else {
+        // Might have changed level, remove from old and add to new
+        Object.keys(custom[typeKey]).forEach(lvl => {
+          custom[typeKey][lvl] = custom[typeKey][lvl].filter(q => q.id !== quiz.id);
+        });
+        custom[typeKey][quiz.level].push(quiz);
+      }
+    } else {
+      // Add new
+      quiz.id = `${quizType === 'python' ? 'p' : 'm'}${quiz.level[0]}${Date.now()}`;
+      custom[typeKey][quiz.level].push(quiz);
+    }
+    
+    saveCustomQuizzes(custom);
+    setQuizData(getAllQuizzes(quizType));
+    setQuizEditorOpen(false);
+    setEditingQuiz(null);
+  };
+
+  const handleDeleteQuiz = (quiz) => {
+    if (!window.confirm(`Delete quiz "${quiz.title}"?`)) return;
+    const custom = loadCustomQuizzes();
+    const typeKey = quizType;
+    if (custom[typeKey] && custom[typeKey][quiz.level]) {
+      custom[typeKey][quiz.level] = custom[typeKey][quiz.level].filter(q => q.id !== quiz.id);
+      saveCustomQuizzes(custom);
+      setQuizData(getAllQuizzes(quizType));
+      if (currentIdx >= questions.length - 1) setCurrentIdx(Math.max(0, questions.length - 2));
+    }
+  };
+
+  const handleAddQuiz = () => {
+    setEditingQuiz(null);
+    setQuizEditorOpen(true);
+  };
+
+  const handleEditQuiz = (quiz) => {
+    setEditingQuiz(quiz);
+    setQuizEditorOpen(true);
+  };
+
   const levels = ['basics', 'intermediate', 'advanced'];
   const levelIcons = { basics: '🌱', intermediate: '⚡', advanced: '🔥' };
 
   return (
     <div className="quiz-platform">
       {achievement && <Achievement icon={achievement.icon} message={achievement.msg} onClose={() => setAchievement(null)} />}
+      
+      {/* Quiz Editor Modal */}
+      {quizEditorOpen && (
+        <QuizEditorModal 
+          quiz={editingQuiz}
+          quizType={quizType}
+          onSave={handleSaveQuiz}
+          onClose={() => { setQuizEditorOpen(false); setEditingQuiz(null); }}
+        />
+      )}
+      
       <div className="quiz-header">
         <div className="quiz-title-row">
           <span className="quiz-platform-icon">{quizType === 'python' ? '🐍' : '🗄️'}</span>
           <h1 className="quiz-platform-title">{quizType === 'python' ? 'Python' : 'MySQL'} Challenges</h1>
           <span className="quiz-subtitle">CodeChef-Style Practice</span>
+          {isMasterUser && (
+            <button className="quiz-add-btn" onClick={handleAddQuiz}>+ Add Quiz</button>
+          )}
         </div>
         <div className="overall-progress">
           <span>{totalCompleted}/{totalQuestions} Solved</span>
@@ -344,14 +440,22 @@ const QuizPlatform = ({ quizType }) => {
               const done = completedQuizzes.has(q.id);
               const active = idx === currentIdx;
               return (
-                <button key={q.id} className={`quiz-list-item ${active?'active':''} ${done?'done':''}`} onClick={() => setCurrentIdx(idx)}>
-                  <span className="qli-num">{idx+1}</span>
-                  <div className="qli-info">
-                    <span className="qli-title">{q.title}</span>
-                    <span className="qli-tag" style={{color: q.tag==='DSA'?'#00d9ff':q.tag==='DATA'?'#a855f7':'#ff6b6b'}}>{q.tag}</span>
-                  </div>
-                  {done ? <span className="qli-done">✓</span> : active ? <span className="qli-active">►</span> : null}
-                </button>
+                <div key={q.id} className="quiz-list-item-wrapper">
+                  <button className={`quiz-list-item ${active?'active':''} ${done?'done':''}`} onClick={() => setCurrentIdx(idx)}>
+                    <span className="qli-num">{idx+1}</span>
+                    <div className="qli-info">
+                      <span className="qli-title">{q.title}</span>
+                      <span className="qli-tag" style={{color: q.tag==='DSA'?'#00d9ff':q.tag==='DATA'?'#a855f7':'#ff6b6b'}}>{q.tag}</span>
+                    </div>
+                    {done ? <span className="qli-done">✓</span> : active ? <span className="qli-active">►</span> : null}
+                  </button>
+                  {isMasterUser && (
+                    <div className="quiz-item-actions">
+                      <button className="quiz-edit-sm" onClick={() => handleEditQuiz(q)}>✏️</button>
+                      <button className="quiz-delete-sm" onClick={() => handleDeleteQuiz(q)}>🗑️</button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -368,6 +472,111 @@ const QuizPlatform = ({ quizType }) => {
             </>
           )}
         </main>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// QUIZ EDITOR MODAL — For Master Users to CRUD Quizzes
+// ============================================================
+const QuizEditorModal = ({ quiz, quizType, onSave, onClose }) => {
+  const isEditing = !!quiz;
+  const [draft, setDraft] = useState(() => quiz || {
+    id: null,
+    level: 'basics',
+    tag: quizType === 'python' ? 'DSA' : 'DDL',
+    title: '',
+    question: '',
+    starterCode: '',
+    expectedOutput: ''
+  });
+
+  const levels = ['basics', 'intermediate', 'advanced'];
+  const pythonTags = ['DSA', 'DATA', 'FULLSTACK'];
+  const mysqlTags = ['DDL', 'DML', 'DQL', 'JOIN', 'GROUP', 'SUBQUERY', 'OPTIMIZE', 'TRANSACTION'];
+  const tags = quizType === 'python' ? pythonTags : mysqlTags;
+
+  const handleSave = () => {
+    if (!draft.title.trim() || !draft.question.trim()) {
+      alert('Title and question are required!');
+      return;
+    }
+    onSave({ ...draft });
+  };
+
+  return (
+    <div className="quiz-editor-overlay">
+      <div className="quiz-editor-modal">
+        <div className="qem-header">
+          <h2>{isEditing ? '✏️ Edit Quiz' : '+ Add New Quiz'} <span style={{color:'#00d9ff'}}>({quizType})</span></h2>
+          <button className="qem-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="qem-body">
+          <div className="qem-row">
+            <div className="qem-field">
+              <label>Level</label>
+              <select value={draft.level} onChange={e => setDraft({...draft, level: e.target.value})}>
+                {levels.map(l => <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
+              </select>
+            </div>
+            <div className="qem-field">
+              <label>Tag</label>
+              <select value={draft.tag} onChange={e => setDraft({...draft, tag: e.target.value})}>
+                {tags.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="qem-field">
+            <label>Title</label>
+            <input 
+              type="text" 
+              placeholder="Quiz title..." 
+              value={draft.title} 
+              onChange={e => setDraft({...draft, title: e.target.value})}
+            />
+          </div>
+
+          <div className="qem-field">
+            <label>Question / Problem Statement</label>
+            <textarea 
+              rows={4}
+              placeholder="Describe the problem..." 
+              value={draft.question} 
+              onChange={e => setDraft({...draft, question: e.target.value})}
+            />
+          </div>
+
+          <div className="qem-field">
+            <label>Starter Code</label>
+            <textarea 
+              rows={6}
+              className="code-area"
+              placeholder={`Enter starter ${quizType} code...`}
+              value={draft.starterCode} 
+              onChange={e => setDraft({...draft, starterCode: e.target.value})}
+            />
+          </div>
+
+          <div className="qem-field">
+            <label>Expected Output</label>
+            <textarea 
+              rows={3}
+              placeholder="Expected output..." 
+              value={draft.expectedOutput} 
+              onChange={e => setDraft({...draft, expectedOutput: e.target.value})}
+            />
+          </div>
+        </div>
+
+        <div className="qem-footer">
+          <button className="qem-cancel" onClick={onClose}>Cancel</button>
+          <button className="qem-save" onClick={handleSave}>
+            {isEditing ? '💾 Save Changes' : '+ Add Quiz'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -964,8 +1173,8 @@ export default function SyllabusPage() {
         )}
       </div>
 
-      {viewMode === 'quiz-python' && <QuizPlatform quizType="python" />}
-      {viewMode === 'quiz-mysql' && <QuizPlatform quizType="mysql" />}
+      {viewMode === 'quiz-python' && <QuizPlatform quizType="python" isMasterUser={isMasterUser} />}
+      {viewMode === 'quiz-mysql' && <QuizPlatform quizType="mysql" isMasterUser={isMasterUser} />}
       {viewMode === 'ml-visuals' && <MLVisuals />}
       {viewMode === 'py-visuals' && <PythonVisuals />}
       {viewMode === 'whiteboard' && <WhiteBoard />}
@@ -2483,19 +2692,6 @@ export default function SyllabusPage() {
         }
         
         .quiz-orb-fan-label {
-          font-size: 12px;
-          padding: 6px 12px;
-        }
-      }
-
-      /* ═══════════════════════════════════════════════════════════════
-        ATTENTION GRABBER — Subtle screen edge glow
-      ═══════════════════════════════════════════════════════════════ */
-
-      .quiz-orb-wrap::before {
-        content: '';
-        position: fixed;
-        bottom: -100px;
         left: -100px;
         width: 300px;
         height: 300px;
