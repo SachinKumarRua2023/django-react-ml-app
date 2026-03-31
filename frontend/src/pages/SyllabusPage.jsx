@@ -1755,17 +1755,6 @@ export default function SyllabusPage() {
 
         /* ─────────────────────────────────────────────────────────
            COURSE SIDEBAR — fixed width, full height, scrollable
-        ───────────────────────────────────────────────────────── */
-        .course-sidebar-wrap {
-          width: 280px;
-          min-width: 280px;
-          flex-shrink: 0;
-          min-height: 0;      /* allow flex shrink */
-          border-right: 1px solid rgba(255,255,255,0.08);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          background: rgba(0,0,0,0.25);
         }
 
         /* Sidebar header — fixed at top of sidebar */
