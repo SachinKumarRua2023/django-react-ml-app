@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import MLVisuals from "../seekhowithrua-animation/MLVisuals";
 import PythonVisuals from "../seekhowithrua-animation/PythonVisuals";
@@ -14,7 +14,7 @@ import "./SyllabusCourses.css"; // Cache bust 2025-03-31 v3
 // API base URL - Updated 2025-03-31 v3
 const API_URL = import.meta.env.VITE_API_URL || "https://django-react-ml-app.onrender.com/api/ml";
 
-// ── Read user from localStorage ──
+// ΓöÇΓöÇ Read user from localStorage ΓöÇΓöÇ
 const getLoggedInUser = () => {
   try {
     const raw = localStorage.getItem("cosmos_user");
@@ -24,17 +24,17 @@ const getLoggedInUser = () => {
   }
 };
 
-// ── Check if user is master@gmail.com ──
+// ΓöÇΓöÇ Check if user is master@gmail.com ΓöÇΓöÇ
 const checkMaster = () => {
   const user = getLoggedInUser();
   const masterEmails = ["master@gmail.com", "seekhowithrua@gmail.com"];
   return masterEmails.includes(user?.email) && !!user?.token;
 };
 
-// ── Tiny unique id helper ──
+// ΓöÇΓöÇ Tiny unique id helper ΓöÇΓöÇ
 const uid = () => Math.random().toString(36).slice(2, 8);
 
-// ── Check if user is trainer ──
+// ΓöÇΓöÇ Check if user is trainer ΓöÇΓöÇ
 const isTrainer = () => {
   const user = getLoggedInUser();
   if (!user) return false;
@@ -63,7 +63,7 @@ const CourseCard = ({ course, onClick, isActive }) => {
         <h3 className="course-title">{course.title}</h3>
         <p className="course-description">{course.description || 'Learn with hands-on projects'}</p>
         <div className="course-modules-count">
-          <span>{course.modules?.length || 0} modules • {topicCount} topics</span>
+          <span>{course.modules?.length || 0} modules ΓÇó {topicCount} topics</span>
         </div>
       </div>
       <div className="course-glow" style={{ background: course.color }} />
@@ -75,7 +75,7 @@ const CourseListing = ({ courses, activeCourseId, onSelect, isMasterUser }) => {
   if (!courses || courses.length === 0) {
     return (
       <div className="no-courses">
-        <span className="no-courses-icon">📚</span>
+        <span className="no-courses-icon">≡ƒôÜ</span>
         <p>No courses available yet.</p>
         {isMasterUser && <p className="master-hint">As master, you can add courses from the Edit panel.</p>}
       </div>
@@ -97,7 +97,7 @@ const CourseListing = ({ courses, activeCourseId, onSelect, isMasterUser }) => {
 };
 
 // ============================================================
-// QUIZ DATA (unchanged — not touched)
+// QUIZ DATA (unchanged ΓÇö not touched)
 // ============================================================
 const pythonQuizzes = {
   basics: [
@@ -192,7 +192,7 @@ const CodeEditor = ({ value, onChange, language = 'python' }) => {
   return (
     <div className="code-editor-wrapper">
       <div className="editor-toolbar">
-        <span className="editor-lang">{language === 'python' ? '🐍 Python' : '🗄️ MySQL'}</span>
+        <span className="editor-lang">{language === 'python' ? '≡ƒÉì Python' : '≡ƒùä∩╕Å MySQL'}</span>
         <button className="clear-btn" onClick={() => onChange('')}>Clear</button>
       </div>
       <textarea className="code-textarea" value={value} onChange={e => onChange(e.target.value)} onKeyDown={handleKeyDown} spellCheck={false} autoComplete="off" />
@@ -235,7 +235,7 @@ const QuizCard = ({ quiz, quizType, onComplete, isCompleted }) => {
         <div className="quiz-meta">
           <span className="quiz-tag" style={{background: tagColors[quiz.tag] || '#666'}}>{quiz.tag}</span>
           <span className="quiz-level">{quiz.level}</span>
-          {isCompleted && <span className="quiz-done-badge">✓ Solved</span>}
+          {isCompleted && <span className="quiz-done-badge">Γ£ô Solved</span>}
         </div>
         <h2 className="quiz-title">{quiz.title}</h2>
       </div>
@@ -243,23 +243,23 @@ const QuizCard = ({ quiz, quizType, onComplete, isCompleted }) => {
       <div className="quiz-workspace">
         <CodeEditor value={code} onChange={setCode} language={quizType} />
         <div className="quiz-controls">
-          {quizType === 'python' && !pyodideReady && <span className="loading-badge">⏳ Loading Python runtime...</span>}
+          {quizType === 'python' && !pyodideReady && <span className="loading-badge">ΓÅ│ Loading Python runtime...</span>}
           <button className={`run-btn ${running ? 'running' : ''}`} onClick={handleRun} disabled={running || (quizType === 'python' && !pyodideReady)}>
-            {running ? '⏳ Running...' : '▶ Run Code'}
+            {running ? 'ΓÅ│ Running...' : 'Γû╢ Run Code'}
           </button>
         </div>
         {output !== '' && (
           <div className={`output-panel ${result}`}>
             <div className="output-header">
-              <span>{result === 'correct' ? '✅ Output (Correct!)' : result === 'incorrect' ? '❌ Output (Not quite...)' : '💥 Error'}</span>
+              <span>{result === 'correct' ? 'Γ£à Output (Correct!)' : result === 'incorrect' ? 'Γ¥î Output (Not quite...)' : '≡ƒÆÑ Error'}</span>
               {result === 'incorrect' && <button className="show-expected-btn" onClick={() => setOutput(p => p + '\n\n--- Expected ---\n' + quiz.expectedOutput)}>Show Expected</button>}
             </div>
             <pre className="output-text">{output}</pre>
           </div>
         )}
       </div>
-      {result === 'correct' && <div className="correct-banner">🎉 100% Correct! Excellent work!</div>}
-      {result === 'incorrect' && <div className="hint-banner">💡 Not matching expected output. Check your logic and try again!</div>}
+      {result === 'correct' && <div className="correct-banner">≡ƒÄë 100% Correct! Excellent work!</div>}
+      {result === 'incorrect' && <div className="hint-banner">≡ƒÆí Not matching expected output. Check your logic and try again!</div>}
     </div>
   );
 };
@@ -296,20 +296,20 @@ const QuizPlatform = ({ quizType }) => {
     newSet.add(qid);
     setCompletedQuizzes(newSet);
     const total = newSet.size;
-    if (total === 1) setAchievement({ icon: '🌟', msg: "First solve! You're on your way!" });
-    else if (total === 10) setAchievement({ icon: '🔥', msg: '10 Problems Solved! You\'re heating up!' });
-    else if (total === 25) setAchievement({ icon: '💎', msg: 'Quarter Century! 25 Problems Done!' });
+    if (total === 1) setAchievement({ icon: '≡ƒîƒ', msg: "First solve! You're on your way!" });
+    else if (total === 10) setAchievement({ icon: '≡ƒöÑ', msg: '10 Problems Solved! You\'re heating up!' });
+    else if (total === 25) setAchievement({ icon: '≡ƒÆÄ', msg: 'Quarter Century! 25 Problems Done!' });
   };
 
   const levels = ['basics', 'intermediate', 'advanced'];
-  const levelIcons = { basics: '🌱', intermediate: '⚡', advanced: '🔥' };
+  const levelIcons = { basics: '≡ƒî▒', intermediate: 'ΓÜí', advanced: '≡ƒöÑ' };
 
   return (
     <div className="quiz-platform">
       {achievement && <Achievement icon={achievement.icon} message={achievement.msg} onClose={() => setAchievement(null)} />}
       <div className="quiz-header">
         <div className="quiz-title-row">
-          <span className="quiz-platform-icon">{quizType === 'python' ? '🐍' : '🗄️'}</span>
+          <span className="quiz-platform-icon">{quizType === 'python' ? '≡ƒÉì' : '≡ƒùä∩╕Å'}</span>
           <h1 className="quiz-platform-title">{quizType === 'python' ? 'Python' : 'MySQL'} Challenges</h1>
           <span className="quiz-subtitle">CodeChef-Style Practice</span>
         </div>
@@ -350,7 +350,7 @@ const QuizPlatform = ({ quizType }) => {
                     <span className="qli-title">{q.title}</span>
                     <span className="qli-tag" style={{color: q.tag==='DSA'?'#00d9ff':q.tag==='DATA'?'#a855f7':'#ff6b6b'}}>{q.tag}</span>
                   </div>
-                  {done ? <span className="qli-done">✓</span> : active ? <span className="qli-active">►</span> : null}
+                  {done ? <span className="qli-done">Γ£ô</span> : active ? <span className="qli-active">Γû║</span> : null}
                 </button>
               );
             })}
@@ -361,9 +361,9 @@ const QuizPlatform = ({ quizType }) => {
             <>
               <QuizCard key={current.id} quiz={current} quizType={quizType} onComplete={handleComplete} isCompleted={completedQuizzes.has(current.id)} />
               <div className="quiz-nav-bar">
-                <button className="qnav-btn" disabled={currentIdx===0} onClick={() => setCurrentIdx(i=>i-1)}>← Previous</button>
+                <button className="qnav-btn" disabled={currentIdx===0} onClick={() => setCurrentIdx(i=>i-1)}>ΓåÉ Previous</button>
                 <span className="qnav-info">{currentIdx+1} / {questions.length}</span>
-                <button className="qnav-btn" disabled={currentIdx===questions.length-1} onClick={() => setCurrentIdx(i=>i+1)}>Next →</button>
+                <button className="qnav-btn" disabled={currentIdx===questions.length-1} onClick={() => setCurrentIdx(i=>i+1)}>Next ΓåÆ</button>
               </div>
             </>
           )}
@@ -379,10 +379,10 @@ const QuizPlatform = ({ quizType }) => {
 const Celebration = ({ onClose }) => (
   <div className="celebration-overlay" onClick={onClose}>
     <div className="celebration-content" onClick={e => e.stopPropagation()}>
-      <div className="celebration-emoji">🎉</div>
+      <div className="celebration-emoji">≡ƒÄë</div>
       <h2>Congratulations!</h2>
       <p>You've completed the entire course!</p>
-      <div className="celebration-badges"><span>🏆</span><span>⭐</span><span>🎯</span></div>
+      <div className="celebration-badges"><span>≡ƒÅå</span><span>Γ¡É</span><span>≡ƒÄ»</span></div>
       <button className="btn btn-primary" onClick={onClose}>Continue Learning</button>
     </div>
     <div className="confetti">
@@ -395,18 +395,18 @@ const Celebration = ({ onClose }) => (
 
 const ModuleComplete = ({ moduleName, onNext }) => (
   <div className="module-complete">
-    <div className="complete-icon">✨</div>
+    <div className="complete-icon">Γ£¿</div>
     <h3>Module Complete!</h3>
     <p>You've finished <strong>{moduleName}</strong></p>
-    <button className="btn btn-primary" onClick={onNext}>Next Module →</button>
+    <button className="btn btn-primary" onClick={onNext}>Next Module ΓåÆ</button>
   </div>
 );
 
 // ============================================================
-// ── TRAINER EDITOR COMPONENTS ──
+// ΓöÇΓöÇ TRAINER EDITOR COMPONENTS ΓöÇΓöÇ
 // ============================================================
 
-// Inline editable text — double-click to edit
+// Inline editable text ΓÇö double-click to edit
 const InlineEdit = ({ value, onSave, className = '', multiline = false, placeholder = 'Click to edit...' }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -435,7 +435,7 @@ const InlineEdit = ({ value, onSave, className = '', multiline = false, placehol
   return (
     <span className={`trainer-editable ${className}`} onDoubleClick={() => { setDraft(value); setEditing(true); }} title="Double-click to edit">
       {value || <em style={{opacity:0.4}}>{placeholder}</em>}
-      <span className="trainer-edit-hint">✏️</span>
+      <span className="trainer-edit-hint">Γ£Å∩╕Å</span>
     </span>
   );
 };
@@ -444,7 +444,7 @@ const InlineEdit = ({ value, onSave, className = '', multiline = false, placehol
 const ConfirmModal = ({ message, onConfirm, onCancel }) => (
   <div className="confirm-overlay">
     <div className="confirm-modal">
-      <div className="confirm-icon">⚠️</div>
+      <div className="confirm-icon">ΓÜá∩╕Å</div>
       <p className="confirm-msg">{message}</p>
       <div className="confirm-actions">
         <button className="confirm-cancel" onClick={onCancel}>Cancel</button>
@@ -478,8 +478,8 @@ const ContentEditorModal = ({ topic, content, onSave, onClose }) => {
     <div className="content-editor-overlay">
       <div className="content-editor-modal">
         <div className="cem-header">
-          <h2>✏️ Editing: <span style={{color:'#00d9ff'}}>{topic}</span></h2>
-          <button className="cem-close" onClick={onClose}>✕</button>
+          <h2>Γ£Å∩╕Å Editing: <span style={{color:'#00d9ff'}}>{topic}</span></h2>
+          <button className="cem-close" onClick={onClose}>Γ£ò</button>
         </div>
 
         <div className="cem-body">
@@ -500,10 +500,10 @@ const ContentEditorModal = ({ topic, content, onSave, onClose }) => {
           {draft.sections.map((sec, idx) => (
             <div key={idx} className="cem-section-block">
               <div className="cem-section-controls">
-                <span className="cem-section-num">§{idx+1}</span>
-                <button className="cem-move-btn" onClick={() => moveSection(idx, -1)} disabled={idx===0}>↑</button>
-                <button className="cem-move-btn" onClick={() => moveSection(idx, 1)} disabled={idx===draft.sections.length-1}>↓</button>
-                <button className="cem-remove-section" onClick={() => removeSection(idx)}>✕</button>
+                <span className="cem-section-num">┬º{idx+1}</span>
+                <button className="cem-move-btn" onClick={() => moveSection(idx, -1)} disabled={idx===0}>Γåæ</button>
+                <button className="cem-move-btn" onClick={() => moveSection(idx, 1)} disabled={idx===draft.sections.length-1}>Γåô</button>
+                <button className="cem-remove-section" onClick={() => removeSection(idx)}>Γ£ò</button>
               </div>
               <input className="cem-input" placeholder="Section heading" value={sec.heading} onChange={e => updateSection(idx, 'heading', e.target.value)} />
               <textarea className="cem-textarea" placeholder="Section content..." value={sec.text} onChange={e => updateSection(idx, 'text', e.target.value)} rows={4} />
@@ -513,7 +513,7 @@ const ContentEditorModal = ({ topic, content, onSave, onClose }) => {
 
         <div className="cem-footer">
           <button className="cem-cancel" onClick={onClose}>Cancel</button>
-          <button className="cem-save" onClick={() => { onSave(draft); onClose(); }}>💾 Save Content</button>
+          <button className="cem-save" onClick={() => { onSave(draft); onClose(); }}>≡ƒÆ╛ Save Content</button>
         </div>
       </div>
     </div>
@@ -521,7 +521,7 @@ const ContentEditorModal = ({ topic, content, onSave, onClose }) => {
 };
 
 // ============================================================
-// TRAINER PANEL — Syllabus Structure Editor (sidebar panel)
+// TRAINER PANEL ΓÇö Syllabus Structure Editor (sidebar panel)
 // ============================================================
 const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, onClose }) => {
   const [confirm, setConfirm] = useState(null);
@@ -634,10 +634,10 @@ const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, o
 
       <div className="trainer-panel-header">
         <div className="tph-title">
-          <span className="tph-icon">⚙️</span>
+          <span className="tph-icon">ΓÜÖ∩╕Å</span>
           <span>Syllabus Editor</span>
         </div>
-        <button className="tph-close" onClick={onClose}>✕</button>
+        <button className="tph-close" onClick={onClose}>Γ£ò</button>
       </div>
 
       <div className="trainer-panel-body">
@@ -651,7 +651,7 @@ const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, o
         {Object.entries(subject.modules).map(([moduleName, topics]) => (
           <div key={moduleName} className="tp-module-block">
             <div className="tp-module-header">
-              <span className="tp-module-drag">⠿</span>
+              <span className="tp-module-drag">Γá┐</span>
               <InlineEdit
                 value={moduleName}
                 onSave={(val) => renameModule(moduleName, val)}
@@ -662,14 +662,14 @@ const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, o
                 <button className="tp-btn tp-btn-add" title="Add Topic" onClick={() => addTopic(moduleName)}>+</button>
                 <button className="tp-btn tp-btn-del" title="Delete Module" onClick={() =>
                   setConfirm({ message: `Delete module "${moduleName}" and all its topics?`, action: () => deleteModule(moduleName) })
-                }>🗑</button>
+                }>≡ƒùæ</button>
               </div>
             </div>
 
             <div className="tp-topics-list">
               {topics.map((topic, tIdx) => (
                 <div key={topic + tIdx} className="tp-topic-row">
-                  <span className="tp-topic-bullet">◇</span>
+                  <span className="tp-topic-bullet">Γùç</span>
                   <InlineEdit
                     value={topic}
                     onSave={(val) => renameTopic(moduleName, topic, val)}
@@ -677,11 +677,11 @@ const TrainerSyllabusPanel = ({ syllabusData, activeSubject, onUpdateSyllabus, o
                     placeholder="Topic name..."
                   />
                   <div className="tp-topic-actions">
-                    <button className="tp-btn-sm" onClick={() => moveTopic(moduleName, tIdx, -1)} disabled={tIdx===0} title="Move up">↑</button>
-                    <button className="tp-btn-sm" onClick={() => moveTopic(moduleName, tIdx, 1)} disabled={tIdx===topics.length-1} title="Move down">↓</button>
+                    <button className="tp-btn-sm" onClick={() => moveTopic(moduleName, tIdx, -1)} disabled={tIdx===0} title="Move up">Γåæ</button>
+                    <button className="tp-btn-sm" onClick={() => moveTopic(moduleName, tIdx, 1)} disabled={tIdx===topics.length-1} title="Move down">Γåô</button>
                     <button className="tp-btn-sm tp-del-sm" onClick={() =>
                       setConfirm({ message: `Delete topic "${topic}"?`, action: () => deleteTopic(moduleName, topic) })
-                    } title="Delete">✕</button>
+                    } title="Delete">Γ£ò</button>
                   </div>
                 </div>
               ))}
@@ -914,15 +914,15 @@ export default function SyllabusPage() {
   };
 
   const topTabs = [
-    { id: 'courses', label: '📚 Courses', icon: '📚' },
-    { id: 'quiz-python', label: '🐍 Python Quiz', icon: '🐍' },
-    { id: 'quiz-mysql', label: '🗄️ MySQL Quiz', icon: '🗄️' },
+    { id: 'courses', label: '≡ƒôÜ Courses', icon: '≡ƒôÜ' },
+    { id: 'quiz-python', label: '≡ƒÉì Python Quiz', icon: '≡ƒÉì' },
+    { id: 'quiz-mysql', label: '≡ƒùä∩╕Å MySQL Quiz', icon: '≡ƒùä∩╕Å' },
   ];
 
   const toolTabs = [
-    { id: 'ml-visuals',  label: 'ML Visuals',      icon: '🤖', color: '#a855f7' },
-    { id: 'py-visuals',  label: 'Python Visuals',  icon: '🐍', color: '#22d3ee' },
-    { id: 'whiteboard',  label: 'Whiteboard',      icon: '🖊️', color: '#f59e0b' },
+    { id: 'ml-visuals',  label: 'ML Visuals',      icon: '≡ƒñû', color: '#a855f7' },
+    { id: 'py-visuals',  label: 'Python Visuals',  icon: '≡ƒÉì', color: '#22d3ee' },
+    { id: 'whiteboard',  label: 'Whiteboard',      icon: '≡ƒûè∩╕Å', color: '#f59e0b' },
   ];
 
   const isT = userRole === 'trainer';
@@ -939,7 +939,7 @@ export default function SyllabusPage() {
         />
       )}
 
-      {/* ── TOP MODE TABS ── */}
+      {/* ΓöÇΓöÇ TOP MODE TABS ΓöÇΓöÇ */}
       <div className="mode-tabs">
         {topTabs.map(tab => (
           <button key={tab.id} className={`mode-tab ${viewMode === tab.id ? 'active' : ''}`} onClick={() => setViewMode(tab.id)}>
@@ -950,16 +950,16 @@ export default function SyllabusPage() {
 
         {isT && viewMode === 'courses' && (
           <div className="trainer-badge-row">
-            <span className="trainer-badge">⚙️ Trainer Mode</span>
+            <span className="trainer-badge">ΓÜÖ∩╕Å Trainer Mode</span>
             <button
               className={`trainer-edit-toggle ${trainerPanelOpen ? 'active' : ''}`}
               onClick={() => setTrainerPanelOpen(p => !p)}
               title="Toggle syllabus editor"
             >
-              {trainerPanelOpen ? '✕ Close Editor' : '✏️ Edit Syllabus'}
+              {trainerPanelOpen ? 'Γ£ò Close Editor' : 'Γ£Å∩╕Å Edit Syllabus'}
             </button>
-            <button className="trainer-reset-btn" onClick={handleResetSyllabus} title="Reset to defaults">↺ Reset</button>
-            {savedIndicator && <span className="saved-indicator">✓ Saved</span>}
+            <button className="trainer-reset-btn" onClick={handleResetSyllabus} title="Reset to defaults">Γå║ Reset</button>
+            {savedIndicator && <span className="saved-indicator">Γ£ô Saved</span>}
           </div>
         )}
       </div>
@@ -970,26 +970,26 @@ export default function SyllabusPage() {
       {viewMode === 'py-visuals' && <PythonVisuals />}
       {viewMode === 'whiteboard' && <WhiteBoard />}
 
-      {/* ── COURSE MODE ── */}
+      {/* ΓöÇΓöÇ COURSE MODE ΓöÇΓöÇ */}
       {viewMode === 'courses' && (
         <>
-          {/* ── SYLLABUS HEADER ── */}
+          {/* ΓöÇΓöÇ SYLLABUS HEADER ΓöÇΓöÇ */}
           <div className="syllabus-header">
-            <h1>📚 Learning Paths</h1>
+            <h1>≡ƒôÜ Learning Paths</h1>
             <p>Explore our comprehensive courses designed to take you from beginner to expert</p>
           </div>
 
-          {/* ── MASTER EDIT BUTTON ── */}
+          {/* ΓöÇΓöÇ MASTER EDIT BUTTON ΓöÇΓöÇ */}
           {isMasterUser && (
             <button 
               className="master-edit-btn"
               onClick={() => setTrainerPanelOpen(p => !p)}
             >
-              ✏️ {trainerPanelOpen ? 'Close Editor' : 'Edit Courses'}
+              Γ£Å∩╕Å {trainerPanelOpen ? 'Close Editor' : 'Edit Courses'}
             </button>
           )}
 
-          {/* ── COURSE GRID ── */}
+          {/* ΓöÇΓöÇ COURSE GRID ΓöÇΓöÇ */}
           {loading ? (
             <div className="courses-loading">
               <div className="courses-loading-spinner"></div>
@@ -1025,7 +1025,7 @@ export default function SyllabusPage() {
             />
           )}
 
-          {/* ── TRAINER PANEL ── */}
+          {/* ΓöÇΓöÇ TRAINER PANEL ΓöÇΓöÇ */}
           {isMasterUser && trainerPanelOpen && (
             <div className="trainer-panel-wrap" style={{position: 'fixed', top: '120px', right: '20px', width: '350px', maxHeight: '70vh', zIndex: 1000}}>
               <TrainerSyllabusPanel
@@ -1037,7 +1037,7 @@ export default function SyllabusPage() {
             </div>
           )}
 
-          {/* ── DETAILED COURSE VIEW (when a topic is selected) ── */}
+          {/* ΓöÇΓöÇ DETAILED COURSE VIEW (when a topic is selected) ΓöÇΓöÇ */}
           {activeSubject && syllabusData[activeSubject] && (
             <>
               {showCelebration && <Celebration onClose={() => setShowCelebration(false)} />}
@@ -1064,7 +1064,7 @@ export default function SyllabusPage() {
                 <span className="progress-text">{progress}% Complete</span>
               </div>
 
-              {/* ── LAYOUT ROOT ── */}
+              {/* ΓöÇΓöÇ LAYOUT ROOT ΓöÇΓöÇ */}
               <div className="course-layout-root">
                 {/* Course sidebar */}
                 {!sidebarCollapsed && (
@@ -1074,7 +1074,7 @@ export default function SyllabusPage() {
                         <span>{currentSubject.icon}</span>
                         {currentSubject.title}
                       </h3>
-                      <button className="collapse-btn" onClick={() => setSidebarCollapsed(true)}>←</button>
+                      <button className="collapse-btn" onClick={() => setSidebarCollapsed(true)}>ΓåÉ</button>
                     </div>
                     <div className="modules-list">
                       {Object.entries(currentSubject.modules).map(([moduleName, topics]) => {
@@ -1083,7 +1083,7 @@ export default function SyllabusPage() {
                         return (
                           <div key={moduleName} className="module-group">
                             <button className={`module-header ${isModuleActive ? 'active' : ''} ${isModuleComplete ? 'completed' : ''}`} onClick={() => setActiveModule(isModuleActive ? null : moduleName)}>
-                              <span className="module-icon">{isModuleComplete ? '✓' : isModuleActive ? '▼' : '▶'}</span>
+                              <span className="module-icon">{isModuleComplete ? 'Γ£ô' : isModuleActive ? 'Γû╝' : 'Γû╢'}</span>
                               <span className="module-name">{moduleName}</span>
                               <span className={`topic-count ${isModuleComplete ? 'done' : ''}`}>
                                 {isModuleComplete ? 'Done' : `${topics.filter(t => completedTopics.has(t)).length}/${topics.length}`}
@@ -1097,9 +1097,9 @@ export default function SyllabusPage() {
                                   const hasCustomContent = !!currentSubject.topicContent?.[topic];
                                   return (
                                     <button key={topic} className={`topic-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} onClick={() => handleTopicClick(topic, moduleName)} style={{ animationDelay: `${idx * 0.05}s` }}>
-                                      <span className="topic-bullet">{isCompleted ? '✓' : isActive ? '◆' : '◇'}</span>
+                                      <span className="topic-bullet">{isCompleted ? 'Γ£ô' : isActive ? 'Γùå' : 'Γùç'}</span>
                                       <span className="topic-text">{topic}</span>
-                                      {isMasterUser && hasCustomContent && <span className="custom-content-dot" title="Has custom content">●</span>}
+                                      {isMasterUser && hasCustomContent && <span className="custom-content-dot" title="Has custom content">ΓùÅ</span>}
                                       {isActive && <span className="topic-active-indicator" />}
                                     </button>
                                   );
@@ -1125,7 +1125,7 @@ export default function SyllabusPage() {
                 {/* Collapsed sidebar toggle */}
                 {sidebarCollapsed && (
                   <button className="sidebar-expand-btn" onClick={() => setSidebarCollapsed(false)}>
-                    →
+                    ΓåÆ
                   </button>
                 )}
 
@@ -1145,25 +1145,25 @@ export default function SyllabusPage() {
                       </div>
                       {isT && (
                         <div className="trainer-welcome-hint">
-                          <span>⚙️ Trainer:</span> Use <strong>✏️ Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
+                          <span>ΓÜÖ∩╕Å Trainer:</span> Use <strong>Γ£Å∩╕Å Edit Syllabus</strong> above to manage modules & topics. Click any topic then use <strong>Edit Content</strong> to update its body.
                         </div>
                       )}
-                      <div className="start-hint"><span className="hint-arrow">←</span><span>Choose a module to begin</span></div>
+                      <div className="start-hint"><span className="hint-arrow">ΓåÉ</span><span>Choose a module to begin</span></div>
                     </div>
                   ) : (
                     <div className="content-display">
                       <div className="content-header">
                         <div className="breadcrumb">
-                          <span>{currentSubject.title}</span><span>›</span><span>{activeModule}</span><span>›</span>
+                          <span>{currentSubject.title}</span><span>ΓÇ║</span><span>{activeModule}</span><span>ΓÇ║</span>
                           <span className="active">{activeTopic}</span>
                         </div>
                         <div className="content-actions">
                           <button className={`action-btn ${completedTopics.has(activeTopic) ? 'completed' : ''}`} title="Mark Complete"
                             onClick={() => { const s = new Set(completedTopics); s.add(activeTopic); setCompletedTopics(s); }}>
-                            {completedTopics.has(activeTopic) ? '✓' : '○'}
+                            {completedTopics.has(activeTopic) ? 'Γ£ô' : 'Γùï'}
                           </button>
-                          <button className="action-btn" title="Bookmark">🔖</button>
-                          <button className="action-btn" title="Share">↗</button>
+                          <button className="action-btn" title="Bookmark">≡ƒöû</button>
+                          <button className="action-btn" title="Share">Γåù</button>
                           {masterUser && (
                           <button
                             className="action-btn trainer-content-edit-btn"
@@ -1174,7 +1174,7 @@ export default function SyllabusPage() {
                               setContentEditorOpen(true);
                             }}
                             >
-                              ✏️ Edit Content
+                              Γ£Å∩╕Å Edit Content
                             </button>
                           )}
                         </div>
@@ -1190,7 +1190,7 @@ export default function SyllabusPage() {
                           </section>
                         ))}
                         <div className="code-playground-teaser">
-                          <div className="teaser-header"><span>💻</span><span>Practice Code</span></div>
+                          <div className="teaser-header"><span>≡ƒÆ╗</span><span>Practice Code</span></div>
                           <div className="teaser-body">
                             <p>Interactive Python compiler coming soon...</p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1201,7 +1201,7 @@ export default function SyllabusPage() {
                                 onClick={() => { setViewMode('quiz-python'); }}
                                 title="Take Quiz"
                               >
-                                🧠
+                                ≡ƒºá
                               </button>
                             </div>
                           </div>
@@ -1209,13 +1209,13 @@ export default function SyllabusPage() {
                       </article>
 
                       <div className="content-footer">
-                        <button className="nav-btn prev" onClick={handlePrevious} disabled={!canGoPrevious}>← Previous</button>
+                        <button className="nav-btn prev" onClick={handlePrevious} disabled={!canGoPrevious}>ΓåÉ Previous</button>
                         <div className="progress-info">
                           <span>{completedTopics.size} / {allTopics.length} completed</span>
                           <div className="mini-progress"><div style={{ width: `${progress}%` }} /></div>
                         </div>
                         <button className="nav-btn next" onClick={handleNext} disabled={!canGoNext}>
-                          {completedTopics.size === allTopics.length - 1 ? 'Finish 🎉' : 'Next →'}
+                          {completedTopics.size === allTopics.length - 1 ? 'Finish ≡ƒÄë' : 'Next ΓåÆ'}
                         </button>
                       </div>
                     </div>
@@ -1227,28 +1227,28 @@ export default function SyllabusPage() {
         </>
       )}
 
-      {/* ── ALL STYLES ── */}
+      {/* ΓöÇΓöÇ ALL STYLES ΓöÇΓöÇ */}
       <style>{`
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            PAGE ROOT
           
           ARCHITECTURE (30yr principle):
           The page is divided into 3 horizontal bands:
-            1. .mode-tabs          — sticky, ~44px
-            2. .subject-tabs       — static, ~46px
-            3. .course-progress-bar — static, 3px
-            4. .course-layout-root — fills EXACT remaining viewport height
+            1. .mode-tabs          ΓÇö sticky, ~44px
+            2. .subject-tabs       ΓÇö static, ~46px
+            3. .course-progress-bar ΓÇö static, 3px
+            4. .course-layout-root ΓÇö fills EXACT remaining viewport height
           
           The layout root is a flex-row. Each column manages its
           own internal scroll. The content column is a flex-column:
             top:    .content-header  (sticky within column, not page)
-            middle: .content-body    (flex:1, overflow-y:auto — SCROLLS)
+            middle: .content-body    (flex:1, overflow-y:auto ΓÇö SCROLLS)
             bottom: .content-footer  (always visible, never scrolls)
           
           This ensures footer is ALWAYS visible regardless of content
-          length — it is NOT position:sticky (which depends on scroll
+          length ΓÇö it is NOT position:sticky (which depends on scroll
           parent having overflow) but a proper flex layout pin.
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
         /* Reset any global box-sizing issues */
         .courses-page *,
@@ -1261,17 +1261,17 @@ export default function SyllabusPage() {
           display: flex;
           flex-direction: column;
           width: 100%;
-          /* Exactly fill the viewport — no more, no less */
+          /* Exactly fill the viewport ΓÇö no more, no less */
           height: 100vh;
           overflow: hidden;
-          /* Navbar is 52px — offset so we start below it */
+          /* Navbar is 52px ΓÇö offset so we start below it */
           padding-top: 52px;
           margin-top: -52px;
         }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            MODE TABS
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .mode-tabs {
           display: flex;
           align-items: center;
@@ -1298,7 +1298,7 @@ export default function SyllabusPage() {
         .mode-tab.active { background: linear-gradient(135deg, rgba(0,217,255,0.2), rgba(168,85,247,0.2)); border-color: #00d9ff; color: #00d9ff; box-shadow: 0 0 12px rgba(0,217,255,0.2); }
         .mode-tab-icon { font-size: 15px; }
 
-        /* ── Trainer toolbar ── */
+        /* ΓöÇΓöÇ Trainer toolbar ΓöÇΓöÇ */
         .trainer-badge-row {
           margin-left: auto;
           display: flex; align-items: center; gap: 8px;
@@ -1327,9 +1327,9 @@ export default function SyllabusPage() {
         .saved-indicator { font-size: 11px; color: #00ff88; animation: fadeInOut 2s ease forwards; }
         @keyframes fadeInOut { 0%{opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{opacity:0} }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            SUBJECT TABS + PROGRESS BAR
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .subject-tabs {
           padding: 10px 20px 0;
           background: rgba(0,0,0,0.2);
@@ -1367,13 +1367,13 @@ export default function SyllabusPage() {
           font-size: 10px; color: rgba(255,255,255,0.4); white-space: nowrap;
         }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            COURSE LAYOUT ROOT
            
            flex:1 + overflow:hidden = fills exactly the remaining
            height left after mode-tabs + subject-tabs + progress-bar.
            Each child column manages its own scroll independently.
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .course-layout-root {
           display: flex;
           flex-direction: row;
@@ -1385,9 +1385,9 @@ export default function SyllabusPage() {
           height: calc(100vh - 140px); /* Full height minus header space */
         }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            TRAINER PANEL WRAP
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .trainer-panel-wrap {
           width: 300px;
           min-width: 300px;
@@ -1454,9 +1454,9 @@ export default function SyllabusPage() {
         .trainer-inline-input.multiline { resize: vertical; min-height: 60px; }
         .tp-title-edit { font-size: 14px; font-weight: 700; color: white; }
 
-        /* ─────────────────────────────────────────────────────────
-           COURSE SIDEBAR — fixed width, full height, scrollable
-        ───────────────────────────────────────────────────────── */
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+           COURSE SIDEBAR ΓÇö fixed width, full height, scrollable
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .course-sidebar-wrap {
           width: 280px;
           min-width: 280px;
@@ -1469,7 +1469,7 @@ export default function SyllabusPage() {
           background: rgba(0,0,0,0.25);
         }
 
-        /* Sidebar header — fixed at top of sidebar */
+        /* Sidebar header ΓÇö fixed at top of sidebar */
         .sidebar-header {
           display: flex; align-items: center; justify-content: space-between;
           padding: 16px 16px 12px;
@@ -1489,7 +1489,7 @@ export default function SyllabusPage() {
         }
         .collapse-btn:hover { background: rgba(255,255,255,0.12); color: white; }
 
-        /* Modules list — scrollable */
+        /* Modules list ΓÇö scrollable */
         .modules-list {
           flex: 1;
           overflow-y: auto;
@@ -1556,18 +1556,18 @@ export default function SyllabusPage() {
         }
         .sidebar-expand-btn:hover { background: rgba(255,255,255,0.06); color: white; }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            CONTENT AREA
            
            flex:1 + min-width:0 = takes remaining horizontal space
            overflow:hidden (NOT auto) = lets children scroll themselves
            display:flex + flex-direction:column = stacks header/body/footer
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .content-area {
           flex: 1;
           min-width: 0;
           min-height: 0;
-          overflow: hidden;         /* NOT auto — children scroll themselves */
+          overflow: hidden;         /* NOT auto ΓÇö children scroll themselves */
           display: flex;
           flex-direction: column;
         }
@@ -1575,7 +1575,7 @@ export default function SyllabusPage() {
         .content-area::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         .content-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
-        /* Welcome screen — scrollable within content-area */
+        /* Welcome screen ΓÇö scrollable within content-area */
         .welcome-screen {
           flex: 1;
           display: flex; flex-direction: column;
@@ -1597,7 +1597,7 @@ export default function SyllabusPage() {
         .hint-arrow { font-size: 18px; animation: bounceLeft 1.5s ease-in-out infinite; }
         @keyframes bounceLeft { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-6px)} }
 
-        /* Content display — fills content-area completely */
+        /* Content display ΓÇö fills content-area completely */
         .content-display {
           display: flex;
           flex-direction: column;
@@ -1611,7 +1611,7 @@ export default function SyllabusPage() {
           padding: 12px 28px;
           border-bottom: 1px solid rgba(255,255,255,0.07);
           background: rgba(6, 0, 20, 0.95);
-          flex-shrink: 0;     /* never shrink — always visible */
+          flex-shrink: 0;     /* never shrink ΓÇö always visible */
           flex-wrap: wrap; gap: 8px;
           backdrop-filter: blur(10px);
           z-index: 10;
@@ -1626,7 +1626,7 @@ export default function SyllabusPage() {
         .trainer-content-edit-btn { padding: 6px 14px !important; font-size: 12px !important; background: rgba(0,217,255,0.1) !important; border: 1px solid rgba(0,217,255,0.3) !important; color: #00d9ff !important; border-radius: 6px !important; cursor: pointer; font-weight: 700 !important; white-space: nowrap; transition: all 0.2s; }
         .trainer-content-edit-btn:hover { background: rgba(0,217,255,0.2) !important; }
 
-        /* Content body — this is the ONLY scroll zone */
+        /* Content body ΓÇö this is the ONLY scroll zone */
         .content-body {
           flex: 1;            /* takes all space between header and footer */
           min-height: 0;      /* allows shrinking below content size */
@@ -1648,15 +1648,15 @@ export default function SyllabusPage() {
         .teaser-body { padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
         .teaser-body p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; }
 
-        /* Content footer — ALWAYS visible, pinned at bottom of flex column */
+        /* Content footer ΓÇö ALWAYS visible, pinned at bottom of flex column */
         .content-footer {
           display: flex; align-items: center; justify-content: space-between;
           padding: 14px 28px;
           border-top: 1px solid rgba(255,255,255,0.08);
           background: rgba(6, 0, 20, 0.97);
-          flex-shrink: 0;    /* never shrink — always takes its full height */
+          flex-shrink: 0;    /* never shrink ΓÇö always takes its full height */
           flex-wrap: wrap; gap: 12px;
-          /* NOT position:sticky — that requires scroll parent to have overflow:auto */
+          /* NOT position:sticky ΓÇö that requires scroll parent to have overflow:auto */
           /* Being the last flex child in a flex column IS the pin */
           backdrop-filter: blur(12px);
           border-top: 1px solid rgba(0, 217, 255, 0.12);
@@ -1678,7 +1678,7 @@ export default function SyllabusPage() {
         .module-complete h3 { font-size: 24px; font-weight: 800; color: white; margin: 0 0 8px; }
         .module-complete p { color: rgba(255,255,255,0.5); font-size: 15px; margin: 0 0 24px; }
 
-        /* ── Shared btn ── */
+        /* ΓöÇΓöÇ Shared btn ΓöÇΓöÇ */
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: all 0.2s; }
         .btn-primary { background: linear-gradient(135deg, #00d9ff, #9d4edd); color: white; }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,217,255,0.3); }
@@ -1694,9 +1694,9 @@ export default function SyllabusPage() {
         .confetti span { position: absolute; width: 8px; height: 8px; top: -10px; animation: confettiFall 3s ease-in infinite; border-radius: 2px; }
         @keyframes confettiFall { 0%{top:-10px;transform:rotate(0deg)} 100%{top:110%;transform:rotate(720deg)} }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            CONFIRM MODAL
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; }
         .confirm-modal { background: #1a1a2e; border: 1px solid rgba(255,107,107,0.3); border-radius: 12px; padding: 28px 32px; text-align: center; max-width: 320px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
         .confirm-icon { font-size: 32px; margin-bottom: 12px; }
@@ -1705,9 +1705,9 @@ export default function SyllabusPage() {
         .confirm-cancel { padding: 8px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.7); cursor: pointer; font-size: 13px; }
         .confirm-delete { padding: 8px 20px; border-radius: 6px; border: none; background: #ff6b6b; color: white; cursor: pointer; font-size: 13px; font-weight: 700; }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            CONTENT EDITOR MODAL
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .content-editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
         .content-editor-modal { background: #12121f; border: 1px solid rgba(0,217,255,0.2); border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 40px rgba(0,217,255,0.1); animation: modalIn 0.25s ease; }
         @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(-10px)} to{opacity:1;transform:scale(1) translateY(0)} }
@@ -1739,9 +1739,9 @@ export default function SyllabusPage() {
         .cem-save { padding: 9px 22px; border-radius: 7px; border: none; background: linear-gradient(135deg, #00d9ff, #00a8cc); color: #000; font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s; }
         .cem-save:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,217,255,0.3); }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            QUIZ PLATFORM (unchanged styles)
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .quiz-platform { min-height: calc(100vh - 120px); background: transparent; }
         .quiz-header { padding: 20px 24px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .quiz-title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -1822,9 +1822,9 @@ export default function SyllabusPage() {
         @keyframes slideInRight { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
         @keyframes fadeOut { to{opacity:0;transform:translateX(120%)} }
 
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            RESPONSIVE
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         @media (max-width: 768px) {
           .courses-page {
             height: auto;
@@ -1860,9 +1860,9 @@ export default function SyllabusPage() {
           .content-header { padding: 10px 16px; }
           .content-footer { padding: 12px 16px; }
         }
-        /* ─────────────────────────────────────────────────────────
+        /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
            FLOATING ORB + RADIAL TOOL MENU
-        ───────────────────────────────────────────────────────── */
+        ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
         .floating-orb-wrap {
           position: fixed;
           bottom: 32px;
@@ -1992,15 +1992,15 @@ export default function SyllabusPage() {
           pointer-events: none;
           text-transform: uppercase;
         }
-        /* ═══════════════════════════════════════════════════════════════
-        3D FLOATING QUIZ ORB — Attention Grabbing Edition
+        /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        3D FLOATING QUIZ ORB ΓÇö Attention Grabbing Edition
         Position: Fixed on body, animated, glowing, floating in 3D space
-      ═══════════════════════════════════════════════════════════════ */
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-wrap {
         position: fixed;
         bottom: 32px;
-        right: 110px;   /* ← moves it left of the tools orb (60px orb + 32px right + 18px gap) */
+        right: 110px;   /* ΓåÉ moves it left of the tools orb (60px orb + 32px right + 18px gap) */
         left: unset;
         z-index: 9999;
         display: flex;
@@ -2011,9 +2011,9 @@ export default function SyllabusPage() {
         transform-style: preserve-3d;
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        MAIN ORB — 3D Sphere with Depth & Glow
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        MAIN ORB ΓÇö 3D Sphere with Depth & Glow
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-main-orb {
         width: 70px;
@@ -2081,7 +2081,7 @@ export default function SyllabusPage() {
         pointer-events: none;
       }
 
-      /* Hover state — intensify everything */
+      /* Hover state ΓÇö intensify everything */
       .quiz-main-orb:hover {
         transform: scale(1.15) translateY(-5px);
         box-shadow: 
@@ -2095,7 +2095,7 @@ export default function SyllabusPage() {
         animation-duration: 0.5s, 4s, 1s;
       }
 
-      /* Open state — morph and spin fast */
+      /* Open state ΓÇö morph and spin fast */
       .quiz-main-orb.open {
         animation: quizOrbSpin 1s linear infinite, quizOrbMorph 0.6s ease forwards;
         transform: scale(1.1) rotateX(15deg);
@@ -2106,7 +2106,7 @@ export default function SyllabusPage() {
           0 0 120px rgba(34,211,238,0.5);
       }
 
-      /* Active quiz state — pulsing alert */
+      /* Active quiz state ΓÇö pulsing alert */
       .quiz-main-orb.quiz-active {
         animation: 
           quizOrbFloat 2s ease-in-out infinite,
@@ -2119,11 +2119,11 @@ export default function SyllabusPage() {
           0 0 120px rgba(34,211,238,0.6);
       }
 
-      /* ═══════════════════════════════════════════════════════════════
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
         KEYFRAME ANIMATIONS
-      ═══════════════════════════════════════════════════════════════ */
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
-      /* Smooth floating motion — like it's suspended in liquid */
+      /* Smooth floating motion ΓÇö like it's suspended in liquid */
       @keyframes quizOrbFloat {
         0%, 100% {
           transform: translateY(0px) rotateX(0deg) rotateY(0deg);
@@ -2173,7 +2173,7 @@ export default function SyllabusPage() {
         }
       }
 
-      /* Alert pulse when quiz is active — attention grabbing */
+      /* Alert pulse when quiz is active ΓÇö attention grabbing */
       @keyframes quizOrbAlertPulse {
         0%, 100% {
           transform: scale(1);
@@ -2196,9 +2196,9 @@ export default function SyllabusPage() {
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        ORBITING PARTICLES — Extra visual flair
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        ORBITING PARTICLES ΓÇö Extra visual flair
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-particles {
         position: absolute;
@@ -2263,9 +2263,9 @@ export default function SyllabusPage() {
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        FAN MENU — Smooth unfold with 3D depth
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        FAN MENU ΓÇö Smooth unfold with 3D depth
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-fan {
         position: absolute;
@@ -2313,9 +2313,9 @@ export default function SyllabusPage() {
         transform: translateX(5px) scale(1.05);
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        FAN BUTTONS — Mini 3D orbs
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        FAN BUTTONS ΓÇö Mini 3D orbs
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-fan-btn {
         width: 50px;
@@ -2388,9 +2388,9 @@ export default function SyllabusPage() {
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        FAN LABELS — Glass morphism style
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        FAN LABELS ΓÇö Glass morphism style
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-fan-label {
         font-size: 13px;
@@ -2427,9 +2427,9 @@ export default function SyllabusPage() {
         box-shadow: 0 0 20px var(--qitem-color);
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        TOOLTIP — Floating label under main orb
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        TOOLTIP ΓÇö Floating label under main orb
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-tooltip {
         position: absolute;
@@ -2461,9 +2461,9 @@ export default function SyllabusPage() {
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
         RESPONSIVE ADJUSTMENTS
-      ═══════════════════════════════════════════════════════════════ */
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       @media (max-width: 768px) {
         .quiz-orb-wrap {
@@ -2488,9 +2488,9 @@ export default function SyllabusPage() {
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-        ATTENTION GRABBER — Subtle screen edge glow
-      ═══════════════════════════════════════════════════════════════ */
+      /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+        ATTENTION GRABBER ΓÇö Subtle screen edge glow
+      ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
       .quiz-orb-wrap::before {
         content: '';
@@ -2517,7 +2517,7 @@ export default function SyllabusPage() {
       }
       `}</style>
 
-      {/* ── FLOATING ORB ── */}
+      {/* ΓöÇΓöÇ FLOATING ORB ΓöÇΓöÇ */}
       <div className="floating-orb-wrap">
         <div className={`orb-fan ${orbOpen ? 'open' : ''}`}>
           {toolTabs.map(t => (
@@ -2534,16 +2534,16 @@ export default function SyllabusPage() {
         </div>
 
         <button className={`main-orb ${orbOpen ? 'open' : ''}`} onClick={() => setOrbOpen(o => !o)} title="Tools">
-          {orbOpen ? '✕' : '🔮'}
+          {orbOpen ? 'Γ£ò' : '≡ƒö«'}
           <span className="orb-tooltip">{orbOpen ? 'close' : 'tools'}</span>
         </button>
       </div>
-      {/* ── QUIZ ORB — bottom-left floating brain orb ── */}
+      {/* ΓöÇΓöÇ QUIZ ORB ΓÇö bottom-left floating brain orb ΓöÇΓöÇ */}
       <div className="quiz-orb-wrap">
         <div className={`quiz-orb-fan ${quizOrbOpen ? 'open' : ''}`}>
           {[
-            { id: 'quiz-python', label: 'Python Quiz', icon: '🐍', color: '#22d3ee' },
-            { id: 'quiz-mysql',  label: 'MySQL Quiz',  icon: '🗄️', color: '#a855f7' },
+            { id: 'quiz-python', label: 'Python Quiz', icon: '≡ƒÉì', color: '#22d3ee' },
+            { id: 'quiz-mysql',  label: 'MySQL Quiz',  icon: '≡ƒùä∩╕Å', color: '#a855f7' },
           ].map((t, i) => (
             <div
               key={t.id}
@@ -2561,10 +2561,11 @@ export default function SyllabusPage() {
           onClick={() => setQuizOrbOpen(o => !o)}
           title="Quizzes"
         >
-          {quizOrbOpen ? '✕' : (viewMode==='quiz-python'||viewMode==='quiz-mysql') ? '❓' : '🧠'}
+          {quizOrbOpen ? 'Γ£ò' : (viewMode==='quiz-python'||viewMode==='quiz-mysql') ? 'Γ¥ô' : '≡ƒºá'}
           <span className="quiz-orb-tooltip">{quizOrbOpen ? 'close' : 'quizzes'}</span>
         </button>
       </div>
     </div>
   );
 }
+
