@@ -3308,7 +3308,301 @@ export default function SyllabusPage() {
           transform: scale(1.2);
         }
       }
-      `}</style>
+      `}
+        
+        /* ============================================================
+           PROFESSIONAL COURSE QUIZ PLATFORM STYLES
+           45+ Years Experience UI/UX Design
+        ============================================================ */
+        .course-quiz-platform {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+          overflow: hidden;
+        }
+        
+        /* Header */
+        .quiz-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 24px;
+          background: rgba(0,0,0,0.4);
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          backdrop-filter: blur(10px);
+        }
+        .quiz-header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .course-icon {
+          font-size: 36px;
+          filter: drop-shadow(0 0 20px rgba(0,217,255,0.5));
+        }
+        .quiz-header-info h2 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 700;
+          color: white;
+          letter-spacing: -0.5px;
+        }
+        .quiz-subtitle {
+          font-size: 13px;
+          color: rgba(255,255,255,0.5);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        
+        /* Master Controls */
+        .master-controls {
+          display: flex;
+          gap: 8px;
+        }
+        .master-btn {
+          padding: 10px 20px;
+          background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(0,217,255,0.2));
+          border: 1px solid rgba(168,85,247,0.5);
+          border-radius: 8px;
+          color: white;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .master-btn:hover {
+          background: linear-gradient(135deg, rgba(168,85,247,0.3), rgba(0,217,255,0.3));
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(168,85,247,0.3);
+        }
+        .master-btn.active {
+          background: linear-gradient(135deg, #a855f7, #00d9ff);
+          border-color: transparent;
+        }
+        
+        /* Layout */
+        .quiz-layout {
+          display: flex;
+          flex: 1;
+          overflow: hidden;
+        }
+        
+        /* Professional Sidebar */
+        .quiz-sidebar-pro {
+          width: 300px;
+          min-width: 300px;
+          background: rgba(0,0,0,0.3);
+          border-right: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .sidebar-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          background: rgba(0,0,0,0.2);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .sidebar-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: white;
+        }
+        .topic-count {
+          font-size: 11px;
+          color: rgba(255,255,255,0.5);
+          background: rgba(0,217,255,0.1);
+          padding: 4px 10px;
+          border-radius: 20px;
+        }
+        .modules-list {
+          flex: 1;
+          overflow-y: auto;
+          padding: 12px;
+        }
+        .module-card {
+          margin-bottom: 8px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.05);
+          transition: all 0.3s ease;
+        }
+        .module-card:hover {
+          border-color: rgba(255,255,255,0.1);
+        }
+        .module-card.expanded {
+          background: rgba(0,217,255,0.05);
+          border-color: rgba(0,217,255,0.2);
+        }
+        .module-header {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 14px 16px;
+          background: transparent;
+          border: none;
+          color: rgba(255,255,255,0.85);
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: all 0.2s;
+          text-align: left;
+        }
+        .module-icon {
+          font-size: 12px;
+          color: #00d9ff;
+          transition: transform 0.3s;
+        }
+        .module-card.expanded .module-icon {
+          transform: rotate(90deg);
+        }
+        .module-name {
+          flex: 1;
+        }
+        .module-badge {
+          font-size: 11px;
+          background: rgba(0,217,255,0.15);
+          color: #00d9ff;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-weight: 600;
+        }
+        .topics-list {
+          padding: 4px 8px 12px 40px;
+        }
+        .topic-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          margin: 2px 0;
+          background: transparent;
+          border: none;
+          border-radius: 8px;
+          color: rgba(255,255,255,0.6);
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+          text-align: left;
+        }
+        .topic-item:hover {
+          background: rgba(255,255,255,0.05);
+          color: rgba(255,255,255,0.9);
+        }
+        .topic-item.active {
+          background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(0,217,255,0.2));
+          color: white;
+          border: 1px solid rgba(168,85,247,0.3);
+        }
+        
+        /* Main Workspace */
+        .quiz-workspace-pro {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          background: rgba(0,0,0,0.1);
+        }
+        
+        /* Editor & Preview Split */
+        .editor-preview-split {
+          flex: 1;
+          display: flex;
+          overflow: hidden;
+          gap: 1px;
+          background: rgba(255,255,255,0.08);
+        }
+        .editor-section, .preview-section {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          background: #0a0a1a;
+          overflow: hidden;
+        }
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 20px;
+          background: rgba(0,0,0,0.3);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .section-icon {
+          font-size: 16px;
+        }
+        .section-title {
+          flex: 1;
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.8);
+        }
+        .run-btn-pro {
+          padding: 10px 24px;
+          background: linear-gradient(135deg, #00d9ff, #a855f7);
+          border: none;
+          border-radius: 8px;
+          color: white;
+          font-size: 13px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .run-btn-pro:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 30px rgba(0,217,255,0.4);
+        }
+        .editor-container {
+          flex: 1;
+          overflow: hidden;
+          position: relative;
+        }
+        .code-editor-pro {
+          width: 100%;
+          height: 100%;
+          padding: 20px;
+          background: #0d0d1a;
+          border: none;
+          color: #00d9ff;
+          font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+          font-size: 15px;
+          line-height: 1.7;
+          resize: none;
+          outline: none;
+        }
+        .preview-container-pro {
+          flex: 1;
+          overflow: hidden;
+          position: relative;
+          background: #0d0d1a;
+        }
+        .terminal-output {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 20px;
+          background: #0d0d1a;
+          color: #00ff88;
+          font-family: 'Fira Code', monospace;
+          font-size: 14px;
+          line-height: 1.6;
+          overflow-y: auto;
+          white-space: pre-wrap;
+        }
+        .live-preview-frame {
+          width: 100%;
+          height: 100%;
+          border: none;
+          background: white;
+        }
+</style>
 
       {/* ── FLOATING ORB ── */}
       <div className="floating-orb-wrap">
