@@ -1590,6 +1590,7 @@ export default function SyllabusPage() {
       setTrainerMode(trainer);
       setIsMasterUser(master);
       setUserRole(trainer ? 'trainer' : getLoggedInUser() ? 'learner' : 'guest');
+      console.log('Master check:', master, 'User:', getLoggedInUser()?.email);
     };
     checkRole();
     window.addEventListener('storage', checkRole);
