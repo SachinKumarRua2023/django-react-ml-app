@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #7c3aed, #00d4ff); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .result-box { background: #fff; padding: 30px; border-radius: 8px; margin: 20px 0; text-align: center; }
+        .score { font-size: 48px; font-weight: bold; margin: 20px 0; }
+        .passed { color: #4caf50; }
+        .failed { color: #f44336; }
+        .passed-text { color: #4caf50; font-size: 18px; font-weight: bold; }
+        .failed-text { color: #f44336; font-size: 18px; font-weight: bold; }
+        .details { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }
+        .detail-row:last-child { border-bottom: none; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #7c3aed; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Quiz Results</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ student_name }},</p>
+            
+            <p>You have completed the quiz for <strong>{{ session_title }}</strong>.</p>
+            
+            <div class="result-box">
+                <h3>{{ quiz_title }}</h3>
+                <div class="score {% if is_passed %}passed{% else %}failed{% endif %}">
+                    {{ score }}/{{ total_marks }}
+                </div>
+                <p style="font-size: 24px; margin: 10px 0;">{{ percentage }}%</p>
+                <p class="{% if is_passed %}passed-text{% else %}failed-text{% endif %}">
+                    {% if is_passed %}✓ PASSED{% else %}✗ NEEDS IMPROVEMENT{% endif %}
+                </p>
+            </div>
+            
+            <div class="details">
+                <h3>Quiz Details</h3>
+                <div class="detail-row">
+                    <span>Score:</span>
+                    <span><strong>{{ score }}/{{ total_marks }}</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span>Percentage:</span>
+                    <span><strong>{{ percentage }}%</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span>Passing Marks:</span>
+                    <span><strong>{{ passing_marks }}</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span>Time Taken:</span>
+                    <span><strong>{{ time_taken_minutes }}m {{ time_taken_seconds }}s</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span>Status:</span>
+                    <span class="{% if is_passed %}passed-text{% else %}failed-text{% endif %}" style="font-weight: bold;">
+                        {% if is_passed %}PASSED{% else %}NEEDS IMPROVEMENT{% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            {% if not is_passed %}
+            <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>💡 Tip:</strong> Don't worry! Review the class materials and try again. Practice makes perfect!</p>
+            </div>
+            {% endif %}
+            
+            <div style="text-align: center;">
+                <a href="https://app.seekhowithrua.com/quizzes" class="button">View All Quizzes</a>
+            </div>
+            
+            <p>Keep learning and improving!</p>
+            
+            <p>Best regards,<br><strong>SeekhoWithRua Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Seekhowithrua. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'ml_apps',
     'livevc',
     'voice_rooms',
+    'lms',
 ]
 
 MIDDLEWARE = [
@@ -205,11 +206,48 @@ X_FRAME_OPTIONS                = 'DENY'
 # Custom User Model
 AUTH_USER_MODEL = 'users.User'
 
-# Email Settings for Achievement Notifications
+# Email Settings for LMS Notifications
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@seekhowithrua.com')
+EMAIL_HOST_USER = 'seekhowithrua@gmail.com'
+EMAIL_HOST_PASSWORD = 'Drunken@123'
+DEFAULT_FROM_EMAIL = 'noreply@seekhowithrua.com'
+
+# LMS Payment Settings
+LMS_UPI_ID = '8826776018-4@ybl'
+LMS_MONTHLY_FEE = 1000  # Base fee in INR
+LMS_REFERRAL_CONCESSION = 200  # ₹200 per referral
+
+# Media files (for payment screenshots)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Celery Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    'payment-reminder-7th': {
+        'task': 'lms.tasks.send_payment_reminders',
+        'schedule': 'crontab(day_of_month="7-10", hour="9", minute="0")',
+    },
+    'class-reminder-24h': {
+        'task': 'lms.tasks.send_class_reminders',
+        'schedule': 'crontab(hour="*/1", minute="0")',
+    },
+    'absence-checker': {
+        'task': 'lms.tasks.check_continuous_absence',
+        'schedule': 'crontab(hour="18", minute="0")',
+    },
+    'feedback-form-sender': {
+        'task': 'lms.tasks.send_feedback_form_requests',
+        'schedule': 'crontab(hour="20", minute="0")',
+    },
+}

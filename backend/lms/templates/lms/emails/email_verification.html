@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #7c3aed, #00d4ff); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .verify-box { background: #e8f5e9; border: 2px solid #4caf50; padding: 30px; border-radius: 8px; margin: 30px 0; text-align: center; }
+        .button { display: inline-block; background: #4caf50; color: white; padding: 18px 40px; text-decoration: none; border-radius: 5px; font-size: 18px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .warning { background: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0; color: #e65100; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Verify Your Email</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ student_name }},</p>
+            
+            <p>Thank you for enrolling at SeekhoWithRua Coaching! We're excited to have you join our learning community for <strong>{{ grade }}</strong>.</p>
+            
+            <p>Before you can access your student account, please verify your email address by clicking the button below:</p>
+            
+            <div class="verify-box">
+                <h3 style="margin-top: 0; color: #2e7d32;">Confirm Your Email</h3>
+                <p style="margin: 15px 0;"><strong>{{ email }}</strong></p>
+                <a href="{{ verification_url }}" class="button">Verify Email Address</a>
+                <p style="font-size: 14px; color: #666; margin-top: 15px;">Or copy and paste this link in your browser:<br>{{ verification_url }}</p>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> This verification link will expire in 24 hours. Please verify your email as soon as possible.
+            </div>
+            
+            <p>Once verified, you'll be able to:</p>
+            <ul>
+                <li>Access your class schedule and materials</li>
+                <li>Watch recorded video sessions</li>
+                <li>Take quizzes and track your progress</li>
+                <li>View your attendance and test results</li>
+                <li>Make fee payments online</li>
+            </ul>
+            
+            <p>If you didn't create this account, please ignore this email.</p>
+            
+            <p>Best regards,<br><strong>Master Rua</strong><br>SeekhoWithRua Coaching</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Seekhowithrua. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

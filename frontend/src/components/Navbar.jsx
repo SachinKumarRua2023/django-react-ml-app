@@ -58,6 +58,7 @@ const Navbar = () => {
     { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' },
     { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
     { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
+    { name: 'LMS', path: 'https://lms.seekhowithrua.com', icon: '📚', color: '#7c3aed', external: true },
   ];
 
   // Check auth status immediately on mount
@@ -386,26 +387,44 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="desktop-nav">
             {navItems.map((item, index) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`nav-link ${isActive(item.path) ? 'active' : ''} ${activeGlow === index && !isActive(item.path) ? 'glow-pulse' : ''}`}
-                onClick={handleNavClick}
-                style={{ '--item-color': item.color }}
-              >
-                <span className="nav-icon-wrapper">
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="icon-glow" />
-                </span>
-                <span className="nav-text">{item.name}</span>
-                <span className="nav-bg" />
-                {isActive(item.path) && (
-                  <>
-                    <span className="active-line" />
-                    <span className="active-glow" />
-                  </>
-                )}
-              </Link>
+              item.external ? (
+                <a
+                  key={item.name}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`nav-link ${activeGlow === index ? 'glow-pulse' : ''}`}
+                  style={{ '--item-color': item.color }}
+                >
+                  <span className="nav-icon-wrapper">
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="icon-glow" />
+                  </span>
+                  <span className="nav-text">{item.name}</span>
+                  <span className="nav-bg" />
+                </a>
+              ) : (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`nav-link ${isActive(item.path) ? 'active' : ''} ${activeGlow === index && !isActive(item.path) ? 'glow-pulse' : ''}`}
+                  onClick={handleNavClick}
+                  style={{ '--item-color': item.color }}
+                >
+                  <span className="nav-icon-wrapper">
+                    <span className="nav-icon">{item.icon}</span>
+                    <span className="icon-glow" />
+                  </span>
+                  <span className="nav-text">{item.name}</span>
+                  <span className="nav-bg" />
+                  {isActive(item.path) && (
+                    <>
+                      <span className="active-line" />
+                      <span className="active-glow" />
+                    </>
+                  )}
+                </Link>
+              )
             ))}
 
             {/* ── ADDITION: Live Voice link visible to all, but routes smartly ── */}
@@ -596,22 +615,41 @@ const Navbar = () => {
 
         <div className="mobile-nav">
           {navItems.map((item, index) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`mobile-link ${isActive(item.path) ? 'active' : ''}`}
-              onClick={handleNavClick}
-              style={{ '--item-color': item.color, animationDelay: `${index * 0.1}s` }}
-            >
-              <span className="mobile-icon-bg">
-                <span className="mobile-icon">{item.icon}</span>
-              </span>
-              <div className="mobile-link-content">
-                <span className="mobile-text">{item.name}</span>
-                {isActive(item.path) && <span className="mobile-active-badge">Active</span>}
-              </div>
-              <span className="mobile-arrow">→</span>
-            </Link>
+            item.external ? (
+              <a
+                key={item.name}
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mobile-link"
+                style={{ '--item-color': item.color, animationDelay: `${index * 0.1}s` }}
+              >
+                <span className="mobile-icon-bg">
+                  <span className="mobile-icon">{item.icon}</span>
+                </span>
+                <div className="mobile-link-content">
+                  <span className="mobile-text">{item.name}</span>
+                </div>
+                <span className="mobile-arrow">↗</span>
+              </a>
+            ) : (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`mobile-link ${isActive(item.path) ? 'active' : ''}`}
+                onClick={handleNavClick}
+                style={{ '--item-color': item.color, animationDelay: `${index * 0.1}s` }}
+              >
+                <span className="mobile-icon-bg">
+                  <span className="mobile-icon">{item.icon}</span>
+                </span>
+                <div className="mobile-link-content">
+                  <span className="mobile-text">{item.name}</span>
+                  {isActive(item.path) && <span className="mobile-active-badge">Active</span>}
+                </div>
+                <span className="mobile-arrow">→</span>
+              </Link>
+            )
           ))}
 
           {/* ── ADDITION: Live Voice in mobile menu, same smart routing ── */}

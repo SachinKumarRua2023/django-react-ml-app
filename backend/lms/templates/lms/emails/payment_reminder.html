@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #ff9800; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .payment-box { background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ff9800; }
+        .amount { font-size: 32px; font-weight: bold; color: #ff9800; text-align: center; }
+        .qr-section { text-align: center; margin: 30px 0; }
+        .qr-placeholder { background: #fff; border: 2px dashed #ddd; padding: 40px; border-radius: 8px; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .button { display: inline-block; background: #ff9800; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .highlight { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Payment Reminder</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ student_name }},</p>
+            
+            <p>This is a friendly reminder that your monthly fee payment is due.</p>
+            
+            <div class="payment-box">
+                <h3>Payment Details</h3>
+                <div class="detail-row">
+                    <span>Amount Due:</span>
+                    <span class="highlight">₹{{ amount }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>UPI ID:</span>
+                    <span class="highlight">{{ upi_id }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Due Date:</span>
+                    <span class="highlight">{{ due_date }}</span>
+                </div>
+                <p style="font-size: 14px; color: #666; margin-top: 15px;">
+                    Monthly Base Fee: ₹{{ base_fee }}<br>
+                    {% if student.total_referral_discount > 0 %}
+                    Referral Discount: ₹{{ student.total_referral_discount }}<br>
+                    {% endif %}
+                    <strong>Your Fee: ₹{{ amount }}</strong>
+                </p>
+            </div>
+            
+            <h3>Payment Options</h3>
+            <p><strong>Option 1: PhonePe UPI</strong></p>
+            <p>UPI ID: <code style="background: #f5f5f5; padding: 5px; border-radius: 3px;">{{ upi_id }}</code></p>
+            
+            <div class="qr-section">
+                <p><strong>OR Scan QR Code</strong></p>
+                <div class="qr-placeholder">
+                    [PhonePe QR Code]<br>
+                    <small>Scan with any UPI app</small>
+                </div>
+            </div>
+            
+            <p><strong>Option 2: Upload Screenshot</strong></p>
+            <p>After making the payment, please upload the payment screenshot to your student portal:</p>
+            <a href="https://app.seekhowithrua.com/payments" class="button">Upload Screenshot</a>
+            
+            <div style="background: #ffebee; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 0; color: #c62828;"><strong>⚠️ Late Payment:</strong> Please make the payment by the due date to avoid late fees.</p>
+            </div>
+            
+            <p>If you have already made the payment, please ignore this reminder. The receipt will be sent once your payment is verified.</p>
+            
+            <p>Best regards,<br><strong>SeekhoWithRua Accounts Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 SeekhoWithRua. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

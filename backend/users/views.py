@@ -11,10 +11,13 @@ from django.conf import settings
 from django.db.models import Max, Avg
 from django.utils import timezone
 
-from .models import Employee, User, MemoryGameScore, Achievement
+from .models import Employee, User, MemoryGameScore, Achievement, GamingScore, QuizResult, VCRSession, CourseProgress, StudentAnalytics
 from .serializers import (
     EmployeeSerializer, UserSerializer, MemoryGameScoreSerializer,
-    AchievementSerializer, GoogleAuthSerializer, ScoreSubmitSerializer
+    AchievementSerializer, GoogleAuthSerializer, ScoreSubmitSerializer,
+    GamingScoreSerializer, GamingScoreSubmitSerializer,
+    QuizResultSerializer, QuizSubmitSerializer,
+    VCRSessionSerializer, CourseProgressSerializer, StudentAnalyticsSerializer
 )
 
 
@@ -191,21 +194,252 @@ def get_leaderboard(request):
     })
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def get_user_achievements(request):
+def submit_gaming_score(request):
     """
-    Get all achievements for the current user
+    Submit gaming score for any game type
     """
+    serializer = GamingScoreSubmitSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
     user = request.user
-    achievements = Achievement.objects.filter(user=user)
+
+    # Check if this is a personal best for this game
+    previous_best = GamingScore.objects.filter(
+        user=user,
+        game_name=data['game_name'],
+        game_subtype=data.get('game_subtype', '')
+    ).aggregate(Max('score'))['score__max'] or 0
+
+    is_personal_best = data['score'] > previous_best
+
+    # Save the score
+    score = GamingScore.objects.create(
+        user=user,
+        game_name=data['game_name'],
+        game_subtype=data.get('game_subtype', ''),
+        score=data['score'],
+        level=data['level'],
+        time_taken=data['time_taken'],
+        accuracy=data['accuracy'],
+        metadata=data.get('metadata', {}),
+        is_personal_best=is_personal_best
+    )
+
+    # Update student analytics
+    update_student_analytics(user)
+
     return Response({
-        'achievements': AchievementSerializer(achievements, many=True).data,
-        'total_achievements': achievements.count()
+        'score': GamingScoreSerializer(score).data,
+        'is_personal_best': is_personal_best,
+        'previous_best': previous_best
     })
 
 
-def check_and_award_achievements(user, difficulty, score, is_personal_best):
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_gaming_scores(request):
+    """
+    Get user's gaming scores
+    """
+    user = request.user
+    game_name = request.query_params.get('game_name', None)
+    
+    scores = GamingScore.objects.filter(user=user)
+    if game_name:
+        scores = scores.filter(game_name=game_name)
+    
+    return Response({
+        'scores': GamingScoreSerializer(scores.order_by('-played_at')[:50], many=True).data,
+        'total_games_played': scores.count()
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_quiz_result(request):
+    """
+    Submit quiz result
+    """
+    serializer = QuizSubmitSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = serializer.validated_data
+    user = request.user
+
+    # Save quiz result
+    result = QuizResult.objects.create(
+        user=user,
+        quiz_name=data['quiz_name'],
+        course_name=data.get('course_name', ''),
+        score=data['score'],
+        total_questions=data['total_questions'],
+        correct_answers=data['correct_answers'],
+        time_taken=data['time_taken'],
+        answers=data['answers'],
+        passed=data['passed']
+    )
+
+    # Update student analytics
+    update_student_analytics(user)
+
+    return Response({
+        'result': QuizResultSerializer(result).data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_quiz_results(request):
+    """
+    Get user's quiz results
+    """
+    user = request.user
+    results = QuizResult.objects.filter(user=user).order_by('-completed_at')
+    
+    return Response({
+        'results': QuizResultSerializer(results[:50], many=True).data,
+        'total_quizzes': results.count(),
+        'passed_quizzes': results.filter(passed=True).count()
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_student_analytics(request):
+    """
+    Get student's own analytics
+    """
+    user = request.user
+    
+    # Get or create analytics
+    analytics, created = StudentAnalytics.objects.get_or_create(
+        user=user,
+        defaults={
+            'total_games_played': 0,
+            'total_gaming_time': 0,
+            'courses_enrolled': 0,
+            'courses_completed': 0,
+            'quizzes_taken': 0,
+            'quizzes_passed': 0,
+            'average_quiz_score': 0,
+            'total_points': 0
+        }
+    )
+    
+    # Recalculate latest stats
+    update_student_analytics(user)
+    analytics.refresh_from_db()
+    
+    return Response({
+        'analytics': StudentAnalyticsSerializer(analytics).data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_trainer_dashboard(request):
+    """
+    Get trainer dashboard data - all students' progress
+    """
+    user = request.user
+    
+    # Check if user is trainer
+    if not hasattr(user, 'profile') or user.profile.role != 'trainer':
+        return Response({'error': 'Only trainers can access this endpoint'}, status=status.HTTP_403_FORBIDDEN)
+    
+    # Get all students
+    all_students = StudentAnalytics.objects.select_related('user').all()
+    
+    # Aggregate stats
+    total_students = User.objects.count()
+    total_courses = CourseProgress.objects.values('course_id').distinct().count()
+    avg_completion = all_students.aggregate(Avg('courses_completed'))['courses_completed__avg'] or 0
+    
+    return Response({
+        'total_students': total_students,
+        'total_courses': total_courses,
+        'average_completion': round(avg_completion, 2),
+        'students': StudentAnalyticsSerializer(all_students, many=True).data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_student_report(request, student_id):
+    """
+    Get detailed report for a specific student (trainer only)
+    """
+    user = request.user
+    
+    # Check if user is trainer
+    if not hasattr(user, 'profile') or user.profile.role != 'trainer':
+        return Response({'error': 'Only trainers can access this endpoint'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        student = User.objects.get(id=student_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Get all data for this student
+    gaming_scores = GamingScore.objects.filter(user=student).order_by('-played_at')[:20]
+    quiz_results = QuizResult.objects.filter(user=student).order_by('-completed_at')[:20]
+    course_progress = CourseProgress.objects.filter(user=student).order_by('-last_watched')[:20]
+    
+    # Update and get analytics
+    update_student_analytics(student)
+    analytics = StudentAnalytics.objects.get(user=student)
+    
+    return Response({
+        'student': UserSerializer(student).data,
+        'analytics': StudentAnalyticsSerializer(analytics).data,
+        'gaming_scores': GamingScoreSerializer(gaming_scores, many=True).data,
+        'quiz_results': QuizResultSerializer(quiz_results, many=True).data,
+        'course_progress': CourseProgressSerializer(course_progress, many=True).data
+    })
+
+
+def update_student_analytics(user):
+    """
+    Update student analytics aggregations
+    """
+    analytics, created = StudentAnalytics.objects.get_or_create(user=user)
+    
+    # Gaming stats
+    gaming_scores = GamingScore.objects.filter(user=user)
+    analytics.total_games_played = gaming_scores.count()
+    analytics.total_gaming_time = gaming_scores.aggregate(total_time=models.Sum('time_taken'))['total_time__sum'] or 0
+    analytics.highest_game_score = gaming_scores.aggregate(max_score=Max('score'))['max_score__max'] or 0
+    
+    # Course stats
+    course_progress = CourseProgress.objects.filter(user=user)
+    analytics.courses_enrolled = course_progress.count()
+    analytics.courses_completed = course_progress.filter(completed=True).count()
+    analytics.total_learning_time = course_progress.aggregate(total_time=models.Sum('watch_time'))['total_time__sum'] or 0
+    
+    # Quiz stats
+    quiz_results = QuizResult.objects.filter(user=user)
+    analytics.quizzes_taken = quiz_results.count()
+    analytics.quizzes_passed = quiz_results.filter(passed=True).count()
+    avg_score = quiz_results.aggregate(avg=Avg('score'))['avg__avg']
+    analytics.average_quiz_score = round(avg_score, 2) if avg_score else 0
+    
+    # Calculate total points
+    analytics.total_points = (
+        analytics.total_games_played * 10 +
+        analytics.courses_completed * 100 +
+        analytics.quizzes_passed * 50 +
+        analytics.highest_game_score
+    )
+    
+    analytics.save()
+
+
+
     """
     Check and award achievements based on score
     """

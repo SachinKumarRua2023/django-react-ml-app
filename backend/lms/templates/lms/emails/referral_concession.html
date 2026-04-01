@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #4caf50, #8bc34a); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .success-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .amount-highlight { font-size: 28px; font-weight: bold; color: #4caf50; text-align: center; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .stats { background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Referral Concession Applied!</h1>
+        </div>
+        <div class="content">
+            <p>Hello {{ referrer_name }},</p>
+            
+            <div class="success-box">
+                <h3 style="margin-top: 0; color: #4caf50;">Great News!</h3>
+                <p><strong>{{ referred_name }}</strong> has completed their payment and joined SeekhoWithRua!</p>
+            </div>
+            
+            <div class="amount-highlight">
+                ₹{{ concession_amount }} OFF<br>
+                <span style="font-size: 16px; color: #666;">applied to your monthly fee</span>
+            </div>
+            
+            <div class="stats">
+                <h3>Your Referral Stats</h3>
+                <div class="stat-row">
+                    <span>Total Active Referrals:</span>
+                    <span><strong>{{ total_referrals }}</strong></span>
+                </div>
+                <div class="stat-row">
+                    <span>Current Monthly Fee:</span>
+                    <span><strong>₹{{ new_monthly_fee }}</strong></span>
+                </div>
+                {% if total_referrals >= 5 %}
+                <div class="stat-row" style="color: #4caf50;">
+                    <span>🎉 Status:</span>
+                    <span><strong>FREE EDUCATION!</strong></span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if total_referrals < 10 %}
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Next Milestone:</strong> Get 5 more referrals and start earning ₹200 per referral!</p>
+            </div>
+            {% else %}
+            <div style="background: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>🚀 You're Now Earning!</strong> You're receiving ₹200-500 for each new referral!</p>
+            </div>
+            {% endif %}
+            
+            <p style="text-align: center; margin: 30px 0;">
+                <strong>Your Referral Code:</strong><br>
+                <span style="font-size: 24px; color: #7c3aed; letter-spacing: 2px;">{{ referral_code }}</span>
+            </p>
+            
+            <p>Keep sharing your referral code with friends and family!</p>
+            
+            <p>Best regards,<br><strong>SeekhoWithRua Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 Seekhowithrua. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

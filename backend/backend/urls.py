@@ -32,6 +32,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),  # New auth and memory game URLs
     path('api/ml/', include('ml_apps.urls')),
     path('api/vcr/', include('voice_rooms.urls')),
+    path('api/lms/', include('lms.urls')),
     path('api/', include('livevc.urls')),
     path('debug/', debug_urls),
 ]
