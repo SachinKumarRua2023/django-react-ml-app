@@ -3,16 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TOKEN_KEY } from '../App';
 
-// Helper to handle LMS redirect after login
+// Helper to handle LMS and Gaming redirect after login
 function handleLMSRedirect(navigate, token, user) {
   const urlParams = new URLSearchParams(window.location.search);
   const redirectUrl = urlParams.get('redirect');
   
-  if (redirectUrl && (redirectUrl.includes('lms.seekhowithrua.com') || redirectUrl.includes('localhost'))) {
-    // Redirect to LMS with token
-    const userJson = encodeURIComponent(JSON.stringify(user));
-    window.location.href = `${decodeURIComponent(redirectUrl)}?token=${token}&user=${userJson}`;
-    return true;
+  if (redirectUrl) {
+    // Support both LMS and Gaming domains
+    const isLMS = redirectUrl.includes('lms.seekhowithrua.com');
+    const isGaming = redirectUrl.includes('gaming.seekhowithrua.com');
+    const isLocalhost = redirectUrl.includes('localhost');
+    
+    if (isLMS || isGaming || isLocalhost) {
+      // Redirect to external site with token
+      const userJson = encodeURIComponent(JSON.stringify(user));
+      window.location.href = `${decodeURIComponent(redirectUrl)}?token=${token}&user=${userJson}`;
+      return true;
+    }
   }
   return false;
 }
