@@ -237,12 +237,12 @@
   margin: 0 auto;
 }
 
-/* Desktop Scrolling Fix */
+/* Desktop Layout Fix - Content Fully Visible */
 .course-layout-root {
   display: flex;
   flex-direction: row;
-  height: calc(100vh - 200px);
-  overflow: hidden;
+  min-height: calc(100vh - 280px);
+  height: auto;
 }
 
 .course-sidebar-wrap {
@@ -250,19 +250,19 @@
   min-width: 300px;
   border-right: 1px solid rgba(255,255,255,0.1);
   overflow-y: auto;
-  max-height: 100%;
+  max-height: calc(100vh - 280px);
 }
 
 .content-area {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
-  max-height: 100%;
+  min-height: calc(100vh - 280px);
 }
 
 .modules-list {
   overflow-y: auto;
-  max-height: calc(100% - 60px);
+  max-height: calc(100vh - 340px);
 }
 
 /* Ensure Master Edit Button is Visible */
