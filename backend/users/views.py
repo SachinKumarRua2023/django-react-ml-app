@@ -440,16 +440,157 @@ def update_student_analytics(user):
 
 
 
+def check_and_award_achievements(user, difficulty=None, score=None, is_personal_best=False, game_name=None):
     """
-    Check and award achievements based on score
+    Check and award achievements based on various criteria
     """
     new_achievements = []
+    
+    # Achievement definitions with criteria
+    achievement_definitions = {
+        'beginner': {'title': '🎮 Beginner Gamer', 'description': 'Play your first game', 'points': 10},
+        'intermediate': {'title': '🏆 Intermediate Player', 'description': 'Score 50+ points in any game', 'points': 25},
+        'advanced': {'title': '🌟 Advanced Player', 'description': 'Score 100+ points in any game', 'points': 50},
+        'expert': {'title': '👑 Expert Player', 'description': 'Score 200+ points in any game', 'points': 100},
+        'memory_master': {'title': '🧠 Memory Master', 'description': 'Complete memory game on hardest difficulty', 'points': 75},
+        'streak_holder': {'title': '🔥 Streak Holder', 'description': 'Get 10+ correct answers in a row', 'points': 30},
+        'quiz_master': {'title': '📝 Quiz Master', 'description': 'Score 100% on any quiz', 'points': 50},
+        'course_complete': {'title': '📚 Course Completer', 'description': 'Complete your first course', 'points': 100},
+        'gaming_pro': {'title': '🎮 Gaming Pro', 'description': 'Play 50+ games', 'points': 200},
+    }
+    
+    # Check gaming achievements
+    total_games = GamingScore.objects.filter(user=user).count()
+    
+    # First game achievement
+    if total_games >= 1:
+        achievement, created = Achievement.objects.get_or_create(
+            user=user,
+            achievement_type='beginner',
+            defaults={
+                'title': achievement_definitions['beginner']['title'],
+                'description': achievement_definitions['beginner']['description']
+            }
+        )
+        if created:
+            new_achievements.append(achievement)
+    
+    # Score-based achievements
+    if score:
+        if score >= 50:
+            achievement, created = Achievement.objects.get_or_create(
+                user=user,
+                achievement_type='intermediate',
+                defaults={
+                    'title': achievement_definitions['intermediate']['title'],
+                    'description': achievement_definitions['intermediate']['description']
+                }
+            )
+            if created:
+                new_achievements.append(achievement)
+        
+        if score >= 100:
+            achievement, created = Achievement.objects.get_or_create(
+                user=user,
+                achievement_type='advanced',
+                defaults={
+                    'title': achievement_definitions['advanced']['title'],
+                    'description': achievement_definitions['advanced']['description']
+                }
+            )
+            if created:
+                new_achievements.append(achievement)
+        
+        if score >= 200:
+            achievement, created = Achievement.objects.get_or_create(
+                user=user,
+                achievement_type='expert',
+                defaults={
+                    'title': achievement_definitions['expert']['title'],
+                    'description': achievement_definitions['expert']['description']
+                }
+            )
+            if created:
+                new_achievements.append(achievement)
+    
+    # 50+ games achievement
+    if total_games >= 50:
+        achievement, created = Achievement.objects.get_or_create(
+            user=user,
+            achievement_type='gaming_pro',
+            defaults={
+                'title': achievement_definitions['gaming_pro']['title'],
+                'description': achievement_definitions['gaming_pro']['description']
+            }
+        )
+        if created:
+            new_achievements.append(achievement)
+    
+    # Send email notifications for new achievements
+    for achievement in new_achievements:
+        send_achievement_email(user, achievement)
+    
+    return new_achievements
 
-    # Achievement definitions
-    achievement_criteria = {
-        'beginner': {'difficulty': '20x', 'min_score': 15},
-        'intermediate': {'difficulty': '50x', 'min_score': 40},
-        'advanced': {'difficulty': '100x', 'min_score': 80},
+
+def send_achievement_email(user, achievement):
+    """
+    Send email notification for unlocked achievement
+    """
+    try:
+        subject = f"🏆 Achievement Unlocked: {achievement.title}"
+        
+        # HTML email template
+        html_message = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff;">
+            <div style="text-align: center; padding: 30px;">
+                <h1 style="color: #ffd700; font-size: 2em; margin-bottom: 10px;">🏆 Achievement Unlocked!</h1>
+                <p style="color: #a0a0a0; font-size: 1.1em;">Congratulations on your amazing progress!</p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 30px; margin: 20px 0; border: 1px solid rgba(255,215,0,0.3);">
+                <h2 style="color: #ffd700; font-size: 1.8em; margin: 0 0 15px 0; text-align: center;">{achievement.title}</h2>
+                <p style="font-size: 1.2em; text-align: center; color: #e0e0e0; margin: 0;">{achievement.description}</p>
+                <p style="text-align: center; color: #888; font-size: 0.9em; margin-top: 15px;">
+                    Unlocked on {achievement.unlocked_at.strftime('%B %d, %Y at %I:%M %p')}
+                </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px;">
+                <p style="color: #a0a0a0; margin-bottom: 20px;">Keep up the great work and unlock more achievements!</p>
+                <a href="https://lms.seekhowithrua.com" 
+                   style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: #fff; padding: 15px 30px; text-decoration: none; border-radius: 25px; 
+                          font-weight: bold; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                    Continue Learning →
+                </a>
+            </div>
+            
+            <div style="text-align: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 30px;">
+                <p style="color: #666; font-size: 0.85em;">© 2026 SeekhoWithRua. Built by Master Rua.</p>
+            </div>
+        </div>
+        """
+        
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        
+        # Mark email as sent
+        achievement.email_sent = True
+        achievement.save()
+        
+        return True
+    except Exception as e:
+        print(f"Failed to send achievement email: {e}")
+        return False
         'expert': {'difficulty': '200x', 'min_score': 150},
     }
 
