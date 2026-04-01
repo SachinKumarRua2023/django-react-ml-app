@@ -3,6 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TOKEN_KEY } from '../App';
 
+// Helper to handle LMS redirect after login
+function handleLMSRedirect(navigate, token, user) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectUrl = urlParams.get('redirect');
+  
+  if (redirectUrl && (redirectUrl.includes('lms.seekhowithrua.com') || redirectUrl.includes('localhost'))) {
+    // Redirect to LMS with token
+    const userJson = encodeURIComponent(JSON.stringify(user));
+    window.location.href = `${decodeURIComponent(redirectUrl)}?token=${token}&user=${userJson}`;
+    return true;
+  }
+  return false;
+}
+
 const COSMOS_AUTH_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@300;400;600&display=swap');
 
@@ -295,6 +309,7 @@ const LoginSignupLogout = () => {
       window.dispatchEvent(new Event('storage'));
       setUser(user);
       setSuccess('Google login successful!');
+      if (handleLMSRedirect(navigate, token, user)) return;
       navigate('/live-voice');
     } catch (err) {
       setError(err.response?.data?.error || 'Google login failed. Please try again.');
@@ -343,6 +358,7 @@ const LoginSignupLogout = () => {
       window.dispatchEvent(new Event('storage'));
       setUser(user);
       setSuccess('Login successful!');
+      if (handleLMSRedirect(navigate, token, user)) return;
       navigate('/live-voice');
       setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
     } catch (err) {
@@ -381,6 +397,7 @@ const LoginSignupLogout = () => {
       window.dispatchEvent(new Event('storage'));
       setUser(user);
       setSuccess('Registration successful! Welcome!');
+      if (handleLMSRedirect(navigate, token, user)) return;
       navigate('/live-voice');
       setFormData({ email:'', password:'', confirm_password:'', first_name:'', last_name:'', role:'learner' });
     } catch (err) {
