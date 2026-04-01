@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete ML Algorithms Visualizer - Interactive 3D</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient 3s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+        
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 30px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .nav-tab.dropdown {
+            position: relative;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(10px);
+            min-width: 280px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 10px 0;
+            margin-top: 10px;
+        }
+        
+        .nav-tab.dropdown:hover .dropdown-content,
+        .nav-tab.dropdown.active .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #fff;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(0, 255, 255, 0.2);
+            padding-left: 25px;
+        }
+        
+        .content-section {
+            display: none;
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .algo-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .algo-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .algo-description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+        
+        .math-formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #ff00ff;
+        }
+        
+        .visualization-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        @media (max-width: 968px) {
+            .visualization-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .viz-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        .viz-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffff00;
+        }
+        
+        #canvas-3d {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ffff;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00ffff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .control-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .code-block pre {
+            margin: 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #d4d4d4;
+        }
+        
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .function { color: #dcdcaa; }
+        .comment { color: #6a9955; }
+        .number { color: #b5cea8; }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .dataset-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .dataset-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .dataset-btn:hover, .dataset-btn.active {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.2);
+        }
+        
+        .metrics-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ffff;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .animation-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .anim-btn {
+            padding: 10px 25px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border: none;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .anim-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .step-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #00ffff;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5rem;
+            color: #00ffff;
+        }
+        
+        .loading::after {
+            content: '';
+            animation: loadingDots 1.5s infinite;
+        }
+        
+        @keyframes loadingDots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+            100% { content: '.'; }
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 1000;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 Complete ML Algorithms Visualizer</h1>
+        <p>Interactive 3D Visualizations with Python Implementation</p>
+    </div>
+    
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="showSection('intro')">📚 Introduction</div>
+        <div class="nav-tab" onclick="showSection('linear')">📈 Linear Regression</div>
+        <div class="nav-tab" onclick="showSection('logistic')">🔮 Logistic Regression</div>
+        <div class="nav-tab" onclick="showSection('decision-tree')">🌳 Decision Trees</div>
+        <div class="nav-tab" onclick="showSection('random-forest')">🌲 Random Forest</div>
+        <div class="nav-tab" onclick="showSection('svm')">⚡ SVM</div>
+        <div class="nav-tab" onclick="showSection('kmeans')">🎯 K-Means</div>
+        <div class="nav-tab" onclick="showSection('knn')">👥 KNN</div>
+        <div class="nav-tab" onclick="showSection('naive-bayes')">📊 Naive Bayes</div>
+        <div class="nav-tab" onclick="showSection('neural-network')">🧠 Neural Network</div>
+        <div class="nav-tab" onclick="showSection('pca')">📉 PCA</div>
+        <div class="nav-tab" onclick="showSection('gradient-boosting')">🚀 Gradient Boosting</div>
+        <div class="nav-tab" onclick="showSection('all-datasets')">💾 All Datasets</div>
+        <div class="nav-tab dropdown" onclick="toggleDropdown(this)">
+            🎯 Science & AI ▼
+            <div class="dropdown-content">
+                <div class="dropdown-item" onclick="showSection('ai-course-1'); event.stopPropagation();">🤖 Artificial Intelligence Fundamentals</div>
+                <div class="dropdown-item" onclick="showSection('ai-course-2'); event.stopPropagation();">🔬 Data Science with Python</div>
+                <div class="dropdown-item" onclick="showSection('ai-course-3'); event.stopPropagation();">🧬 Machine Learning for Research</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Introduction Section -->
+    <div id="intro" class="content-section active">
+        <div class="algo-card">
+            <h2 class="algo-title">🎓 Machine Learning Fundamentals</h2>
+            <div class="algo-description">
+                Machine Learning is a subset of Artificial Intelligence that enables computers to learn and improve from experience without being explicitly programmed. This interactive guide covers all major ML algorithms with 3D visualizations, mathematical intuition, and Python implementations.
+            </div>
+            
+            <div class="info-box">
+                <h3>📌 Types of Machine Learning</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div>
+                            <strong>Supervised Learning:</strong> Learning with labeled data (Regression & Classification)
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div>
+                            <strong>Unsupervised Learning:</strong> Finding patterns in unlabeled data (Clustering & Dimensionality Reduction)
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div>
+                            <strong>Reinforcement Learning:</strong> Learning through trial and error with rewards
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div>
+                            <strong>Semi-supervised Learning:</strong> Mix of labeled and unlabeled data
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">🔄 ML Pipeline Overview</div>
+                    <div id="pipeline-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Algorithm Selection Guide</div>
+                    <div id="algo-guide-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Complete ML Pipeline in Python</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split, cross_val_score, GridSearchCV
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler, LabelEncoder
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score, confusion_matrix, classification_report
+
+<span class="comment"># 1. Data Collection & Exploration</span>
+<span class="keyword">def</span> <span class="function">explore_data</span>(df):
+    <span class="function">print</span>(<span class="string">"Dataset Shape:"</span>, df.shape)
+    <span class="function">print</span>(<span class="string">"\nData Types:\n"</span>, df.dtypes)
+    <span class="function">print</span>(<span class="string">"\nMissing Values:\n"</span>, df.isnull().sum())
+    <span class="function">print</span>(<span class="string">"\nStatistical Summary:\n"</span>, df.describe())
+    
+    <span class="comment"># Visualizations</span>
+    fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">10</span>))
+    
+    <span class="comment"># Correlation heatmap</span>
+    sns.heatmap(df.corr(), annot=<span class="keyword">True</span>, cmap=<span class="string">'coolwarm'</span>, ax=axes[<span class="number">0</span>,<span class="number">0</span>])
+    axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Correlation Matrix'</span>)
+    
+    <span class="comment"># Distribution plots</span>
+    df.hist(ax=axes[<span class="number">0</span>,<span class="number">1</span>])
+    axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Feature Distributions'</span>)
+    
+    plt.tight_layout()
+    plt.show()
+
+<span class="comment"># 2. Feature Engineering</span>
+<span class="keyword">def</span> <span class="function">engineer_features</span>(df):
+    <span class="comment"># Handle missing values</span>
+    df = df.fillna(df.mean())
+    
+    <span class="comment"># Encode categorical variables</span>
+    le = LabelEncoder()
+    <span class="keyword">for</span> col <span class="keyword">in</span> df.select_dtypes(include=[<span class="string">'object'</span>]).columns:
+        df[col] = le.fit_transform(df[col])
+    
+    <span class="comment"># Scale features</span>
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(df.drop(<span class="string">'target'</span>, axis=<span class="number">1</span>))
+    
+    <span class="keyword">return</span> X_scaled, df[<span class="string">'target'</span>]
+
+<span class="comment"># 3. Model Training & Evaluation</span>
+<span class="keyword">def</span> <span class="function">train_evaluate</span>(model, X_train, X_test, y_train, y_test):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    <span class="function">print</span>(<span class="string">"Accuracy:"</span>, accuracy_score(y_test, y_pred))
+    <span class="function">print</span>(<span class="string">"\nConfusion Matrix:\n"</span>, confusion_matrix(y_test, y_pred))
+    <span class="function">print</span>(<span class="string">"\nClassification Report:\n"</span>, classification_report(y_test, y_pred))
+    
+    <span class="keyword">return</span> model</code></pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Linear Regression Section -->
+    <div id="linear" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">📈 Linear Regression</h2>
+            <div class="algo-description">
+                Linear Regression models the relationship between independent variables (X) and a dependent variable (y) by fitting a linear equation. It's the foundation of predictive modeling.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Formulation</h3>
+                <p><strong>Hypothesis:</strong> \( h_\theta(x) = \theta_0 + \theta_1 x_1 + \theta_2 x_2 + ... + \theta_n x_n \)</p>
+                <p><strong>Cost Function (MSE):</strong> \( J(\theta) = \frac{1}{2m} \sum_{i=1}^{m} (h_\theta(x^{(i)}) - y^{(i)})^2 \)</p>
+                <p><strong>Gradient Descent:</strong> \( \theta_j := \theta_j - \alpha \frac{\partial J(\theta)}{\partial \theta_j} \)</p>
+                <p><strong>Normal Equation:</strong> \( \theta = (X^T X)^{-1} X^T y \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Interactive Controls</h3>
+                <div class="control-group">
+                    <label>Learning Rate (α): <span id="lr-value">0.01</span></label>
+                    <input type="range" id="lr-slider" min="0.001" max="0.1" step="0.001" value="0.01" oninput="updateLinearReg()">
+                </div>
+                <div class="control-group">
+                    <label>Number of Iterations: <span id="iter-value">100</span></label>
+                    <input type="range" id="iter-slider" min="10" max="1000" step="10" value="100" oninput="updateLinearReg()">
+                </div>
+                <div class="control-group">
+                    <label>Noise Level: <span id="noise-value">5</span></label>
+                    <input type="range" id="noise-slider" min="0" max="20" step="1" value="5" oninput="updateLinearReg()">
+                </div>
+                <div class="control-group">
+                    <label>Dataset:</label>
+                    <select id="linear-dataset" onchange="updateLinearReg()">
+                        <option value="synthetic">Synthetic Data</option>
+                        <option value="boston">Boston Housing</option>
+                        <option value="california">California Housing</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="animation-controls">
+                <button class="anim-btn" onclick="startGradientDescentAnim()">▶️ Start Gradient Descent</button>
+                <button class="anim-btn" onclick="resetLinearReg()">🔄 Reset</button>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 2D Regression Line</div>
+                    <div id="linear-2d-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">🎲 3D Cost Function Surface</div>
+                    <div id="linear-3d-canvas"></div>
+                </div>
+            </div>
+            
+            <div class="metrics-panel">
+                <div class="metric-card">
+                    <div class="metric-value" id="mse-value">0.00</div>
+                    <div class="metric-label">MSE (Mean Squared Error)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="rmse-value">0.00</div>
+                    <div class="metric-label">RMSE</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="r2-value">0.00</div>
+                    <div class="metric-label">R² Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="theta0-value">0.00</div>
+                    <div class="metric-label">θ₀ (Intercept)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="theta1-value">0.00</div>
+                    <div class="metric-label">θ₁ (Slope)</div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Linear Regression - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LinearRegression
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_regression, fetch_california_housing
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> mean_squared_error, r2_score
+
+<span class="comment"># Generate synthetic data</span>
+X, y = make_regression(n_samples=<span class="number">100</span>, n_features=<span class="number">1</span>, noise=<span class="number">10</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Split data</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.2</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Method 1: Using sklearn (Quick)</span>
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+<span class="function">print</span>(<span class="string">f"Coefficient: {model.coef_[0]:.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Intercept: {model.intercept_:.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"R² Score: {r2_score(y_test, y_pred):.4f}"</span>)
+
+<span class="comment"># Method 2: Manual Gradient Descent (Educational)</span>
+<span class="keyword">class</span> <span class="function">ManualLinearRegression</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, learning_rate=<span class="number">0.01</span>, n_iterations=<span class="number">1000</span>):
+        self.lr = learning_rate
+        self.n_iter = n_iterations
+        self.theta = <span class="keyword">None</span>
+        self.cost_history = []
+    
+    <span class="keyword">def</span> <span class="function">fit</span>(self, X, y):
+        m, n = X.shape
+        <span class="comment"># Add bias term</span>
+        X_b = np.c_[np.ones((m, <span class="number">1</span>)), X]
+        self.theta = np.random.randn(n + <span class="number">1</span>, <span class="number">1</span>)
+        
+        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(self.n_iter):
+            <span class="comment"># Predictions</span>
+            y_pred = X_b.dot(self.theta)
+            
+            <span class="comment"># Gradient</span>
+            gradient = (<span class="number">1</span>/m) * X_b.T.dot(y_pred - y.reshape(-<span class="number">1</span>, <span class="number">1</span>))
+            
+            <span class="comment"># Update</span>
+            self.theta -= self.lr * gradient
+            
+            <span class="comment"># Cost</span>
+            cost = (<span class="number">1</span>/(<span class="number">2</span>*m)) * np.sum((y_pred - y.reshape(-<span class="number">1</span>, <span class="number">1</span>))**<span class="number">2</span>)
+            self.cost_history.append(cost)
+        
+        <span class="keyword">return</span> self
+    
+    <span class="keyword">def</span> <span class="function">predict</span>(self, X):
+        m = X.shape[<span class="number">0</span>]
+        X_b = np.c_[np.ones((m, <span class="number">1</span>)), X]
+        <span class="keyword">return</span> X_b.dot(self.theta).flatten()
+
+<span class="comment"># Visualization</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Scatter plot with regression line</span>
+axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X_test, y_test, color=<span class="string">'blue'</span>, alpha=<span class="number">0.5</span>, label=<span class="string">'Actual'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].plot(X_test, y_pred, color=<span class="string">'red'</span>, linewidth=<span class="number">2</span>, label=<span class="string">'Predicted'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(<span class="string">'X'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">'y'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Linear Regression Fit'</span>)
+
+<span class="comment"># 2. Residuals plot</span>
+residuals = y_test - y_pred
+axes[<span class="number">0</span>,<span class="number">1</span>].scatter(y_pred, residuals, alpha=<span class="number">0.6</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].axhline(y=<span class="number">0</span>, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Predicted'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Residuals'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Residual Plot'</span>)
+
+<span class="comment"># 3. Cost function convergence</span>
+manual_model = ManualLinearRegression(learning_rate=<span class="number">0.01</span>, n_iterations=<span class="number">500</span>)
+manual_model.fit(X_train, y_train)
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(manual_model.cost_history)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Iteration'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Cost (MSE)'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Gradient Descent Convergence'</span>)
+
+<span class="comment"># 4. Feature importance (for multiple features)</span>
+X_multi, y_multi = make_regression(n_samples=<span class="number">100</span>, n_features=<span class="number">5</span>, noise=<span class="number">10</span>)
+model_multi = LinearRegression()
+model_multi.fit(X_multi, y_multi)
+axes[<span class="number">1</span>,<span class="number">1</span>].bar(<span class="function">range</span>(<span class="number">5</span>), model_multi.coef_)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Feature Index'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Coefficient'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Feature Importance'</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGISTIC REGRESSION SECTION -->
+    <div id="logistic" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🔮 Logistic Regression</h2>
+            <div class="algo-description">
+                Logistic Regression is a classification algorithm used to predict the probability of a binary or categorical outcome. Unlike Linear Regression, it uses the sigmoid function to constrain outputs between 0 and 1.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Formulation</h3>
+                <p><strong>Sigmoid Function:</strong> \( \sigma(z) = \frac{1}{1 + e^{-z}} \)</p>
+                <p><strong>Hypothesis:</strong> \( h_\theta(x) = \sigma(\theta^T x) = \frac{1}{1 + e^{-\theta^T x}} \)</p>
+                <p><strong>Cost Function (Log Loss):</strong> \( J(\theta) = -\frac{1}{m} \sum_{i=1}^{m} [y^{(i)} \log(h_\theta(x^{(i)})) + (1-y^{(i)}) \log(1-h_\theta(x^{(i)}))] \)</p>
+                <p><strong>Gradient:</strong> \( \frac{\partial J(\theta)}{\partial \theta_j} = \frac{1}{m} \sum_{i=1}^{m} (h_\theta(x^{(i)}) - y^{(i)}) x_j^{(i)} \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Interactive Controls</h3>
+                <div class="control-group">
+                    <label>Decision Threshold: <span id="threshold-value">0.5</span></label>
+                    <input type="range" id="threshold-slider" min="0.1" max="0.9" step="0.05" value="0.5" oninput="updateLogisticReg()">
+                </div>
+                <div class="control-group">
+                    <label>Regularization (C): <span id="c-value">1.0</span></label>
+                    <input type="range" id="c-slider" min="0.01" max="10" step="0.01" value="1.0" oninput="updateLogisticReg()">
+                </div>
+                <div class="control-group">
+                    <label>Dataset:</label>
+                    <select id="logistic-dataset" onchange="updateLogisticReg()">
+                        <option value="synthetic">Synthetic Binary</option>
+                        <option value="iris">Iris (Setosa vs Versicolor)</option>
+                        <option value="breast-cancer">Breast Cancer</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Decision Boundary</div>
+                    <div id="logistic-2d-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📈 Sigmoid Function 3D</div>
+                    <div id="logistic-3d-canvas"></div>
+                </div>
+            </div>
+            
+            <div class="metrics-panel">
+                <div class="metric-card">
+                    <div class="metric-value" id="accuracy-value">0.00</div>
+                    <div class="metric-label">Accuracy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="precision-value">0.00</div>
+                    <div class="metric-label">Precision</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="recall-value">0.00</div>
+                    <div class="metric-label">Recall</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="f1-value">0.00</div>
+                    <div class="metric-label">F1 Score</div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Logistic Regression - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LogisticRegression
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_classification, load_iris, load_breast_cancer
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score, confusion_matrix, roc_curve, auc
+
+<span class="comment"># Generate binary classification data</span>
+X, y = make_classification(n_samples=<span class="number">200</span>, n_features=<span class="number">2</span>, n_redundant=<span class="number">0</span>, 
+                          n_informative=<span class="number">2</span>, n_clusters_per_class=<span class="number">1</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Split data</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Train Logistic Regression</span>
+model = LogisticRegression(C=<span class="number">1.0</span>, max_iter=<span class="number">1000</span>)
+model.fit(X_train, y_train)
+
+<span class="comment"># Predictions</span>
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)[:, <span class="number">1</span>]
+
+<span class="comment"># Evaluation</span>
+<span class="function">print</span>(<span class="string">f"Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Confusion Matrix:\n{confusion_matrix(y_test, y_pred)}"</span>)
+
+<span class="comment"># ROC Curve</span>
+fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+roc_auc = auc(fpr, tpr)
+
+<span class="comment"># Visualization</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Decision Boundary</span>
+h = <span class="number">0.02</span>
+x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">1</span>, X[:, <span class="number">0</span>].max() + <span class="number">1</span>
+y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">1</span>, X[:, <span class="number">1</span>].max() + <span class="number">1</span>
+xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+Z = model.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, <span class="number">1</span>]
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">0</span>].contourf(xx, yy, Z, levels=<span class="number">50</span>, alpha=<span class="number">0.8</span>, cmap=plt.cm.RdYlBu)
+scatter = axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'black'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Decision Boundary'</span>)
+
+<span class="comment"># 2. Sigmoid Curve</span>
+x_sigmoid = np.linspace(-<span class="number">10</span>, <span class="number">10</span>, <span class="number">100</span>)
+y_sigmoid = <span class="number">1</span> / (<span class="number">1</span> + np.exp(-x_sigmoid))
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(x_sigmoid, y_sigmoid, linewidth=<span class="number">3</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].axhline(y=<span class="number">0.5</span>, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Sigmoid Function'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 3. ROC Curve</span>
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(fpr, tpr, color=<span class="string">'darkorange'</span>, lw=<span class="number">2</span>, label=<span class="string">f'ROC curve (AUC = {roc_auc:.2f})'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].plot([<span class="number">0</span>, <span class="number">1</span>], [<span class="number">0</span>, <span class="number">1</span>], color=<span class="string">'navy'</span>, lw=<span class="number">2</span>, linestyle=<span class="string">'--'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'False Positive Rate'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'True Positive Rate'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'ROC Curve'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].legend()
+
+<span class="comment"># 4. Probability Distribution</span>
+axes[<span class="number">1</span>,<span class="number">1</span>].hist(y_pred_proba[y_test==<span class="number">0</span>], bins=<span class="number">20</span>, alpha=<span class="number">0.5</span>, label=<span class="string">'Class 0'</span>, color=<span class="string">'red'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].hist(y_pred_proba[y_test==<span class="number">1</span>], bins=<span class="number">20</span>, alpha=<span class="number">0.5</span>, label=<span class="string">'Class 1'</span>, color=<span class="string">'blue'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Predicted Probability'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Probability Distribution'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].legend()
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECISION TREES SECTION -->
+    <div id="decision-tree" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🌳 Decision Trees</h2>
+            <div class="algo-description">
+                Decision Trees split data recursively based on feature values to create a tree-like model of decisions. They are intuitive, easy to interpret, and can handle both numerical and categorical data.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Splitting Criteria</h3>
+                <p><strong>Gini Impurity:</strong> \( Gini = 1 - \sum_{i=1}^{c} (p_i)^2 \)</p>
+                <p><strong>Entropy:</strong> \( H = -\sum_{i=1}^{c} p_i \log_2(p_i) \)</p>
+                <p><strong>Information Gain:</strong> \( IG = H_{parent} - \sum_{j} \frac{n_j}{n} H_j \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Tree Parameters</h3>
+                <div class="control-group">
+                    <label>Max Depth: <span id="depth-value">3</span></label>
+                    <input type="range" id="depth-slider" min="1" max="10" step="1" value="3" oninput="updateDecisionTree()">
+                </div>
+                <div class="control-group">
+                    <label>Min Samples Split: <span id="min-samples-value">2</span></label>
+                    <input type="range" id="min-samples-slider" min="2" max="20" step="1" value="2" oninput="updateDecisionTree()">
+                </div>
+                <div class="control-group">
+                    <label>Criterion:</label>
+                    <select id="criterion-select" onchange="updateDecisionTree()">
+                        <option value="gini">Gini</option>
+                        <option value="entropy">Entropy</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">🌲 Decision Tree Structure</div>
+                    <div id="tree-structure-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Decision Boundaries</div>
+                    <div id="tree-boundary-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3>🔍 How Decision Trees Work</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div><strong>Select Best Feature:</strong> Calculate Information Gain for each feature</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div><strong>Split Data:</strong> Divide dataset based on the best feature threshold</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div><strong>Recursion:</strong> Repeat process for each subset until stopping criteria met</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div><strong>Pruning:</strong> Remove branches that don't improve validation accuracy</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Decision Tree - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.tree <span class="keyword">import</span> DecisionTreeClassifier, plot_tree, export_text
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris, make_classification
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score
+
+<span class="comment"># Load Iris dataset</span>
+iris = load_iris()
+X, y = iris.data[:, :<span class="number">2</span>], iris.target  <span class="comment"># Use only 2 features for visualization</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Train Decision Tree</span>
+dt = DecisionTreeClassifier(max_depth=<span class="number">3</span>, criterion=<span class="string">'gini'</span>, min_samples_split=<span class="number">2</span>)
+dt.fit(X_train, y_train)
+
+<span class="comment"># Predictions</span>
+y_pred = dt.predict(X_test)
+<span class="function">print</span>(<span class="string">f"Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">16</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Decision Tree Plot</span>
+plot_tree(dt, feature_names=iris.feature_names[:<span class="number">2</span>], 
+          class_names=iris.target_names, filled=<span class="keyword">True</span>, ax=axes[<span class="number">0</span>,<span class="number">0</span>])
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Decision Tree Structure'</span>)
+
+<span class="comment"># 2. Decision Boundary</span>
+x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">1</span>, X[:, <span class="number">0</span>].max() + <span class="number">1</span>
+y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">1</span>, X[:, <span class="number">1</span>].max() + <span class="number">1</span>
+xx, yy = np.meshgrid(np.arange(x_min, x_max, <span class="number">0.02</span>), np.arange(y_min, y_max, <span class="number">0.02</span>))
+Z = dt.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">1</span>].contourf(xx, yy, Z, alpha=<span class="number">0.8</span>, cmap=plt.cm.RdYlBu)
+scatter = axes[<span class="number">0</span>,<span class="number">1</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(iris.feature_names[<span class="number">0</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(iris.feature_names[<span class="number">1</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Decision Boundaries'</span>)
+
+<span class="comment"># 3. Feature Importance</span>
+importances = dt.feature_importances_
+axes[<span class="number">1</span>,<span class="number">0</span>].barh(iris.feature_names[:<span class="number">2</span>], importances)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Importance'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Feature Importance'</span>)
+
+<span class="comment"># 4. Tree Depth vs Accuracy</span>
+depths = <span class="function">range</span>(<span class="number">1</span>, <span class="number">11</span>)
+train_scores = []
+test_scores = []
+
+<span class="keyword">for</span> depth <span class="keyword">in</span> depths:
+    clf = DecisionTreeClassifier(max_depth=depth)
+    clf.fit(X_train, y_train)
+    train_scores.append(clf.score(X_train, y_train))
+    test_scores.append(clf.score(X_test, y_test))
+
+axes[<span class="number">1</span>,<span class="number">1</span>].plot(depths, train_scores, <span class="string">'o-'</span>, label=<span class="string">'Training'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].plot(depths, test_scores, <span class="string">'s-'</span>, label=<span class="string">'Testing'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Tree Depth'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Depth vs Accuracy (Overfitting Check)'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].legend()
+axes[<span class="number">1</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Text representation of tree</span>
+tree_rules = export_text(dt, feature_names=iris.feature_names[:<span class="number">2</span>])
+<span class="function">print</span>(tree_rules)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- K-MEANS CLUSTERING SECTION -->
+    <div id="kmeans" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🎯 K-Means Clustering</h2>
+            <div class="algo-description">
+                K-Means is an unsupervised learning algorithm that partitions data into K clusters by minimizing the within-cluster sum of squares. It's the most popular clustering algorithm due to its simplicity and efficiency.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Formulation</h3>
+                <p><strong>Objective Function:</strong> \( J = \sum_{i=1}^{k} \sum_{x \in C_i} ||x - \mu_i||^2 \)</p>
+                <p><strong>Centroid Update:</strong> \( \mu_i = \frac{1}{|C_i|} \sum_{x \in C_i} x \)</p>
+                <p><strong>Assignment Step:</strong> \( C_i = \{x : ||x - \mu_i||^2 \leq ||x - \mu_j||^2, \forall j\} \)</p>
+                <p><strong>Elbow Method:</strong> Find K where marginal gain drops significantly</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Clustering Controls</h3>
+                <div class="control-group">
+                    <label>Number of Clusters (K): <span id="k-value">3</span></label>
+                    <input type="range" id="k-slider" min="2" max="10" step="1" value="3" oninput="updateKMeans()">
+                </div>
+                <div class="control-group">
+                    <label>Max Iterations: <span id="max-iter-value">100</span></label>
+                    <input type="range" id="max-iter-slider" min="10" max="500" step="10" value="100" oninput="updateKMeans()">
+                </div>
+                <div class="control-group">
+                    <label>Dataset:</label>
+                    <select id="kmeans-dataset" onchange="updateKMeans()">
+                        <option value="blobs">Gaussian Blobs</option>
+                        <option value="moons">Moons</option>
+                        <option value="circles">Circles</option>
+                        <option value="iris">Iris (PCA)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="animation-controls">
+                <button class="anim-btn" onclick="animateKMeans()">▶️ Animate Clustering</button>
+                <button class="anim-btn" onclick="resetKMeans()">🔄 Reset</button>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Clustering Result</div>
+                    <div id="kmeans-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📈 Elbow Method</div>
+                    <div id="elbow-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="metrics-panel">
+                <div class="metric-card">
+                    <div class="metric-value" id="inertia-value">0.00</div>
+                    <div class="metric-label">Inertia (WCSS)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="silhouette-value">0.00</div>
+                    <div class="metric-label">Silhouette Score</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="iterations-value">0</div>
+                    <div class="metric-label">Iterations</div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># K-Means Clustering - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> KMeans
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_blobs, make_moons, load_iris
+<span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> silhouette_score
+
+<span class="comment"># Generate sample data</span>
+X, y_true = make_blobs(n_samples=<span class="number">300</span>, centers=<span class="number">4</span>, cluster_std=<span class="number">0.60</span>, random_state=<span class="number">0</span>)
+
+<span class="comment"># Elbow Method to find optimal K</span>
+inertias = []
+silhouettes = []
+K_range = <span class="function">range</span>(<span class="number">2</span>, <span class="number">11</span>)
+
+<span class="keyword">for</span> k <span class="keyword">in</span> K_range:
+    kmeans = KMeans(n_clusters=k, random_state=<span class="number">42</span>, n_init=<span class="number">10</span>)
+    kmeans.fit(X)
+    inertias.append(kmeans.inertia_)
+    silhouettes.append(silhouette_score(X, kmeans.labels_))
+
+<span class="comment"># Apply K-Means with optimal K</span>
+optimal_k = <span class="number">4</span>  <span class="comment"># Based on elbow plot</span>
+kmeans = KMeans(n_clusters=optimal_k, random_state=<span class="number">42</span>, n_init=<span class="number">10</span>)
+labels = kmeans.fit_predict(X)
+centroids = kmeans.cluster_centers_
+
+<span class="comment"># Visualization</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Clustering Result</span>
+scatter = axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=labels, cmap=<span class="string">'viridis'</span>, s=<span class="number">50</span>, alpha=<span class="number">0.7</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].scatter(centroids[:, <span class="number">0</span>], centroids[:, <span class="number">1</span>], c=<span class="string">'red'</span>, s=<span class="number">200</span>, marker=<span class="string">'X'</span>, edgecolors=<span class="string">'black'</span>, label=<span class="string">'Centroids'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">f'K-Means Clustering (K={optimal_k})'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+
+<span class="comment"># 2. Elbow Plot</span>
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(K_range, inertias, <span class="string">'bo-'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Number of Clusters (K)'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Inertia (WCSS)'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Elbow Method'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 3. Silhouette Score</span>
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(K_range, silhouettes, <span class="string">'go-'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Number of Clusters (K)'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Silhouette Score'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Silhouette Analysis'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 4. Voronoi Diagram (Decision Boundaries)</span>
+x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">1</span>, X[:, <span class="number">0</span>].max() + <span class="number">1</span>
+y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">1</span>, X[:, <span class="number">1</span>].max() + <span class="number">1</span>
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, <span class="number">200</span>), np.linspace(y_min, y_max, <span class="number">200</span>))
+Z = kmeans.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">1</span>,<span class="number">1</span>].imshow(Z, interpolation=<span class="string">'nearest'</span>, extent=(x_min, x_max, y_min, y_max), 
+                cmap=<span class="string">'viridis'</span>, aspect=<span class="string">'auto'</span>, origin=<span class="string">'lower'</span>, alpha=<span class="number">0.4</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=labels, cmap=<span class="string">'viridis'</span>, s=<span class="number">50</span>, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].scatter(centroids[:, <span class="number">0</span>], centroids[:, <span class="number">1</span>], c=<span class="string">'red'</span>, s=<span class="number">200</span>, marker=<span class="string">'X'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Voronoi Diagram (Cluster Regions)'</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Print cluster statistics</span>
+<span class="function">print</span>(<span class="string">f"Final Inertia: {kmeans.inertia_:.2f}"</span>)
+<span class="function">print</span>(<span class="string">f"Silhouette Score: {silhouette_score(X, labels):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Iterations to converge: {kmeans.n_iter_}"</span>)
+<span class="function">print</span>(<span class="string">f"\nCluster sizes: {np.bincount(labels)}"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- RANDOM FOREST SECTION -->
+    <div id="random-forest" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🌲 Random Forest</h2>
+            <div class="algo-description">
+                Random Forest is an ensemble learning method that constructs multiple decision trees during training and outputs the mode of the classes (classification) or mean prediction (regression) of the individual trees. It reduces overfitting and improves accuracy.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Foundation</h3>
+                <p><strong>Bootstrap Aggregation (Bagging):</strong> Train M trees on bootstrap samples</p>
+                <p><strong>Random Subspace:</strong> Select m features randomly at each split (typically m = √p)</p>
+                <p><strong>Prediction:</strong> \( \hat{y} = \frac{1}{M} \sum_{i=1}^{M} f_i(x) \) for regression</p>
+                <p><strong>Majority Vote:</strong> \( \hat{y} = \text{mode}\{f_1(x), f_2(x), ..., f_M(x)\} \) for classification</p>
+                <p><strong>Out-of-Bag Error:</strong> \( \text{OOB} = \frac{1}{N} \sum_{i=1}^{N} L(y_i, \hat{y}_i^{oob}) \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Forest Parameters</h3>
+                <div class="control-group">
+                    <label>Number of Trees: <span id="n-estimators-value">100</span></label>
+                    <input type="range" id="n-estimators-slider" min="10" max="500" step="10" value="100" oninput="updateRandomForest()">
+                </div>
+                <div class="control-group">
+                    <label>Max Depth: <span id="rf-depth-value">10</span></label>
+                    <input type="range" id="rf-depth-slider" min="1" max="30" step="1" value="10" oninput="updateRandomForest()">
+                </div>
+                <div class="control-group">
+                    <label>Max Features:</label>
+                    <select id="max-features-select" onchange="updateRandomForest()">
+                        <option value="sqrt">√n (sqrt)</option>
+                        <option value="log2">log₂(n)</option>
+                        <option value="all">All features</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">🌳 Forest Visualization</div>
+                    <div id="forest-viz-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Feature Importance</div>
+                    <div id="rf-importance-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="metrics-panel">
+                <div class="metric-card">
+                    <div class="metric-value" id="rf-accuracy-value">0.00</div>
+                    <div class="metric-label">OOB Accuracy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="rf-trees-value">100</div>
+                    <div class="metric-label">Active Trees</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="rf-depth-metric">10</div>
+                    <div class="metric-label">Avg Depth</div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3>🔍 Why Random Forest Works</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div><strong>Decorrelated Trees:</strong> Random feature selection makes trees diverse</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div><strong>Wisdom of Crowds:</strong> Many weak learners combine into strong predictor</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div><strong>Built-in Validation:</strong> OOB error estimates generalization without CV</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Random Forest - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> RandomForestClassifier, RandomForestRegressor
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris, make_classification, load_boston
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score, classification_report
+
+<span class="comment"># Classification with Random Forest</span>
+X, y = make_classification(n_samples=<span class="number">1000</span>, n_features=<span class="number">10</span>, n_informative=<span class="number">5</span>,
+                           n_redundant=<span class="number">3</span>, n_classes=<span class="number">3</span>, random_state=<span class="number">42</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Train Random Forest</span>
+rf = RandomForestClassifier(n_estimators=<span class="number">100</span>, max_depth=<span class="number">10</span>, 
+                            max_features=<span class="string">'sqrt'</span>, oob_score=<span class="keyword">True</span>,
+                            random_state=<span class="number">42</span>, n_jobs=<span class="number">-1</span>)
+rf.fit(X_train, y_train)
+
+<span class="comment"># Predictions</span>
+y_pred = rf.predict(X_test)
+<span class="function">print</span>(<span class="string">f"Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"OOB Score: {rf.oob_score_:.4f}"</span>)
+
+<span class="comment"># Feature Importance</span>
+importances = rf.feature_importances_
+indices = np.argsort(importances)[::-<span class="number">1</span>]
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Feature Importance</span>
+axes[<span class="number">0</span>,<span class="number">0</span>].bar(<span class="function">range</span>(<span class="number">10</span>), importances[indices])
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xticks(<span class="function">range</span>(<span class="number">10</span>))
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xticklabels([<span class="string">f'Feature {i}'</span> <span class="keyword">for</span> i <span class="keyword">in</span> indices], rotation=<span class="number">45</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Feature Importance (Gini)'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Importance'</span>)
+
+<span class="comment"># 2. Trees vs Accuracy</span>
+n_estimators_range = [<span class="number">1</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">25</span>, <span class="number">50</span>, <span class="number">100</span>, <span class="number">200</span>]
+train_scores = []
+test_scores = []
+
+<span class="keyword">for</span> n <span class="keyword">in</span> n_estimators_range:
+    rf_temp = RandomForestClassifier(n_estimators=n, random_state=<span class="number">42</span>)
+    rf_temp.fit(X_train, y_train)
+    train_scores.append(rf_temp.score(X_train, y_train))
+    test_scores.append(rf_temp.score(X_test, y_test))
+
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(n_estimators_range, train_scores, <span class="string">'o-'</span>, label=<span class="string">'Training'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(n_estimators_range, test_scores, <span class="string">'s-'</span>, label=<span class="string">'Testing'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Number of Trees'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Ensemble Size Effect'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].legend()
+axes[<span class="number">0</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 3. Decision Boundary (using 2 features)</span>
+X_viz, y_viz = make_classification(n_samples=<span class="number">200</span>, n_features=<span class="number">2</span>, n_redundant=<span class="number">0</span>,
+                                   n_clusters_per_class=<span class="number">1</span>, random_state=<span class="number">42</span>)
+rf_viz = RandomForestClassifier(n_estimators=<span class="number">50</span>, random_state=<span class="number">42</span>)
+rf_viz.fit(X_viz, y_viz)
+
+x_min, x_max = X_viz[:, <span class="number">0</span>].min() - <span class="number">1</span>, X_viz[:, <span class="number">0</span>].max() + <span class="number">1</span>
+y_min, y_max = X_viz[:, <span class="number">1</span>].min() - <span class="number">1</span>, X_viz[:, <span class="number">1</span>].max() + <span class="number">1</span>
+xx, yy = np.meshgrid(np.arange(x_min, x_max, <span class="number">0.02</span>), np.arange(y_min, y_max, <span class="number">0.02</span>))
+Z = rf_viz.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">1</span>,<span class="number">0</span>].contourf(xx, yy, Z, alpha=<span class="number">0.4</span>, cmap=plt.cm.RdYlBu)
+axes[<span class="number">1</span>,<span class="number">0</span>].scatter(X_viz[:, <span class="number">0</span>], X_viz[:, <span class="number">1</span>], c=y_viz, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Decision Boundary (2D)'</span>)
+
+<span class="comment"># 4. Tree Depth Distribution</span>
+depths = [est.tree_.max_depth <span class="keyword">for</span> est <span class="keyword">in</span> rf.estimators_]
+axes[<span class="number">1</span>,<span class="number">1</span>].hist(depths, bins=<span class="number">20</span>, edgecolor=<span class="string">'black'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Tree Depth'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Frequency'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Distribution of Tree Depths'</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- SVM SECTION -->
+    <div id="svm" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">⚡ Support Vector Machine (SVM)</h2>
+            <div class="algo-description">
+                Support Vector Machine finds the optimal hyperplane that maximally separates classes with the largest margin. It uses the kernel trick to handle non-linear decision boundaries and is effective in high-dimensional spaces.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Formulation</h3>
+                <p><strong>Decision Function:</strong> \( f(x) = w^T x + b \)</p>
+                <p><strong>Margin Maximization:</strong> \( \min_{w,b} \frac{1}{2} ||w||^2 \) subject to \( y_i(w^T x_i + b) \geq 1 \)</p>
+                <p><strong>Soft Margin (C):</strong> \( \min \frac{1}{2} ||w||^2 + C \sum_{i} \max(0, 1 - y_i(w^T x_i + b)) \)</p>
+                <p><strong>Kernel Trick:</strong> \( K(x_i, x_j) = \phi(x_i)^T \phi(x_j) \)</p>
+                <p><strong>RBF Kernel:</strong> \( K(x, x') = \exp(-\gamma ||x - x'||^2) \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 SVM Parameters</h3>
+                <div class="control-group">
+                    <label>C (Regularization): <span id="svm-c-value">1.0</span></label>
+                    <input type="range" id="svm-c-slider" min="0.01" max="100" step="0.01" value="1.0" oninput="updateSVM()">
+                </div>
+                <div class="control-group">
+                    <label>Kernel:</label>
+                    <select id="svm-kernel-select" onchange="updateSVM()">
+                        <option value="linear">Linear</option>
+                        <option value="rbf">RBF (Radial)</option>
+                        <option value="poly">Polynomial</option>
+                        <option value="sigmoid">Sigmoid</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Gamma: <span id="svm-gamma-value">scale</span></label>
+                    <input type="range" id="svm-gamma-slider" min="0.001" max="10" step="0.001" value="0.1" oninput="updateSVM()">
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Decision Boundary & Support Vectors</div>
+                    <div id="svm-boundary-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📈 Kernel Comparison</div>
+                    <div id="svm-kernel-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="metrics-panel">
+                <div class="metric-card">
+                    <div class="metric-value" id="svm-accuracy-value">0.00</div>
+                    <div class="metric-label">Accuracy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="svm-vectors-value">0</div>
+                    <div class="metric-label">Support Vectors</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="svm-margin-value">0.00</div>
+                    <div class="metric-label">Margin Width</div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># SVM - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.svm <span class="keyword">import</span> SVC
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_classification, make_circles, make_moons
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score
+
+<span class="comment"># Generate non-linear dataset</span>
+X, y = make_circles(n_samples=<span class="number">300</span>, noise=<span class="number">0.1</span>, factor=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Train SVM with RBF kernel</span>
+svm = SVC(kernel=<span class="string">'rbf'</span>, C=<span class="number">1.0</span>, gamma=<span class="string">'scale'</span>, probability=<span class="keyword">True</span>)
+svm.fit(X_train, y_train)
+
+<span class="comment"># Predictions</span>
+y_pred = svm.predict(X_test)
+<span class="function">print</span>(<span class="string">f"Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Support Vectors: {svm.n_support_}"</span>)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Decision Boundary with Support Vectors</span>
+x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">0.5</span>, X[:, <span class="number">0</span>].max() + <span class="number">0.5</span>
+y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">0.5</span>, X[:, <span class="number">1</span>].max() + <span class="number">0.5</span>
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, <span class="number">200</span>), np.linspace(y_min, y_max, <span class="number">200</span>))
+Z = svm.decision_function(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">0</span>].contourf(xx, yy, Z, levels=<span class="number">50</span>, alpha=<span class="number">0.8</span>, cmap=plt.cm.RdYlBu)
+axes[<span class="number">0</span>,<span class="number">0</span>].contour(xx, yy, Z, colors=<span class="string">'k'</span>, levels=[<span class="number">-1</span>, <span class="number">0</span>, <span class="number">1</span>], 
+             alpha=<span class="number">0.5</span>, linestyles=[<span class="string">'--'</span>, <span class="string">'-'</span>, <span class="string">'--'</span>])
+axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X_train[:, <span class="number">0</span>], X_train[:, <span class="number">1</span>], c=y_train, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].scatter(svm.support_vectors_[:, <span class="number">0</span>], svm.support_vectors_[:, <span class="number">1</span>], 
+             s=<span class="number">100</span>, linewidth=<span class="number">1</span>, facecolors=<span class="string">'none'</span>, edgecolors=<span class="string">'k'</span>, label=<span class="string">'Support Vectors'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'SVM Decision Boundary'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+
+<span class="comment"># 2. Kernel Comparison</span>
+kernels = [<span class="string">'linear'</span>, <span class="string">'rbf'</span>, <span class="string">'poly'</span>]
+accuracies = []
+<span class="keyword">for</span> kernel <span class="keyword">in</span> kernels:
+    svm_k = SVC(kernel=kernel, random_state=<span class="number">42</span>)
+    svm_k.fit(X_train, y_train)
+    accuracies.append(svm_k.score(X_test, y_test))
+
+axes[<span class="number">0</span>,<span class="number">1</span>].bar(kernels, accuracies, color=[<span class="string">'#00ffff'</span>, <span class="string">'#ff00ff'</span>, <span class="string">'#ffff00'</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Kernel Performance Comparison'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylim([<span class="number">0</span>, <span class="number">1</span>])
+
+<span class="comment"># 3. C Parameter Effect</span>
+C_values = [<span class="number">0.01</span>, <span class="number">0.1</span>, <span class="number">1</span>, <span class="number">10</span>, <span class="number">100</span>]
+train_scores = []
+test_scores = []
+
+<span class="keyword">for</span> C <span class="keyword">in</span> C_values:
+    svm_c = SVC(kernel=<span class="string">'rbf'</span>, C=C, random_state=<span class="number">42</span>)
+    svm_c.fit(X_train, y_train)
+    train_scores.append(svm_c.score(X_train, y_train))
+    test_scores.append(svm_c.score(X_test, y_test))
+
+axes[<span class="number">1</span>,<span class="number">0</span>].semilogx(C_values, train_scores, <span class="string">'o-'</span>, label=<span class="string">'Training'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].semilogx(C_values, test_scores, <span class="string">'s-'</span>, label=<span class="string">'Testing'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'C (Regularization Parameter)'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Effect of Regularization'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].legend()
+axes[<span class="number">1</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 4. Probability Contours</span>
+svm_proba = SVC(kernel=<span class="string">'rbf'</span>, probability=<span class="keyword">True</span>, random_state=<span class="number">42</span>)
+svm_proba.fit(X_train, y_train)
+proba = svm_proba.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, <span class="number">1</span>]
+proba = proba.reshape(xx.shape)
+
+contour = axes[<span class="number">1</span>,<span class="number">1</span>].contourf(xx, yy, proba, levels=<span class="number">50</span>, alpha=<span class="number">0.8</span>, cmap=<span class="string">'RdYlBu'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, cmap=<span class="string">'RdYlBu'</span>, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Probability Contours'</span>)
+plt.colorbar(contour, ax=axes[<span class="number">1</span>,<span class="number">1</span>])
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- KNN SECTION -->
+    <div id="knn" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">👥 K-Nearest Neighbors (KNN)</h2>
+            <div class="algo-description">
+                KNN is a non-parametric, lazy learning algorithm that classifies data points based on the majority class of their k nearest neighbors. It's simple, intuitive, and makes no assumptions about data distribution.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Formulation</h3>
+                <p><strong>Distance Metrics:</strong> Euclidean: \( d(x, x') = \sqrt{\sum_{i=1}^{n} (x_i - x'_i)^2} \)</p>
+                <p><strong>Manhattan:</strong> \( d(x, x') = \sum_{i=1}^{n} |x_i - x'_i| \)</p>
+                <p><strong>Minkowski:</strong> \( d(x, x') = (\sum_{i=1}^{n} |x_i - x'_i|^p)^{1/p} \)</p>
+                <p><strong>Prediction:</strong> \( \hat{y} = \text{mode}\{y_1, y_2, ..., y_k\} \) or \( \hat{y} = \frac{1}{k} \sum_{i=1}^{k} y_i \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 KNN Parameters</h3>
+                <div class="control-group">
+                    <label>K (Neighbors): <span id="knn-k-value">5</span></label>
+                    <input type="range" id="knn-k-slider" min="1" max="50" step="1" value="5" oninput="updateKNN()">
+                </div>
+                <div class="control-group">
+                    <label>Distance Metric:</label>
+                    <select id="knn-metric-select" onchange="updateKNN()">
+                        <option value="euclidean">Euclidean</option>
+                        <option value="manhattan">Manhattan</option>
+                        <option value="minkowski">Minkowski</option>
+                        <option value="chebyshev">Chebyshev</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Weights:</label>
+                    <select id="knn-weights-select" onchange="updateKNN()">
+                        <option value="uniform">Uniform</option>
+                        <option value="distance">Distance-based</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Decision Boundary</div>
+                    <div id="knn-boundary-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📈 K vs Accuracy</div>
+                    <div id="knn-k-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># KNN - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.neighbors <span class="keyword">import</span> KNeighborsClassifier
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris, make_classification
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score
+
+<span class="comment"># Generate data</span>
+X, y = make_classification(n_samples=<span class="number">200</span>, n_features=<span class="number">2</span>, n_redundant=<span class="number">0</span>,
+                           n_clusters_per_class=<span class="number">1</span>, random_state=<span class="number">42</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Find optimal K</span>
+k_range = <span class="function">range</span>(<span class="number">1</span>, <span class="number">31</span>)
+train_scores = []
+test_scores = []
+
+<span class="keyword">for</span> k <span class="keyword">in</span> k_range:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    train_scores.append(knn.score(X_train, y_train))
+    test_scores.append(knn.score(X_test, y_test))
+
+<span class="comment"># Best K</span>
+optimal_k = np.argmax(test_scores) + <span class="number">1</span>
+<span class="function">print</span>(<span class="string">f"Optimal K: {optimal_k}"</span>)
+
+<span class="comment"># Train with optimal K</span>
+knn_best = KNeighborsClassifier(n_neighbors=optimal_k)
+knn_best.fit(X_train, y_train)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. K vs Accuracy</span>
+axes[<span class="number">0</span>,<span class="number">0</span>].plot(k_range, train_scores, <span class="string">'o-'</span>, label=<span class="string">'Training'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].plot(k_range, test_scores, <span class="string">'s-'</span>, label=<span class="string">'Testing'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].axvline(optimal_k, color=<span class="string">'red'</span>, linestyle=<span class="string">'--'</span>, label=<span class="string">f'Optimal K={optimal_k}'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(<span class="string">'K (Number of Neighbors)'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'K Selection (Elbow Method)'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+axes[<span class="number">0</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 2. Decision Boundary</span>
+x_min, x_max = X[:, <span class="number">0</span>].min() - <span class="number">1</span>, X[:, <span class="number">0</span>].max() + <span class="number">1</span>
+y_min, y_max = X[:, <span class="number">1</span>].min() - <span class="number">1</span>, X[:, <span class="number">1</span>].max() + <span class="number">1</span>
+xx, yy = np.meshgrid(np.arange(x_min, x_max, <span class="number">0.02</span>), np.arange(y_min, y_max, <span class="number">0.02</span>))
+Z = knn_best.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">1</span>].contourf(xx, yy, Z, alpha=<span class="number">0.4</span>, cmap=plt.cm.RdYlBu)
+axes[<span class="number">0</span>,<span class="number">1</span>].scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">f'Decision Boundary (K={optimal_k})'</span>)
+
+<span class="comment"># 3. Distance Metric Comparison</span>
+metrics = [<span class="string">'euclidean'</span>, <span class="string">'manhattan'</span>, <span class="string">'chebyshev'</span>, <span class="string">'minkowski'</span>]
+metric_scores = []
+<span class="keyword">for</span> metric <span class="keyword">in</span> metrics:
+    knn_m = KNeighborsClassifier(n_neighbors=<span class="number">5</span>, metric=metric)
+    knn_m.fit(X_train, y_train)
+    metric_scores.append(knn_m.score(X_test, y_test))
+
+axes[<span class="number">1</span>,<span class="number">0</span>].bar(metrics, metric_scores, color=[<span class="string">'#00ffff'</span>, <span class="string">'#ff00ff'</span>, <span class="string">'#ffff00'</span>, <span class="string">'#00ff00'</span>])
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Distance Metric Comparison'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].tick_params(axis=<span class="string">'x'</span>, rotation=<span class="number">45</span>)
+
+<span class="comment"># 4. Weight Comparison</span>
+weights = [<span class="string">'uniform'</span>, <span class="string">'distance'</span>]
+weight_scores = []
+<span class="keyword">for</span> weight <span class="keyword">in</span> weights:
+    knn_w = KNeighborsClassifier(n_neighbors=<span class="number">5</span>, weights=weight)
+    knn_w.fit(X_train, y_train)
+    weight_scores.append(knn_w.score(X_test, y_test))
+
+axes[<span class="number">1</span>,<span class="number">1</span>].bar(weights, weight_scores, color=[<span class="string">'#00ffff'</span>, <span class="string">'#ff00ff'</span>])
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Weighting Scheme Comparison'</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAIVE BAYES SECTION -->
+    <div id="naive-bayes" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">📊 Naive Bayes</h2>
+            <div class="algo-description">
+                Naive Bayes classifiers are probabilistic classifiers based on Bayes' theorem with strong (naive) independence assumptions. Despite their simplicity, they work well for text classification, spam filtering, and sentiment analysis.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Bayes Theorem</h3>
+                <p><strong>Bayes Rule:</strong> \( P(y|x) = \frac{P(x|y) P(y)}{P(x)} \)</p>
+                <p><strong>Naive Assumption:</strong> Features are conditionally independent: \( P(x|y) = \prod_{i=1}^{n} P(x_i|y) \)</p>
+                <p><strong>Classification:</strong> \( \hat{y} = \arg\max_y P(y) \prod_{i=1}^{n} P(x_i|y) \)</p>
+                <p><strong>Gaussian NB:</strong> \( P(x_i|y) = \frac{1}{\sqrt{2\pi\sigma_y^2}} \exp\left(-\frac{(x_i - \mu_y)^2}{2\sigma_y^2}\right) \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Naive Bayes Variants</h3>
+                <div class="control-group">
+                    <label>Variant:</label>
+                    <select id="nb-variant-select" onchange="updateNaiveBayes()">
+                        <option value="gaussian">Gaussian NB</option>
+                        <option value="multinomial">Multinomial NB</option>
+                        <option value="complement">Complement NB</option>
+                        <option value="bernoulli">Bernoulli NB</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Smoothing (α): <span id="nb-alpha-value">1.0</span></label>
+                    <input type="range" id="nb-alpha-slider" min="0" max="10" step="0.1" value="1.0" oninput="updateNaiveBayes()">
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Naive Bayes - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.naive_bayes <span class="keyword">import</span> GaussianNB, MultinomialNB
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris, make_classification, fetch_20newsgroups
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.feature_extraction.text <span class="keyword">import</span> TfidfVectorizer
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score, confusion_matrix
+
+<span class="comment"># Gaussian NB for continuous data</span>
+iris = load_iris()
+X, y = iris.data, iris.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+gnb = GaussianNB()
+gnb.fit(X_train, y_train)
+y_pred = gnb.predict(X_test)
+
+<span class="function">print</span>(<span class="string">f"Gaussian NB Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Class-conditional densities for 2 features</span>
+X_2d = X[:, :<span class="number">2</span>]
+X_train_2d, X_test_2d, y_train_2d, y_test_2d = train_test_split(X_2d, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+gnb_2d = GaussianNB()
+gnb_2d.fit(X_train_2d, y_train_2d)
+
+x_min, x_max = X_2d[:, <span class="number">0</span>].min() - <span class="number">0.5</span>, X_2d[:, <span class="number">0</span>].max() + <span class="number">0.5</span>
+y_min, y_max = X_2d[:, <span class="number">1</span>].min() - <span class="number">0.5</span>, X_2d[:, <span class="number">1</span>].max() + <span class="number">0.5</span>
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, <span class="number">200</span>), np.linspace(y_min, y_max, <span class="number">200</span>))
+Z = gnb_2d.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">0</span>].contourf(xx, yy, Z, alpha=<span class="number">0.3</span>, cmap=plt.cm.RdYlBu)
+scatter = axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X_2d[:, <span class="number">0</span>], X_2d[:, <span class="number">1</span>], c=y, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(iris.feature_names[<span class="number">0</span>])
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(iris.feature_names[<span class="number">1</span>])
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Naive Bayes Decision Boundary'</span>)
+
+<span class="comment"># 2. Prior probabilities</span>
+axes[<span class="number">0</span>,<span class="number">1</span>].bar(iris.target_names, gnb.class_prior_, color=[<span class="string">'#00ffff'</span>, <span class="string">'#ff00ff'</span>, <span class="string">'#ffff00'</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Prior Probability'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Class Prior Probabilities'</span>)
+
+<span class="comment"># 3. Feature means per class</span>
+x_pos = np.arange(len(iris.feature_names))
+width = <span class="number">0.25</span>
+<span class="keyword">for</span> i, class_name <span class="keyword">in</span> enumerate(iris.target_names):
+    axes[<span class="number">1</span>,<span class="number">0</span>].bar(x_pos + i*width, gnb.theta_[i], width, label=class_name)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xticks(x_pos + width)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xticklabels(iris.feature_names, rotation=<span class="number">45</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Mean Feature Value'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Class-conditional Means'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].legend()
+
+<span class="comment"># 4. Variance per class</span>
+<span class="keyword">for</span> i, class_name <span class="keyword">in</span> enumerate(iris.target_names):
+    axes[<span class="number">1</span>,<span class="number">1</span>].bar(x_pos + i*width, gnb.var_[i], width, label=class_name)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xticks(x_pos + width)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xticklabels(iris.feature_names, rotation=<span class="number">45</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Variance'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Class-conditional Variances'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].legend()
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Text classification with Multinomial NB</span>
+categories = [<span class="string">'alt.atheism'</span>, <span class="string">'sci.space'</span>, <span class="string">'talk.religion.misc'</span>]
+newsgroups = fetch_20newsgroups(subset=<span class="string">'train'</span>, categories=categories, remove=(<span class="string">'headers'</span>, <span class="string">'footers'</span>, <span class="string">'quotes'</span>))
+vectorizer = TfidfVectorizer(max_features=<span class="number">1000</span>)
+X_text = vectorizer.fit_transform(newsgroups.data)
+y_text = newsgroups.target
+
+mnb = MultinomialNB()
+mnb.fit(X_text, y_text)
+<span class="function">print</span>(<span class="string">f"\nText Classification Accuracy: {mnb.score(X_text, y_text):.4f}"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEURAL NETWORK SECTION -->
+    <div id="neural-network" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🧠 Neural Networks (Deep Learning)</h2>
+            <div class="algo-description">
+                Neural Networks are computing systems inspired by biological neural networks. They consist of interconnected nodes (neurons) organized in layers. Deep Learning uses many hidden layers to learn complex patterns and representations from data.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Neural Network Mathematics</h3>
+                <p><strong>Neuron Output:</strong> \( z = \sum_{i=1}^{n} w_i x_i + b = W^T x + b \)</p>
+                <p><strong>Activation:</strong> \( a = \sigma(z) \) where σ can be:</p>
+                <p>- Sigmoid: \( \sigma(z) = \frac{1}{1 + e^{-z}} \)</p>
+                <p>- ReLU: \( \sigma(z) = \max(0, z) \)</p>
+                <p>- Tanh: \( \sigma(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}} \)</p>
+                <p><strong>Backpropagation:</strong> \( \frac{\partial L}{\partial w} = \frac{\partial L}{\partial a} \cdot \frac{\partial a}{\partial z} \cdot \frac{\partial z}{\partial w} \)</p>
+                <p><strong>Weight Update:</strong> \( w_{new} = w_{old} - \eta \frac{\partial L}{\partial w} \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Network Architecture</h3>
+                <div class="control-group">
+                    <label>Hidden Layers: <span id="nn-layers-value">2</span></label>
+                    <input type="range" id="nn-layers-slider" min="1" max="5" step="1" value="2" oninput="updateNeuralNetwork()">
+                </div>
+                <div class="control-group">
+                    <label>Neurons per Layer: <span id="nn-neurons-value">64</span></label>
+                    <input type="range" id="nn-neurons-slider" min="8" max="256" step="8" value="64" oninput="updateNeuralNetwork()">
+                </div>
+                <div class="control-group">
+                    <label>Activation:</label>
+                    <select id="nn-activation-select" onchange="updateNeuralNetwork()">
+                        <option value="relu">ReLU</option>
+                        <option value="sigmoid">Sigmoid</option>
+                        <option value="tanh">Tanh</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Learning Rate: <span id="nn-lr-value">0.001</span></label>
+                    <input type="range" id="nn-lr-slider" min="0.0001" max="0.1" step="0.0001" value="0.001" oninput="updateNeuralNetwork()">
+                </div>
+            </div>
+            
+            <div class="animation-controls">
+                <button class="anim-btn" onclick="animateNeuralNetwork()">▶️ Train Network</button>
+                <button class="anim-btn" onclick="resetNeuralNetwork()">🔄 Reset</button>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">🧠 Network Architecture</div>
+                    <div id="nn-arch-canvas" style="height: 400px;"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📉 Training Progress</div>
+                    <div id="nn-training-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Neural Network with TensorFlow/Keras</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_moons, load_digits
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+<span class="keyword">from</span> sklearn.neural_network <span class="keyword">import</span> MLPClassifier
+
+<span class="comment"># Binary classification with moons dataset</span>
+X, y = make_moons(n_samples=<span class="number">500</span>, noise=<span class="number">0.2</span>, random_state=<span class="number">42</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Standardize features</span>
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+<span class="comment"># Train Neural Network</span>
+mlp = MLPClassifier(hidden_layer_sizes=(<span class="number">64</span>, <span class="number">32</span>), activation=<span class="string">'relu'</span>,
+                    solver=<span class="string">'adam'</span>, learning_rate_init=<span class="number">0.001</span>,
+                    max_iter=<span class="number">500</span>, random_state=<span class="number">42</span>)
+mlp.fit(X_train, y_train)
+
+<span class="function">print</span>(<span class="string">f"Training Accuracy: {mlp.score(X_train, y_train):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Test Accuracy: {mlp.score(X_test, y_test):.4f}"</span>)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Decision Boundary</span>
+x_min, x_max = X_train[:, <span class="number">0</span>].min() - <span class="number">0.5</span>, X_train[:, <span class="number">0</span>].max() + <span class="number">0.5</span>
+y_min, y_max = X_train[:, <span class="number">1</span>].min() - <span class="number">0.5</span>, X_train[:, <span class="number">1</span>].max() + <span class="number">0.5</span>
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, <span class="number">200</span>), np.linspace(y_min, y_max, <span class="number">200</span>))
+Z = mlp.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, <span class="number">1</span>]
+Z = Z.reshape(xx.shape)
+
+axes[<span class="number">0</span>,<span class="number">0</span>].contourf(xx, yy, Z, levels=<span class="number">50</span>, alpha=<span class="number">0.8</span>, cmap=plt.cm.RdYlBu)
+axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X_train[:, <span class="number">0</span>], X_train[:, <span class="number">1</span>], c=y_train, cmap=plt.cm.RdYlBu, edgecolors=<span class="string">'k'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Neural Network Decision Boundary'</span>)
+
+<span class="comment"># 2. Loss Curve</span>
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(mlp.loss_curve_)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Iterations'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Loss'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Training Loss Curve'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 3. Activation Functions</span>
+x = np.linspace(-<span class="number">5</span>, <span class="number">5</span>, <span class="number">100</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(x, np.maximum(<span class="number">0</span>, x), label=<span class="string">'ReLU'</span>, linewidth=<span class="number">2</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(x, <span class="number">1</span>/(<span class="number">1</span>+np.exp(-x)), label=<span class="string">'Sigmoid'</span>, linewidth=<span class="number">2</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].plot(x, np.tanh(x), label=<span class="string">'Tanh'</span>, linewidth=<span class="number">2</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Input'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Output'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Activation Functions'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].legend()
+axes[<span class="number">1</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 4. Architecture Diagram</span>
+layer_sizes = [<span class="number">2</span>, <span class="number">64</span>, <span class="number">32</span>, <span class="number">1</span>]
+max_neurons = max(layer_sizes)
+<span class="keyword">for</span> i, size <span class="keyword">in</span> enumerate(layer_sizes):
+    x_pos = i
+    y_positions = np.linspace(-size/<span class="number">2</span>, size/<span class="number">2</span>, size)
+    <span class="keyword">for</span> j, y_pos <span class="keyword">in</span> enumerate(y_positions):
+        circle = plt.Circle((x_pos, y_pos), <span class="number">0.2</span>, color=<span class="string">'cyan'</span>, alpha=<span class="number">0.7</span>)
+        axes[<span class="number">1</span>,<span class="number">1</span>].add_patch(circle)
+        <span class="keyword">if</span> i < len(layer_sizes) - <span class="number">1</span>:
+            next_y_positions = np.linspace(-layer_sizes[i+<span class="number">1</span>]/<span class="number">2</span>, layer_sizes[i+<span class="number">1</span>]/<span class="number">2</span>, layer_sizes[i+<span class="number">1</span>])
+            <span class="keyword">for</span> next_y <span class="keyword">in</span> next_y_positions:
+                axes[<span class="number">1</span>,<span class="number">1</span>].plot([x_pos, x_pos+<span class="number">1</span>], [y_pos, next_y], <span class="string">'gray'</span>, alpha=<span class="number">0.3</span>, linewidth=<span class="number">0.5</span>)
+
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlim(-<span class="number">0.5</span>, len(layer_sizes)-<span class="number">0.5</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylim(-max_neurons/<span class="number">2</span>-<span class="number">1</span>, max_neurons/<span class="number">2</span>+<span class="number">1</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_aspect(<span class="string">'equal'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].axis(<span class="string">'off'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Network Architecture: 2-64-32-1'</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- PCA SECTION -->
+    <div id="pca" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">📉 Principal Component Analysis (PCA)</h2>
+            <div class="algo-description">
+                PCA is a dimensionality reduction technique that transforms data into a new coordinate system where the greatest variance lies on the first coordinate (first principal component), the second greatest variance on the second coordinate, and so on.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Mathematical Foundation</h3>
+                <p><strong>Covariance Matrix:</strong> \( \Sigma = \frac{1}{n-1} X^T X \)</p>
+                <p><strong>Eigenvalue Problem:</strong> \( \Sigma v = \lambda v \)</p>
+                <p><strong>Principal Components:</strong> Eigenvectors sorted by eigenvalues (descending)</p>
+                <p><strong>Transformation:</strong> \( Z = X W \) where W is matrix of eigenvectors</p>
+                <p><strong>Explained Variance:</strong> \( \frac{\lambda_i}{\sum_{j=1}^{p} \lambda_j} \)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 PCA Parameters</h3>
+                <div class="control-group">
+                    <label>Number of Components: <span id="pca-components-value">2</span></label>
+                    <input type="range" id="pca-components-slider" min="1" max="10" step="1" value="2" oninput="updatePCA()">
+                </div>
+                <div class="control-group">
+                    <label>Dataset:</label>
+                    <select id="pca-dataset-select" onchange="updatePCA()">
+                        <option value="iris">Iris</option>
+                        <option value="digits">Digits</option>
+                        <option value="wine">Wine</option>
+                        <option value="random">Random High-Dim</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📊 2D PCA Projection</div>
+                    <div id="pca-2d-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📈 Explained Variance</div>
+                    <div id="pca-variance-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># PCA - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris, load_digits, load_wine
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+
+<span class="comment"># Load and standardize data</span>
+iris = load_iris()
+X, y = iris.data, iris.target
+
+<span class="comment"># Standardization is crucial for PCA</span>
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+<span class="comment"># Apply PCA</span>
+pca = PCA()
+X_pca = pca.fit_transform(X_scaled)
+
+<span class="comment"># Explained variance ratio</span>
+explained_var = pca.explained_variance_ratio_
+cumulative_var = np.cumsum(explained_var)
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+colors = [<span class="string">'red'</span>, <span class="string">'green'</span>, <span class="string">'blue'</span>]
+<span class="keyword">for</span> i, target_name <span class="keyword">in</span> enumerate(iris.target_names):
+    axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X_pca[y == i, <span class="number">0</span>], X_pca[y == i, <span class="number">1</span>], 
+                     color=colors[i], label=target_name, alpha=<span class="number">0.7</span>, s=<span class="number">50</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(<span class="string">f'PC1 ({explained_var[0]:.1%} variance)'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">f'PC2 ({explained_var[1]:.1%} variance)'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'PCA 2D Projection'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+axes[<span class="number">0</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># Scree plot</span>
+axes[<span class="number">0</span>,<span class="number">1</span>].bar(<span class="function">range</span>(<span class="number">1</span>, len(explained_var) + <span class="number">1</span>), explained_var, alpha=<span class="number">0.7</span>, label=<span class="string">'Individual'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].plot(<span class="function">range</span>(<span class="number">1</span>, len(explained_var) + <span class="number">1</span>), cumulative_var, <span class="string">'ro-'</span>, label=<span class="string">'Cumulative'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Principal Component'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_ylabel(<span class="string">'Explained Variance Ratio'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Scree Plot'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].legend()
+axes[<span class="number">0</span>,<span class="number">1</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># Biplot - show original feature directions</span>
+feature_vectors = pca.components_[:<span class="number">2</span>].T
+axes[<span class="number">1</span>,<span class="number">0</span>].scatter(X_pca[:, <span class="number">0</span>], X_pca[:, <span class="number">1</span>], c=y, cmap=<span class="string">'viridis'</span>, alpha=<span class="number">0.5</span>)
+<span class="keyword">for</span> i, feature <span class="keyword">in</span> enumerate(iris.feature_names):
+    axes[<span class="number">1</span>,<span class="number">0</span>].arrow(<span class="number">0</span>, <span class="number">0</span>, feature_vectors[i, <span class="number">0</span>]*<span class="number">3</span>, feature_vectors[i, <span class="number">1</span>]*<span class="number">3</span>,
+                  head_width=<span class="number">0.1</span>, head_length=<span class="number">0.1</span>, fc=<span class="string">'red'</span>, ec=<span class="string">'red'</span>)
+    axes[<span class="number">1</span>,<span class="number">0</span>].text(feature_vectors[i, <span class="number">0</span>]*<span class="number">3.2</span>, feature_vectors[i, <span class="number">1</span>]*<span class="number">3.2</span>, feature, color=<span class="string">'red'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'PC1'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'PC2'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Biplot with Feature Vectors'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 3D PCA (first 3 components)</span>
+ax3d = fig.add_subplot(<span class="number">2</span>, <span class="number">2</span>, <span class="number">4</span>, projection=<span class="string">'3d'</span>)
+<span class="keyword">for</span> i, target_name <span class="keyword">in</span> enumerate(iris.target_names):
+    ax3d.scatter(X_pca[y == i, <span class="number">0</span>], X_pca[y == i, <span class="number">1</span>], X_pca[y == i, <span class="number">2</span>],
+                color=colors[i], label=target_name, alpha=<span class="number">0.7</span>, s=<span class="number">30</span>)
+ax3d.set_xlabel(<span class="string">'PC1'</span>)
+ax3d.set_ylabel(<span class="string">'PC2'</span>)
+ax3d.set_zlabel(<span class="string">'PC3'</span>)
+ax3d.set_title(<span class="string">'3D PCA Projection'</span>)
+ax3d.legend()
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Optimal number of components</span>
+n_components_95 = np.argmax(cumulative_var >= <span class="number">0.95</span>) + <span class="number">1</span>
+<span class="function">print</span>(<span class="string">f"Components needed for 95% variance: {n_components_95}"</span>)
+<span class="function">print</span>(<span class="string">f"Variance explained by first 2 PCs: {cumulative_var[1]:.2%}"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRADIENT BOOSTING SECTION -->
+    <div id="gradient-boosting" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🚀 Gradient Boosting (XGBoost/LightGBM)</h2>
+            <div class="algo-description">
+                Gradient Boosting builds models sequentially, with each new model correcting errors made by previous ones. It combines weak learners into a strong predictor using gradient descent in function space. XGBoost and LightGBM are optimized implementations.
+            </div>
+            
+            <div class="math-formula">
+                <h3>🧮 Boosting Mathematics</h3>
+                <p><strong>Additive Model:</strong> \( F_M(x) = \sum_{m=1}^{M} \alpha_m h_m(x) \)</p>
+                <p><strong>Gradient Descent:</strong> Fit new model to negative gradient: \( h_m = -\frac{\partial L(y, F_{m-1}(x))}{\partial F_{m-1}(x)} \)</p>
+                <p><strong>Shrinkage:</strong> \( F_m(x) = F_{m-1}(x) + \nu \cdot h_m(x) \) where ν is learning rate</p>
+                <p><strong>Regularization:</strong> \( \Omega(f) = \gamma T + \frac{1}{2} \lambda \sum_{j=1}^{T} w_j^2 \) (tree complexity)</p>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Boosting Parameters</h3>
+                <div class="control-group">
+                    <label>Number of Estimators: <span id="gb-n-estimators-value">100</span></label>
+                    <input type="range" id="gb-n-estimators-slider" min="10" max="500" step="10" value="100" oninput="updateGradientBoosting()">
+                </div>
+                <div class="control-group">
+                    <label>Learning Rate: <span id="gb-lr-value">0.1</span></label>
+                    <input type="range" id="gb-lr-slider" min="0.01" max="1" step="0.01" value="0.1" oninput="updateGradientBoosting()">
+                </div>
+                <div class="control-group">
+                    <label>Max Depth: <span id="gb-depth-value">3</span></label>
+                    <input type="range" id="gb-depth-slider" min="1" max="10" step="1" value="3" oninput="updateGradientBoosting()">
+                </div>
+                <div class="control-group">
+                    <label>Subsample: <span id="gb-subsample-value">1.0</span></label>
+                    <input type="range" id="gb-subsample-slider" min="0.1" max="1" step="0.1" value="1.0" oninput="updateGradientBoosting()">
+                </div>
+            </div>
+            
+            <div class="visualization-container">
+                <div class="viz-panel">
+                    <div class="viz-title">📉 Training Progress</div>
+                    <div id="gb-progress-chart" class="chart-container"></div>
+                </div>
+                <div class="viz-panel">
+                    <div class="viz-title">📊 Feature Importance</div>
+                    <div id="gb-importance-chart" class="chart-container"></div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Gradient Boosting - Complete Implementation</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> GradientBoostingClassifier
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> make_classification, load_breast_cancer
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> accuracy_score, classification_report
+
+<span class="comment"># Load dataset</span>
+X, y = make_classification(n_samples=<span class="number">1000</span>, n_features=<span class="number">10</span>, n_informative=<span class="number">6</span>,
+                           n_redundant=<span class="number">2</span>, random_state=<span class="number">42</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>)
+
+<span class="comment"># Train Gradient Boosting</span>
+gb = GradientBoostingClassifier(n_estimators=<span class="number">100</span>, learning_rate=<span class="number">0.1</span>,
+                                 max_depth=<span class="number">3</span>, subsample=<span class="number">0.8</span>,
+                                 random_state=<span class="number">42</span>)
+gb.fit(X_train, y_train)
+
+<span class="comment"># Predictions</span>
+y_pred = gb.predict(X_test)
+<span class="function">print</span>(<span class="string">f"Accuracy: {accuracy_score(y_test, y_pred):.4f}"</span>)
+
+<span class="comment"># Staged predictions for learning curves</span>
+train_scores = []
+test_scores = []
+<span class="keyword">for</span> stage_pred <span class="keyword">in</span> gb.staged_predict(X_train):
+    train_scores.append(accuracy_score(y_train, stage_pred))
+<span class="keyword">for</span> stage_pred <span class="keyword">in</span> gb.staged_predict(X_test):
+    test_scores.append(accuracy_score(y_test, stage_pred))
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Training Deviance (Loss Curve)</span>
+axes[<span class="number">0</span>,<span class="number">0</span>].plot(np.arange(<span class="number">1</span>, len(train_scores) + <span class="number">1</span>), train_scores, <span class="string">'b-'</span>, label=<span class="string">'Training'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].plot(np.arange(<span class="number">1</span>, len(test_scores) + <span class="number">1</span>), test_scores, <span class="string">'r-'</span>, label=<span class="string">'Testing'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Boosting Iterations'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Accuracy'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Training Progress'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+axes[<span class="number">0</span>,<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 2. Feature Importance</span>
+feature_importance = gb.feature_importances_
+sorted_idx = np.argsort(feature_importance)
+pos = np.arange(sorted_idx.shape[<span class="number">0</span>]) + <span class="number">0.5</span>
+axes[<span class="number">0</span>,<span class="number">1</span>].barh(pos, feature_importance[sorted_idx], align=<span class="string">'center'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_yticks(pos)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_yticklabels([<span class="string">f'Feature {i}'</span> <span class="keyword">for</span> i <span class="keyword">in</span> sorted_idx])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Importance'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Feature Importance'</span>)
+
+<span class="comment"># 3. Learning Rate vs N Estimators Heatmap</span>
+learning_rates = [<span class="number">0.01</span>, <span class="number">0.05</span>, <span class="number">0.1</span>, <span class="number">0.5</span>]
+n_estimators_range = [<span class="number">50</span>, <span class="number">100</span>, <span class="number">200</span>, <span class="number">300</span>]
+heatmap_data = []
+
+<span class="keyword">for</span> lr <span class="keyword">in</span> learning_rates:
+    row = []
+    <span class="keyword">for</span> n_est <span class="keyword">in</span> n_estimators_range:
+        gb_temp = GradientBoostingClassifier(learning_rate=lr, n_estimators=n_est, random_state=<span class="number">42</span>)
+        gb_temp.fit(X_train, y_train)
+        row.append(gb_temp.score(X_test, y_test))
+    heatmap_data.append(row)
+
+im = axes[<span class="number">1</span>,<span class="number">0</span>].imshow(heatmap_data, cmap=<span class="string">'YlOrRd'</span>, aspect=<span class="string">'auto'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xticks(<span class="function">range</span>(len(n_estimators_range)))
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xticklabels(n_estimators_range)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_yticks(<span class="function">range</span>(len(learning_rates)))
+axes[<span class="number">1</span>,<span class="number">0</span>].set_yticklabels(learning_rates)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_xlabel(<span class="string">'N Estimators'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Learning Rate'</span>)
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Parameter Grid Search'</span>)
+plt.colorbar(im, ax=axes[<span class="number">1</span>,<span class="number">0</span>])
+
+<span class="comment"># 4. Out-of-bag improvement (if subsample < 1)</span>
+<span class="keyword">if</span> hasattr(gb, <span class="string">'oob_improvement_'</span>) <span class="keyword">and</span> gb.subsample < <span class="number">1.0</span>:
+    axes[<span class="number">1</span>,<span class="number">1</span>].plot(np.arange(<span class="number">1</span>, len(gb.oob_improvement_) + <span class="number">1</span>), gb.oob_improvement_)
+    axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">'Iteration'</span>)
+    axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">'OOB Improvement'</span>)
+    axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Out-of-Bag Loss Improvement'</span>)
+<span class="keyword">else</span>:
+    <span class="comment"># Partial Dependence Plot (simplified)</span>
+    axes[<span class="number">1</span>,<span class="number">1</span>].text(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="string">'Partial Dependence\n(Requires sklearn.inspection)'</span>,
+                 ha=<span class="string">'center'</span>, va=<span class="string">'center'</span>, fontsize=<span class="number">12</span>)
+    axes[<span class="number">1</span>,<span class="number">1</span>].axis(<span class="string">'off'</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Comparison with Random Forest</span>
+<span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> RandomForestClassifier
+
+rf = RandomForestClassifier(n_estimators=<span class="number">100</span>, random_state=<span class="number">42</span>)
+rf.fit(X_train, y_train)
+
+<span class="function">print</span>(<span class="string">f"\nRandom Forest Accuracy: {rf.score(X_test, y_test):.4f}"</span>)
+<span class="function">print</span>(<span class="string">f"Gradient Boosting Accuracy: {gb.score(X_test, y_test):.4f}"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALL DATASETS SECTION -->
+    <div id="all-datasets" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">💾 All ML Datasets Collection</h2>
+            <div class="algo-description">
+                Complete collection of classic machine learning datasets with interactive visualizations, statistical summaries, and ready-to-use Python code for each dataset.
+            </div>
+            
+            <div class="dataset-selector">
+                <button class="dataset-btn active" onclick="showDataset('iris')">🌸 Iris</button>
+                <button class="dataset-btn" onclick="showDataset('titanic')">🚢 Titanic</button>
+                <button class="dataset-btn" onclick="showDataset('wine')">🍷 Wine</button>
+                <button class="dataset-btn" onclick="showDataset('breast-cancer')">🎗️ Breast Cancer</button>
+                <button class="dataset-btn" onclick="showDataset('digits')">🔢 Digits</button>
+                <button class="dataset-btn" onclick="showDataset('boston')">🏠 Boston</button>
+                <button class="dataset-btn" onclick="showDataset('diabetes')">💉 Diabetes</button>
+                <button class="dataset-btn" onclick="showDataset('mnist')">📝 MNIST</button>
+            </div>
+            
+            <div id="dataset-content">
+                <div class="info-box">
+                    <h3>🌸 Iris Dataset</h3>
+                    <p>The most famous dataset in machine learning history. Contains 150 samples of iris flowers with 4 features: sepal length, sepal width, petal length, petal width. Three classes: Setosa, Versicolor, Virginica.</p>
+                    
+                    <div class="visualization-container">
+                        <div class="viz-panel">
+                            <div class="viz-title">📊 Pairplot - Feature Relationships</div>
+                            <div id="iris-pairplot" class="chart-container"></div>
+                        </div>
+                        <div class="viz-panel">
+                            <div class="viz-title">🌸 3D Visualization</div>
+                            <div id="iris-3d" class="chart-container"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="code-block">
+                        <pre><code><span class="comment"># Iris Dataset - Complete Analysis</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+<span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+
+<span class="comment"># Load dataset</span>
+iris = load_iris()
+X, y = iris.data, iris.target
+df = pd.DataFrame(X, columns=iris.feature_names)
+df[<span class="string">'target'</span>] = y
+
+<span class="comment"># Statistical summary</span>
+<span class="function">print</span>(<span class="string">"Dataset Shape:"</span>, df.shape)
+<span class="function">print</span>(<span class="string">"\nClass Distribution:"</span>)
+<span class="function">print</span>(df[<span class="string">'target'</span>].value_counts().sort_index())
+
+<span class="comment"># Visualizations</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">15</span>, <span class="number">12</span>))
+
+<span class="comment"># 1. Pairplot equivalent - scatter matrix</span>
+colors = [<span class="string">'red'</span>, <span class="string">'green'</span>, <span class="string">'blue'</span>]
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">3</span>):
+    axes[<span class="number">0</span>,<span class="number">0</span>].scatter(X[y==i, <span class="number">0</span>], X[y==i, <span class="number">1</span>], c=colors[i], label=iris.target_names[i], alpha=<span class="number">0.6</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_xlabel(<span class="string">'Sepal Length'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].set_ylabel(<span class="string">'Sepal Width'</span>)
+axes[<span class="number">0</span>,<span class="number">0</span>].legend()
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Sepal Dimensions'</span>)
+
+<span class="comment"># 2. Box plots</span>
+df_melted = df.melt(id_vars=[<span class="string">'target'</span>], var_name=<span class="string">'feature'</span>, value_name=<span class="string">'value'</span>)
+sns.boxplot(data=df_melted, x=<span class="string">'feature'</span>, y=<span class="string">'value'</span>, hue=<span class="string">'target'</span>, ax=axes[<span class="number">0</span>,<span class="number">1</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Feature Distributions by Class'</span>)
+axes[<span class="number">0</span>,<span class="number">1</span>].tick_params(axis=<span class="string">'x'</span>, rotation=<span class="number">45</span>)
+
+<span class="comment"># 3. Correlation heatmap</span>
+sns.heatmap(df.corr(), annot=<span class="keyword">True</span>, cmap=<span class="string">'coolwarm'</span>, center=<span class="number">0</span>, ax=axes[<span class="number">1</span>,<span class="number">0</span>])
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Feature Correlation Matrix'</span>)
+
+<span class="comment"># 4. PCA 2D projection</span>
+pca = PCA(n_components=<span class="number">2</span>)
+X_pca = pca.fit_transform(X)
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">3</span>):
+    axes[<span class="number">1</span>,<span class="number">1</span>].scatter(X_pca[y==i, <span class="number">0</span>], X_pca[y==i, <span class="number">1</span>], c=colors[i], label=iris.target_names[i], alpha=<span class="number">0.6</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_xlabel(<span class="string">f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].set_ylabel(<span class="string">f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)'</span>)
+axes[<span class="number">1</span>,<span class="number">1</span>].legend()
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'PCA 2D Projection'</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Dataset info</span>
+<span class="function">print</span>(<span class="string">f"\nExplained variance ratio (first 2 PCs): {pca.explained_variance_ratio_}"</span>)
+<span class="function">print</span>(<span class="string">f"Total variance explained: {sum(pca.explained_variance_ratio_):.2%}"</span>)</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCIENCE & AI COURSES -->
+    <!-- AI Course 1: Artificial Intelligence Fundamentals -->
+    <div id="ai-course-1" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🤖 Artificial Intelligence Fundamentals</h2>
+            <div class="algo-description">
+                A comprehensive introduction to AI concepts, history, and applications. Learn about intelligent agents, search algorithms, knowledge representation, and the foundations of modern AI systems.
+            </div>
+            
+            <div class="info-box">
+                <h3>📚 Course Modules</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div><strong>Introduction to AI:</strong> History, applications, and AI types</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div><strong>Intelligent Agents:</strong> Agent architectures and environments</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div><strong>Search Algorithms:</strong> BFS, DFS, A*, heuristic search</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div><strong>Knowledge Representation:</strong> Logic, ontologies, semantic networks</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div><strong>Planning & Reasoning:</strong> Automated planning systems</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># AI Fundamentals - Search Algorithm Example (A* Search)</span>
+<span class="keyword">import</span> heapq
+
+<span class="keyword">class</span> <span class="function">Node</span>:
+    <span class="keyword">def</span> <span class="function">__init__</span>(self, state, parent=<span class="keyword">None</span>, g=<span class="number">0</span>, h=<span class="number">0</span>):
+        self.state = state
+        self.parent = parent
+        self.g = g  <span class="comment"># Cost from start</span>
+        self.h = h  <span class="comment"># Heuristic to goal</span>
+        self.f = g + h
+    
+    <span class="keyword">def</span> <span class="function">__lt__</span>(self, other):
+        <span class="keyword">return</span> self.f < other.f
+
+<span class="keyword">def</span> <span class="function">astar_search</span>(start, goal, neighbors_func, heuristic):
+    <span class="string">"""A* Search Algorithm Implementation"""</span>
+    open_set = [Node(start, g=<span class="number">0</span>, h=heuristic(start, goal))]
+    closed_set = <span class="function">set</span>()
+    
+    <span class="keyword">while</span> open_set:
+        current = heapq.heappop(open_set)
+        
+        <span class="keyword">if</span> current.state == goal:
+            <span class="comment"># Reconstruct path</span>
+            path = []
+            <span class="keyword">while</span> current:
+                path.append(current.state)
+                current = current.parent
+            <span class="keyword">return</span> path[::-<span class="number">1</span>]
+        
+        closed_set.add(current.state)
+        
+        <span class="keyword">for</span> neighbor, cost <span class="keyword">in</span> neighbors_func(current.state):
+            <span class="keyword">if</span> neighbor <span class="keyword">in</span> closed_set:
+                <span class="keyword">continue</span>
+            
+            g = current.g + cost
+            h = heuristic(neighbor, goal)
+            node = Node(neighbor, current, g, h)
+            heapq.heappush(open_set, node)
+    
+    <span class="keyword">return</span> <span class="keyword">None</span>  <span class="comment"># No path found</span>
+
+<span class="comment"># Example: Grid pathfinding</span>
+<span class="keyword">def</span> <span class="function">manhattan_distance</span>(a, b):
+    <span class="keyword">return</span> <span class="function">abs</span>(a[<span class="number">0</span>] - b[<span class="number">0</span>]) + <span class="function">abs</span>(a[<span class="number">1</span>] - b[<span class="number">1</span>])
+
+<span class="comment"># Usage</span>
+start = (<span class="number">0</span>, <span class="number">0</span>)
+goal = (<span class="number">5</span>, <span class="number">5</span>)
+<span class="function">print</span>(<span class="string">f"A* Search from {start} to {goal}"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Course 2: Data Science with Python -->
+    <div id="ai-course-2" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🔬 Data Science with Python</h2>
+            <div class="algo-description">
+                Master data manipulation, analysis, and visualization using Python. Learn pandas, numpy, matplotlib, seaborn, and real-world data science workflows from data collection to insights.
+            </div>
+            
+            <div class="info-box">
+                <h3>📚 Course Modules</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div><strong>Python for Data Science:</strong> NumPy, Pandas basics</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div><strong>Data Manipulation:</strong> Cleaning, transformation, merging</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div><strong>Data Visualization:</strong> Matplotlib, Seaborn, Plotly</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div><strong>Statistical Analysis:</strong> Descriptive & inferential stats</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div><strong>Real-world Projects:</strong> EDA on real datasets</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># Data Science with Python - Complete EDA Example</span>
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">from</span> sklearn.datasets <span class="keyword">import</span> load_iris
+
+<span class="comment"># Load data</span>
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df[<span class="string">'species'</span>] = [iris.target_names[t] <span class="keyword">for</span> t <span class="keyword">in</span> iris.target]
+
+<span class="comment"># Data Overview</span>
+<span class="function">print</span>(<span class="string">"Dataset Shape:"</span>, df.shape)
+<span class="function">print</span>(<span class="string">"\nData Info:"</span>)
+<span class="function">print</span>(df.info())
+
+<span class="comment"># Statistical Summary</span>
+<span class="function">print</span>(<span class="string">"\nDescriptive Statistics:"</span>)
+<span class="function">print</span>(df.describe())
+
+<span class="comment"># Data Cleaning Example</span>
+<span class="comment"># Check for missing values</span>
+<span class="function">print</span>(<span class="string">"\nMissing Values:"</span>)
+<span class="function">print</span>(df.isnull().sum())
+
+<span class="comment"># Visualization</span>
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">14</span>, <span class="number">10</span>))
+
+<span class="comment"># 1. Distribution plots</span>
+sns.histplot(data=df, x=<span class="string">'sepal length (cm)'</span>, hue=<span class="string">'species'</span>, kde=<span class="keyword">True</span>, ax=axes[<span class="number">0</span>,<span class="number">0</span>])
+axes[<span class="number">0</span>,<span class="number">0</span>].set_title(<span class="string">'Sepal Length Distribution'</span>)
+
+<span class="comment"># 2. Correlation heatmap</span>
+numeric_df = df.select_dtypes(include=[np.number])
+sns.heatmap(numeric_df.corr(), annot=<span class="keyword">True</span>, cmap=<span class="string">'coolwarm'</span>, ax=axes[<span class="number">0</span>,<span class="number">1</span>])
+axes[<span class="number">0</span>,<span class="number">1</span>].set_title(<span class="string">'Feature Correlation Matrix'</span>)
+
+<span class="comment"># 3. Box plots</span>
+sns.boxplot(data=df, x=<span class="string">'species'</span>, y=<span class="string">'petal length (cm)'</span>, ax=axes[<span class="number">1</span>,<span class="number">0</span>])
+axes[<span class="number">1</span>,<span class="number">0</span>].set_title(<span class="string">'Petal Length by Species'</span>)
+
+<span class="comment"># 4. Pairplot subset</span>
+sns.scatterplot(data=df, x=<span class="string">'sepal length (cm)'</span>, y=<span class="string">'petal length (cm)'</span>, 
+                hue=<span class="string">'species'</span>, style=<span class="string">'species'</span>, s=<span class="number">100</span>, ax=axes[<span class="number">1</span>,<span class="number">1</span>])
+axes[<span class="number">1</span>,<span class="number">1</span>].set_title(<span class="string">'Sepal vs Petal Length'</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="comment"># Advanced: Feature Engineering</span>
+df[<span class="string">'sepal_petal_ratio'</span>] = df[<span class="string">'sepal length (cm)'</span>] / df[<span class="string">'petal length (cm)'</span>]
+<span class="function">print</span>(<span class="string">f"\nNew feature created: sepal_petal_ratio"</span>)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Course 3: Machine Learning for Research -->
+    <div id="ai-course-3" class="content-section">
+        <div class="algo-card">
+            <h2 class="algo-title">🧬 Machine Learning for Research</h2>
+            <div class="algo-description">
+                Advanced ML techniques for scientific research applications. Learn how to apply ML to genomics, drug discovery, climate science, physics simulations, and other research domains with case studies.
+            </div>
+            
+            <div class="info-box">
+                <h3>📚 Course Modules</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div><strong>ML in Genomics:</strong> DNA sequencing, gene expression analysis</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div><strong>Drug Discovery:</strong> Molecular property prediction</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div><strong>Climate Science:</strong> Weather prediction, climate modeling</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div><strong>Physics Simulations:</strong> Surrogate modeling, data-driven physics</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div><strong>Research Methodology:</strong> Reproducibility, peer review</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="comment"># ML for Research - Genomics Example (Gene Expression Classification)</span>
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> RandomForestClassifier
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split, cross_val_score
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+<span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> classification_report, confusion_matrix
+import matplotlib.pyplot <span class="keyword">as</span> plt
+
+<span class="comment"># Simulated genomics dataset</span>
+<span class="comment"># Features: gene expression levels for 1000 genes</span>
+<span class="comment"># Target: disease subtype (0, 1, 2)</span>
+np.random.seed(<span class="number">42</span>)
+n_samples = <span class="number">500</span>
+n_genes = <span class="number">1000</span>
+
+<span class="comment"># Generate synthetic gene expression data</span>
+X = np.random.randn(n_samples, n_genes)
+<span class="comment"># Create disease subtypes based on gene expression patterns</span>
+y = np.zeros(n_samples, dtype=<span class="function">int</span>)
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(n_samples):
+    <span class="keyword">if</span> X[i, :<span class="number">50</span>].mean() > <span class="number">0.5</span>:
+        y[i] = <span class="number">1</span>
+    <span class="keyword">elif</span> X[i, <span class="number">50</span>:<span class="number">100</span>].mean() > <span class="number">0.3</span>:
+        y[i] = <span class="number">2</span>
+
+<span class="function">print</span>(<span class="string">f"Dataset: {n_samples} samples, {n_genes} genes"</span>)
+<span class="function">print</span>(<span class="string">f"Classes: {np.bincount(y)}"</span>)
+
+<span class="comment"># Split data</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="number">0.3</span>, random_state=<span class="number">42</span>, stratify=y)
+
+<span class="comment"># Preprocessing: Standardize</span>
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+<span class="comment"># Dimensionality Reduction for visualization</span>
+pca = PCA(n_components=<span class="number">2</span>)
+X_pca = pca.fit_transform(X_train_scaled)
+
+<span class="comment"># Train Random Forest</span>
+rf = RandomForestClassifier(n_estimators=<span class="number">100</span>, random_state=<span class="number">42</span>)
+rf.fit(X_train_scaled, y_train)
+
+<span class="comment"># Cross-validation</span>
+cv_scores = cross_val_score(rf, X_train_scaled, y_train, cv=<span class="number">5</span>)
+<span class="function">print</span>(<span class="string">f"\nCross-validation accuracy: {cv_scores.mean():.4f} (+/- {cv_scores.std():.4f})"</span>)
+
+<span class="comment"># Test performance</span>
+y_pred = rf.predict(X_test_scaled)
+<span class="function">print</span>(<span class="string">f"\nTest Accuracy: {rf.score(X_test_scaled, y_test):.4f}"</span>)
+
+<span class="comment"># Feature importance (top genes)</span>
+feature_importance = rf.feature_importances_
+top_genes = np.argsort(feature_importance)[-<span class="number">20</span>:][::-<span class="number">1</span>]
+<span class="function">print</span>(<span class="string">f"\nTop 20 important genes: {top_genes}"</span>)
+
+<span class="comment"># Visualization</span>
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">14</span>, <span class="number">5</span>))
+
+<span class="comment"># 1. PCA visualization</span>
+colors = [<span class="string">'red'</span>, <span class="string">'green'</span>, <span class="string">'blue'</span>]
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="function">range</span>(<span class="number">3</span>):
+    mask = y_train == i
+    axes[<span class="number">0</span>].scatter(X_pca[mask, <span class="number">0</span>], X_pca[mask, <span class="number">1</span>], 
+                     c=colors[i], label=<span class="string">f'Disease Type {i}'</span>, alpha=<span class="number">0.6</span>)
+axes[<span class="number">0</span>].set_xlabel(<span class="string">f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)'</span>)
+axes[<span class="number">0</span>].set_ylabel(<span class="string">f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)'</span>)
+axes[<span class="number">0</span>].set_title(<span class="string">'Gene Expression PCA'</span>)
+axes[<span class="number">0</span>].legend()
+axes[<span class="number">0</span>].grid(<span class="keyword">True</span>)
+
+<span class="comment"># 2. Feature importance</span>
+axes[<span class="number">1</span>].barh(<span class="function">range</span>(<span class="number">20</span>), feature_importance[top_genes])
+axes[<span class="number">1</span>].set_yticks(<span class="function">range</span>(<span class="number">20</span>))
+axes[<span class="number">1</span>].set_yticklabels([<span class="string">f'Gene {i}'</span> <span class="keyword">for</span> i <span class="keyword">in</span> top_genes])
+axes[<span class="number">1</span>].set_xlabel(<span class="string">'Importance'</span>)
+axes[<span class="number">1</span>].set_title(<span class="string">'Top 20 Important Genes'</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Additional JavaScript for new sections
+        
+        // Logistic Regression Functions
+        function updateLogisticReg() {
+            const threshold = document.getElementById('threshold-slider')?.value || 0.5;
+            const c = document.getElementById('c-slider')?.value || 1.0;
+            
+            document.getElementById('threshold-value').textContent = threshold;
+            document.getElementById('c-value').textContent = c;
+            
+            // Update metrics with simulation
+            const accuracy = 0.85 + (c - 1) * 0.02 + Math.random() * 0.05;
+            const precision = 0.82 + Math.random() * 0.08;
+            const recall = 0.78 + Math.random() * 0.10;
+            const f1 = 2 * (precision * recall) / (precision + recall);
+            
+            document.getElementById('accuracy-value').textContent = Math.min(accuracy, 0.99).toFixed(2);
+            document.getElementById('precision-value').textContent = precision.toFixed(2);
+            document.getElementById('recall-value').textContent = recall.toFixed(2);
+            document.getElementById('f1-value').textContent = f1.toFixed(2);
+        }
+        
+        // Decision Tree Functions
+        function updateDecisionTree() {
+            const depth = document.getElementById('depth-slider')?.value || 3;
+            const minSamples = document.getElementById('min-samples-slider')?.value || 2;
+            
+            document.getElementById('depth-value').textContent = depth;
+            document.getElementById('min-samples-value').textContent = minSamples;
+        }
+        
+        // K-Means Functions
+        function updateKMeans() {
+            const k = document.getElementById('k-slider')?.value || 3;
+            const maxIter = document.getElementById('max-iter-slider')?.value || 100;
+            
+            document.getElementById('k-value').textContent = k;
+            document.getElementById('max-iter-value').textContent = maxIter;
+            
+            // Simulate metrics
+            const inertia = 150 - (k * 10) + Math.random() * 20;
+            const silhouette = 0.5 + (k === 3 ? 0.15 : 0) + Math.random() * 0.1;
+            
+            document.getElementById('inertia-value').textContent = Math.max(inertia, 20).toFixed(2);
+            document.getElementById('silhouette-value').textContent = Math.min(silhouette, 0.95).toFixed(2);
+            document.getElementById('iterations-value').textContent = Math.floor(Math.random() * 15 + 5);
+        }
+        
+        function animateKMeans() {
+            // K-Means animation simulation
+            alert('K-Means clustering animation started! In a real implementation, this would show step-by-step centroid updates.');
+        }
+        
+        function resetKMeans() {
+            updateKMeans();
+        }
+        
+        // Dataset Functions
+        function showDataset(datasetName) {
+            document.querySelectorAll('.dataset-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update dataset content based on selection
+            const content = document.getElementById('dataset-content');
+            
+            const datasets = {
+                'iris': '🌸 Iris Dataset - 150 samples, 4 features, 3 classes',
+                'titanic': '🚢 Titanic Dataset - 891 passengers, survival prediction',
+                'wine': '🍷 Wine Dataset - 178 samples, 13 features, 3 classes',
+                'breast-cancer': '🎗️ Breast Cancer - 569 samples, 30 features, binary classification',
+                'digits': '🔢 Digits Dataset - 1797 samples, 64 features (8x8 images)',
+                'boston': '🏠 Boston Housing - 506 samples, 13 features, regression',
+                'diabetes': '💉 Diabetes Dataset - 442 samples, 10 features, regression',
+                'mnist': '📝 MNIST Dataset - 70,000 samples, 784 features (28x28 images)'
+            };
+            
+            alert(`Selected: ${datasets[datasetName]}`);
+        }
+        
+        // Random Forest Functions
+        function updateRandomForest() {
+            const nEstimators = document.getElementById('n-estimators-slider')?.value || 100;
+            const depth = document.getElementById('rf-depth-slider')?.value || 10;
+            
+            document.getElementById('n-estimators-value').textContent = nEstimators;
+            document.getElementById('rf-depth-value').textContent = depth;
+            document.getElementById('rf-trees-value').textContent = nEstimators;
+            document.getElementById('rf-depth-metric').textContent = depth;
+            
+            // Simulate accuracy
+            const accuracy = 0.88 + (nEstimators / 500) * 0.08 + Math.random() * 0.03;
+            document.getElementById('rf-accuracy-value').textContent = Math.min(accuracy, 0.98).toFixed(2);
+        }
+        
+        // SVM Functions
+        function updateSVM() {
+            const c = document.getElementById('svm-c-slider')?.value || 1.0;
+            const gamma = document.getElementById('svm-gamma-slider')?.value || 0.1;
+            
+            document.getElementById('svm-c-value').textContent = c;
+            document.getElementById('svm-gamma-value').textContent = gamma;
+            
+            // Simulate metrics
+            const accuracy = 0.90 + (c > 1 ? 0.03 : 0) + Math.random() * 0.05;
+            const nSupportVectors = Math.floor(20 + (1/c) * 50);
+            
+            document.getElementById('svm-accuracy-value').textContent = Math.min(accuracy, 0.98).toFixed(2);
+            document.getElementById('svm-vectors-value').textContent = nSupportVectors;
+            document.getElementById('svm-margin-value').textContent = (1/c * 0.5).toFixed(2);
+        }
+        
+        // KNN Functions
+        function updateKNN() {
+            const k = document.getElementById('knn-k-slider')?.value || 5;
+            document.getElementById('knn-k-value').textContent = k;
+        }
+        
+        // Naive Bayes Functions
+        function updateNaiveBayes() {
+            const alpha = document.getElementById('nb-alpha-slider')?.value || 1.0;
+            document.getElementById('nb-alpha-value').textContent = alpha;
+        }
+        
+        // Neural Network Functions
+        function updateNeuralNetwork() {
+            const layers = document.getElementById('nn-layers-slider')?.value || 2;
+            const neurons = document.getElementById('nn-neurons-slider')?.value || 64;
+            const lr = document.getElementById('nn-lr-slider')?.value || 0.001;
+            
+            document.getElementById('nn-layers-value').textContent = layers;
+            document.getElementById('nn-neurons-value').textContent = neurons;
+            document.getElementById('nn-lr-value').textContent = lr;
+        }
+        
+        function animateNeuralNetwork() {
+            alert('Neural Network training animation started! This would show forward pass, backpropagation, and weight updates.');
+        }
+        
+        function resetNeuralNetwork() {
+            updateNeuralNetwork();
+        }
+        
+        // PCA Functions
+        function updatePCA() {
+            const components = document.getElementById('pca-components-slider')?.value || 2;
+            document.getElementById('pca-components-value').textContent = components;
+        }
+        
+        // Gradient Boosting Functions
+        function updateGradientBoosting() {
+            const nEstimators = document.getElementById('gb-n-estimators-slider')?.value || 100;
+            const lr = document.getElementById('gb-lr-slider')?.value || 0.1;
+            const depth = document.getElementById('gb-depth-slider')?.value || 3;
+            const subsample = document.getElementById('gb-subsample-slider')?.value || 1.0;
+            
+            document.getElementById('gb-n-estimators-value').textContent = nEstimators;
+            document.getElementById('gb-lr-value').textContent = lr;
+            document.getElementById('gb-depth-value').textContent = depth;
+            document.getElementById('gb-subsample-value').textContent = subsample;
+        }
+        
+        // Toggle dropdown for Science & AI menu
+        function toggleDropdown(element) {
+            element.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
