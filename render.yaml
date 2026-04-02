@@ -1,0 +1,24 @@
+# Render configuration for Django backend
+services:
+  - type: web
+    name: django-react-ml-app
+    runtime: python
+    buildCommand: |
+      cd backend
+      pip install -r requirements.txt
+      python manage.py migrate --noinput
+      python manage.py collectstatic --noinput
+    startCommand: |
+      cd backend
+      daphne -b 0.0.0.0 -p $PORT backend.asgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: backend.settings
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+    healthCheckPath: /api/auth/login/
+    autoDeploy: true
