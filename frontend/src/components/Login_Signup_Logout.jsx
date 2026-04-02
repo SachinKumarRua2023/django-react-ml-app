@@ -568,6 +568,27 @@ const LoginSignupLogout = () => {
             </button>
           </form>
 
+          {/* Forgot Password Link - Only show for login */}
+          {isLogin && (
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(0,245,255,0.8)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontFamily: 'Rajdhani, sans-serif'
+                }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
           {/* Google Sign In */}
           <div className="ca-divider">
             <div className="ca-divider-line" />

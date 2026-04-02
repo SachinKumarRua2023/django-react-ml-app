@@ -13,6 +13,8 @@ import VCRoom from "./components/VCRoom";
 import MnemonicSystem from "./components/MnemonicSystem";
 import TalkWithRua from "./components/TalkWithRua";
 import WhiteBoard from "./seekhowithrua-animation/WhiteBoard";
+import ForgotPassword from "./components/ForgotPassword";
+import Profile from "./components/Profile";
 
 export const TOKEN_KEY = "cosmos_token";
 
@@ -52,6 +54,8 @@ function App() {
         <div className="main-wrapper">
           <Routes>
             <Route path="/login"      element={<PublicOnlyRoute><LoginSignupLogout /></PublicOnlyRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/profile"     element={<Profile />} />
 
             {/* VCRoom handles its own auth — no ProtectedRoute wrapper needed */}
             <Route path="/live-voice" element={<VCRoom />} />
