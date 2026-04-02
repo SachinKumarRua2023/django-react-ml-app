@@ -5,10 +5,16 @@ from .views import (
     submit_gaming_score, get_gaming_scores,
     submit_quiz_result, get_quiz_results,
     get_student_analytics, get_trainer_dashboard, get_student_report,
-    request_password_reset, verify_otp_and_reset_password, update_profile
+    request_password_reset, verify_otp_and_reset_password, update_profile,
+    user_login, user_register, user_logout
 )
 
 urlpatterns = [
+    # Authentication
+    path('login/', user_login, name='login'),
+    path('register/', user_register, name='register'),
+    path('logout/', user_logout, name='logout'),
+    
     # Google Authentication
     path('auth/google/', google_auth, name='google-auth'),
     

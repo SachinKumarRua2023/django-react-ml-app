@@ -847,6 +847,113 @@ def verify_otp_and_reset_password(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+def user_login(request):
+    """
+    Login with email and password
+    """
+    email = request.data.get('email', '').lower().strip()
+    password = request.data.get('password', '')
+    
+    if not email or not password:
+        return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Authenticate user
+    user = authenticate(request, username=email, password=password)
+    
+    if not user:
+        # Try to find user by email and check password manually
+        try:
+            user = User.objects.get(email=email)
+            if not user.check_password(password):
+                return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.DoesNotExist:
+            return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Generate token
+    token, _ = Token.objects.get_or_create(user=user)
+    
+    return Response({
+        'token': token.key,
+        'user': UserSerializer(user).data,
+        'message': 'Login successful'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def user_register(request):
+    """
+    Register new user with email and password
+    """
+    email = request.data.get('email', '').lower().strip()
+    password = request.data.get('password', '')
+    confirm_password = request.data.get('confirm_password', '')
+    first_name = request.data.get('first_name', '').strip()
+    last_name = request.data.get('last_name', '').strip()
+    role = request.data.get('role', 'learner')
+    
+    # Validation
+    if not email or not password:
+        return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if password != confirm_password:
+        return Response({'error': 'Passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(password) < 8:
+        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if email already exists
+    if User.objects.filter(email=email).exists():
+        return Response({'error': 'Email already registered'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Create username from email
+    username = email.split('@')[0]
+    base_username = username
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base_username}{counter}"
+        counter += 1
+    
+    # Create user
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name
+    )
+    
+    # Set role in profile if exists
+    if hasattr(user, 'profile'):
+        user.profile.role = role
+        user.profile.save()
+    
+    # Generate token
+    token, _ = Token.objects.get_or_create(user=user)
+    
+    return Response({
+        'token': token.key,
+        'user': UserSerializer(user).data,
+        'message': 'Registration successful'
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def user_logout(request):
+    """
+    Logout user and delete auth token
+    """
+    try:
+        # Delete the user's token
+        Token.objects.filter(user=request.user).delete()
+        return Response({'message': 'Logout successful'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     """
