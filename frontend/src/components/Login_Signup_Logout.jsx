@@ -356,7 +356,7 @@ const LoginSignupLogout = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.post('api/login/', {
+      const response = await api.post('/api/auth/login/', {
         email:    formData.email,
         password: formData.password,
       });
@@ -391,7 +391,7 @@ const LoginSignupLogout = () => {
       return;
     }
     try {
-      const response = await api.post('api/register/', {
+      const response = await api.post('/api/auth/register/', {
         email:            formData.email,
         password:         formData.password,
         confirm_password: formData.confirm_password,
@@ -418,7 +418,7 @@ const LoginSignupLogout = () => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await api.post('/api/logout/');
+      await api.post('/api/auth/logout/');
     } catch (err) {
       console.log('Logout error:', err);
     } finally {
