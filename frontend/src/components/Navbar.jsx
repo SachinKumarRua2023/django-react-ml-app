@@ -58,6 +58,11 @@ const Navbar = () => {
     { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' },
     { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
     { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
+    { name: 'Builder Tools', path: '/builder-tools', icon: '🛠️', color: '#00d4ff', dropdown: [
+      { name: 'AI Agent Builder', path: '/ai-agent-builder', icon: '🤖', desc: 'Build AI workflows like n8n' },
+      { name: 'App Builder', path: '/app-builder', icon: '📱', desc: 'Create mobile apps visually' },
+      { name: 'Website Builder', path: '/website-builder', icon: '🌐', desc: 'Design websites with Next.js' },
+    ]},
     { name: 'LMS', path: 'https://lms.seekhowithrua.com', icon: '📚', color: '#7c3aed', external: true },
   ];
 

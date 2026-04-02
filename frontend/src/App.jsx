@@ -15,6 +15,7 @@ import TalkWithRua from "./components/TalkWithRua";
 import WhiteBoard from "./seekhowithrua-animation/WhiteBoard";
 import ForgotPassword from "./components/ForgotPassword";
 import Profile from "./components/Profile";
+import BuilderTools from "./components/BuilderTools";
 
 export const TOKEN_KEY = "cosmos_token";
 
@@ -67,6 +68,9 @@ function App() {
             <Route path="/trainer-kpi"     element={<TrainerDashboard />} />
             <Route path="/mnemonic-system" element={<MnemonicSystem />} />
             <Route path="/talk-with-rua"   element={<TalkWithRua />} />
+
+            {/* Builder Tools Routes */}
+            <Route path="/builder-tools"     element={<BuilderTools />} />
 
             {/* New SEO-friendly routes */}
             <Route path="/courses"       element={<SyllabusPage />} />
