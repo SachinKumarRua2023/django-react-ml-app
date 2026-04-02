@@ -63,35 +63,6 @@ ROOT_URLCONF = 'backend.urls'
 # CORS SETTINGS
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-
-ALLOWED_HOSTS = [
-    'app.seekhowithrua.com',
-    'seekhowithrua.com',
-    'www.seekhowithrua.com',
-    'api.seekhowithrua.com',
-    'django-react-ml-app.onrender.com',
-    '*',
-]
-
-CORS_ALLOWED_ORIGINS = [
-    'https://app.seekhowithrua.com',
-    'https://seekhowithrua.com',
-    'https://www.seekhowithrua.com',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'https://django-react-ml-app.vercel.app',
-]
-# CORS_ALLOWED_ORIGINS = [
-#     'seekhowithrua.com',
-#     'www.seekhowithrua.com',
-#     'api.seekhowithrua.com',
-#     "http://localhost:5173",
-#     "http://localhost:3000",
-#     "http://127.0.0.1:5173",
-#     "https://django-react-ml-app.vercel.app",
-# ]
-
 CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',
@@ -99,6 +70,42 @@ CORS_ALLOW_HEADERS = [
     'accept',
     'origin',
     'x-csrftoken',
+    'x-api-key',
+    'cache-control',
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+ALLOWED_HOSTS = [
+    'app.seekhowithrua.com',
+    'seekhowithrua.com',
+    'www.seekhowithrua.com',
+    'api.seekhowithrua.com',
+    'django-react-ml-app.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    '*',
+]
+
+# Explicit CORS origins for security (works with ALLOW_ALL_ORIGINS as backup)
+CORS_ALLOWED_ORIGINS = [
+    'https://app.seekhowithrua.com',
+    'https://seekhowithrua.com',
+    'https://www.seekhowithrua.com',
+    'https://lms.seekhowithrua.com',
+    'https://gaming.seekhowithrua.com',
+    'https://animation.seekhowithrua.com',
+    'https://services.seekhowithrua.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'https://django-react-ml-app.vercel.app',
 ]
 
 # REST Framework Configuration
