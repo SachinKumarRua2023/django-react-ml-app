@@ -4,12 +4,20 @@ from .views import (
     get_user_achievements, send_test_email,
     submit_gaming_score, get_gaming_scores,
     submit_quiz_result, get_quiz_results,
-    get_student_analytics, get_trainer_dashboard, get_student_report
+    get_student_analytics, get_trainer_dashboard, get_student_report,
+    request_password_reset, verify_otp_and_reset_password, update_profile
 )
 
 urlpatterns = [
     # Google Authentication
     path('auth/google/', google_auth, name='google-auth'),
+    
+    # Password Reset with OTP
+    path('password-reset/request/', request_password_reset, name='password-reset-request'),
+    path('password-reset/verify/', verify_otp_and_reset_password, name='password-reset-verify'),
+    
+    # Profile Management
+    path('profile/update/', update_profile, name='profile-update'),
     
     # Memory Game Scores
     path('scores/submit/', submit_score, name='submit-score'),

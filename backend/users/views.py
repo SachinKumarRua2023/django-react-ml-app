@@ -714,3 +714,172 @@ def send_test_email(request):
         return Response({'message': 'Test email sent successfully'})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# In-memory OTP storage (use Redis in production)
+_password_reset_otps = {}
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    """
+    Send OTP to user's email for password reset
+    """
+    email = request.data.get('email', '').lower().strip()
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Don't reveal if email exists or not (security)
+        return Response({'message': 'If the email exists, an OTP has been sent'})
+    
+    # Generate 6-digit OTP
+    import random
+    otp = str(random.randint(100000, 999999))
+    
+    # Store OTP with expiry (10 minutes)
+    _password_reset_otps[email] = {
+        'otp': otp,
+        'expires_at': timezone.now() + timezone.timedelta(minutes=10),
+        'attempts': 0
+    }
+    
+    # Send OTP email
+    try:
+        html_message = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+            <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 style="color: #7c3aed; margin-bottom: 20px;">Password Reset Request</h2>
+                <p style="color: #333; font-size: 16px;">Hello {user.first_name or user.username},</p>
+                <p style="color: #555; font-size: 14px; line-height: 1.6;">
+                    You requested to reset your password. Use the OTP below to proceed:
+                </p>
+                <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                    <span style="font-size: 32px; font-weight: bold; color: #7c3aed; letter-spacing: 8px;">{otp}</span>
+                </div>
+                <p style="color: #888; font-size: 12px;">
+                    This OTP will expire in 10 minutes.<br>
+                    If you didn't request this, please ignore this email.
+                </p>
+            </div>
+        </div>
+        """
+        
+        send_mail(
+            subject='Password Reset OTP - SeekhoWithRua',
+            message=f'Your OTP for password reset is: {otp}. Valid for 10 minutes.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False
+        )
+        
+        return Response({'message': 'OTP sent to your email'})
+        
+    except Exception as e:
+        # Remove OTP if email fails
+        _password_reset_otps.pop(email, None)
+        return Response({'error': 'Failed to send email. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp_and_reset_password(request):
+    """
+    Verify OTP and reset password
+    """
+    email = request.data.get('email', '').lower().strip()
+    otp = request.data.get('otp', '').strip()
+    new_password = request.data.get('new_password', '')
+    
+    if not email or not otp or not new_password:
+        return Response({'error': 'Email, OTP and new password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(new_password) < 8:
+        return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check OTP
+    otp_data = _password_reset_otps.get(email)
+    
+    if not otp_data:
+        return Response({'error': 'OTP expired or invalid. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check expiry
+    if timezone.now() > otp_data['expires_at']:
+        _password_reset_otps.pop(email, None)
+        return Response({'error': 'OTP expired. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check attempts
+    if otp_data['attempts'] >= 3:
+        _password_reset_otps.pop(email, None)
+        return Response({'error': 'Too many failed attempts. Please request a new OTP.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verify OTP
+    if otp != otp_data['otp']:
+        otp_data['attempts'] += 1
+        remaining = 3 - otp_data['attempts']
+        return Response({'error': f'Invalid OTP. {remaining} attempts remaining.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Reset password
+    try:
+        user = User.objects.get(email=email)
+        user.set_password(new_password)
+        user.save()
+        
+        # Clear OTP
+        _password_reset_otps.pop(email, None)
+        
+        # Generate new token
+        token, _ = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'message': 'Password reset successful',
+            'token': token.key,
+            'user': UserSerializer(user).data
+        })
+        
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    """
+    Update user profile (name, password, profile picture)
+    """
+    user = request.user
+    data = request.data
+    
+    # Update name fields
+    if 'first_name' in data:
+        user.first_name = data['first_name'].strip()
+    if 'last_name' in data:
+        user.last_name = data['last_name'].strip()
+    
+    # Update password if provided
+    if 'password' in data and data['password']:
+        if len(data['password']) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(data['password'])
+    
+    # Update profile picture if provided
+    if 'profile_picture' in data:
+        user.profile_picture = data['profile_picture']
+    
+    # Update role if provided (admin only)
+    if 'role' in data and user.is_staff:
+        if hasattr(user, 'profile'):
+            user.profile.role = data['role']
+            user.profile.save()
+    
+    user.save()
+    
+    return Response({
+        'message': 'Profile updated successfully',
+        'user': UserSerializer(user).data
+    })
