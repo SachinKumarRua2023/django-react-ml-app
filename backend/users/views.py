@@ -591,8 +591,7 @@ def send_achievement_email(user, achievement):
     except Exception as e:
         print(f"Failed to send achievement email: {e}")
         return False
-        'expert': {'difficulty': '200x', 'min_score': 150},
-    }
+
 
     for achievement_type, criteria in achievement_criteria.items():
         if difficulty == criteria['difficulty'] and score >= criteria['min_score']:
@@ -726,64 +725,77 @@ def request_password_reset(request):
     """
     Send OTP to user's email for password reset
     """
-    email = request.data.get('email', '').lower().strip()
-    
-    if not email:
-        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
     try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        # Don't reveal if email exists or not (security)
-        return Response({'message': 'If the email exists, an OTP has been sent'})
-    
-    # Generate 6-digit OTP
-    import random
-    otp = str(random.randint(100000, 999999))
-    
-    # Store OTP with expiry (10 minutes)
-    _password_reset_otps[email] = {
-        'otp': otp,
-        'expires_at': timezone.now() + timezone.timedelta(minutes=10),
-        'attempts': 0
-    }
-    
-    # Send OTP email
-    try:
-        html_message = f"""
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
-            <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <h2 style="color: #7c3aed; margin-bottom: 20px;">Password Reset Request</h2>
-                <p style="color: #333; font-size: 16px;">Hello {user.first_name or user.username},</p>
-                <p style="color: #555; font-size: 14px; line-height: 1.6;">
-                    You requested to reset your password. Use the OTP below to proceed:
-                </p>
-                <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                    <span style="font-size: 32px; font-weight: bold; color: #7c3aed; letter-spacing: 8px;">{otp}</span>
+        email = request.data.get('email', '').lower().strip()
+        
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Don't reveal if email exists or not (security)
+            return Response({'message': 'If the email exists, an OTP has been sent'})
+        
+        # Generate 6-digit OTP
+        import random
+        otp = str(random.randint(100000, 999999))
+        
+        # Store OTP with expiry (10 minutes)
+        _password_reset_otps[email] = {
+            'otp': otp,
+            'expires_at': timezone.now() + timezone.timedelta(minutes=10),
+            'attempts': 0
+        }
+        
+        # Send OTP email
+        try:
+            # Check if email is configured
+            if not settings.EMAIL_HOST_USER:
+                print("ERROR: EMAIL_HOST_USER not configured")
+                return Response({'error': 'Email service not configured'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            html_message = f"""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+                <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h2 style="color: #7c3aed; margin-bottom: 20px;">Password Reset Request</h2>
+                    <p style="color: #333; font-size: 16px;">Hello {user.first_name or user.username},</p>
+                    <p style="color: #555; font-size: 14px; line-height: 1.6;">
+                        You requested to reset your password. Use the OTP below to proceed:
+                    </p>
+                    <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                        <span style="font-size: 32px; font-weight: bold; color: #7c3aed; letter-spacing: 8px;">{otp}</span>
+                    </div>
+                    <p style="color: #888; font-size: 12px;">
+                        This OTP will expire in 10 minutes.<br>
+                        If you didn't request this, please ignore this email.
+                    </p>
                 </div>
-                <p style="color: #888; font-size: 12px;">
-                    This OTP will expire in 10 minutes.<br>
-                    If you didn't request this, please ignore this email.
-                </p>
             </div>
-        </div>
-        """
-        
-        send_mail(
-            subject='Password Reset OTP - SeekhoWithRua',
-            message=f'Your OTP for password reset is: {otp}. Valid for 10 minutes.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            html_message=html_message,
-            fail_silently=False
-        )
-        
-        return Response({'message': 'OTP sent to your email'})
-        
+            """
+            
+            send_mail(
+                subject='Password Reset OTP - SeekhoWithRua',
+                message=f'Your OTP for password reset is: {otp}. Valid for 10 minutes.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False
+            )
+            
+            return Response({'message': 'OTP sent to your email'})
+            
+        except Exception as e:
+            print(f"Email sending error: {str(e)}")
+            # Remove OTP if email fails
+            _password_reset_otps.pop(email, None)
+            return Response({'error': f'Failed to send email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
     except Exception as e:
-        # Remove OTP if email fails
-        _password_reset_otps.pop(email, None)
-        return Response({'error': 'Failed to send email. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        print(f"Password reset error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({'error': f'Server error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
