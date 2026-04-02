@@ -1002,3 +1002,21 @@ def update_profile(request):
         'message': 'Profile updated successfully',
         'user': UserSerializer(user).data
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_achievements(request):
+    """
+    Get all achievements for the current user
+    """
+    from .models import Achievement
+    from .serializers import AchievementSerializer
+    
+    user = request.user
+    achievements = Achievement.objects.filter(user=user).order_by('-unlocked_at')
+    
+    return Response({
+        'achievements': AchievementSerializer(achievements, many=True).data,
+        'total_achievements': achievements.count()
+    })
