@@ -213,7 +213,12 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'seekhowithrua@gmail.com'
 EMAIL_HOST_PASSWORD = 'Drunken@123'
-DEFAULT_FROM_EMAIL = 'noreply@seekhowithrua.com'
+DEFAULT_FROM_EMAIL = 'SeekhoWithRua <seekhowithrua@gmail.com>'
+SERVER_EMAIL = 'seekhowithrua@gmail.com'
+
+# Email deliverability settings to avoid spam
+EMAIL_SUBJECT_PREFIX = '[SeekhoWithRua] '
+EMAIL_USE_LOCALTIME = True
 
 # LMS Payment Settings
 LMS_UPI_ID = '8826776018-4@ybl'
