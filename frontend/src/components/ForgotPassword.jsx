@@ -26,7 +26,7 @@ const ForgotPassword = () => {
     setError('');
     
     try {
-      const response = await api.post('/api/password-reset/request/', { email });
+      const response = await api.post('/api/auth/password-reset/request/', { email });
       setSuccess('OTP sent to your email!');
       setStep(2);
     } catch (err) {
@@ -53,7 +53,7 @@ const ForgotPassword = () => {
     setError('');
     
     try {
-      const response = await api.post('/api/password-reset/verify/', {
+      const response = await api.post('/api/auth/password-reset/verify/', {
         email,
         otp,
         new_password: newPassword

@@ -69,7 +69,7 @@ const Profile = () => {
         updateData.profile_picture = formData.profile_picture;
       }
 
-      const response = await api.post('/api/profile/update/', updateData);
+      const response = await api.post('/api/auth/profile/update/', updateData);
       
       // Update local storage
       localStorage.setItem('cosmos_user', JSON.stringify(response.data.user));
@@ -100,7 +100,7 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/api/profile/update/', {
+      const response = await api.post('/api/auth/profile/update/', {
         password: formData.password
       });
       
