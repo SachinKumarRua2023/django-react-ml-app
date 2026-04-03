@@ -56,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'lms.access_control.CourseAccessMiddleware',  # Course content protection
 ]
 
 ROOT_URLCONF = 'backend.urls'
