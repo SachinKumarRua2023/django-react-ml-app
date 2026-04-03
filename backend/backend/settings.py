@@ -16,7 +16,7 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-9kw!4)@$&am^_*_x=qzl_sv4c@qg@!v9jg39mt32%=r0%lxr$('
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me-in-production')
 
 DEBUG = True
 
@@ -56,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'lms.access_control.CourseAccessMiddleware',  # Course content protection
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -146,16 +147,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-# Database — Supabase Transaction Pooler (aws-1, IPv4, Render compatible)
+# Database — Supabase Transaction Pooler (environment variables)
 DATABASES = {
     'default': {
-        'ENGINE':   'django.db.backends.postgresql',
-        'NAME':     'postgres',
-        'USER':     'postgres.vhkiwztuyypdtvduapqf',
-        'PASSWORD': 'Drunken@1234#4321',
-        'HOST':     'aws-1-ap-southeast-2.pooler.supabase.com',
-        'PORT':     '6543',
-        'OPTIONS':  {'sslmode': 'require'},
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'postgres'),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', '6543'),
+        'OPTIONS': {'sslmode': 'require'},
     }
 }
 
@@ -218,17 +219,17 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'seekhowithrua@gmail.com'
-EMAIL_HOST_PASSWORD = 'Drunken@123'
-DEFAULT_FROM_EMAIL = 'SeekhoWithRua <seekhowithrua@gmail.com>'
-SERVER_EMAIL = 'seekhowithrua@gmail.com'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'SeekhoWithRua <noreply@seekhowithrua.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'noreply@seekhowithrua.com')
 
 # Email deliverability settings to avoid spam
 EMAIL_SUBJECT_PREFIX = '[SeekhoWithRua] '
 EMAIL_USE_LOCALTIME = True
 
-# LMS Payment Settings
-LMS_UPI_ID = '8826776018-4@ybl'
+# LMS Payment Settings - KEEP SECRET
+LMS_UPI_ID = os.environ.get('LMS_UPI_ID', '')
 LMS_MONTHLY_FEE = 1000  # Base fee in INR
 LMS_REFERRAL_CONCESSION = 200  # ₹200 per referral
 
