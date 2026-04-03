@@ -51,7 +51,7 @@ class PaymentGateway:
             }
     
     @classmethod
-    def create_razorpay_order(cls) -> Dict[str, Any]:
+    def create_razorpay_order(cls, amount: int = None) -> Dict[str, Any]:
         """Create a Razorpay order for Bundle Pack (India)"""
         if not razorpay_client:
             return {
@@ -59,9 +59,12 @@ class PaymentGateway:
                 'error': 'Razorpay not configured'
             }
         
+        # Use provided amount or default
+        order_amount = amount if amount else cls.BUNDLE_PACK_PRICE_INR
+        
         try:
             order_data = {
-                'amount': cls.BUNDLE_PACK_PRICE_INR,
+                'amount': order_amount,
                 'currency': 'INR',
                 'receipt': 'bundle_pack_order',
                 'notes': {
