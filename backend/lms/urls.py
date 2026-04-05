@@ -26,4 +26,6 @@ urlpatterns = [
     path('payment/razorpay/create/', payment_views.create_razorpay_order, name='razorpay-create'),
     path('payment/razorpay/verify/', payment_views.verify_razorpay_payment, name='razorpay-verify'),
     path('payment/stripe/webhook/', payment_views.stripe_webhook, name='stripe-webhook'),
+    # Quiz Report URL
+    path('quiz/submit-report/', views.submit_quiz_report, name='quiz-submit-report'),
 ]

@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Count, Sum, Q
+from django.core.mail import send_mail, EmailMultiAlternatives
 from datetime import timedelta, datetime
 
 from .models import (
@@ -1070,3 +1071,164 @@ class EnrollmentViewSet(viewsets.ViewSet):
                 {'error': 'No pending enrollment found for this email'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def submit_quiz_report(request):
+    """Receive quiz results from static HTML and email report to trainer"""
+    data = request.data
+    
+    # Extract student info
+    student_name = data.get('name', 'Anonymous')
+    student_email = data.get('email', 'N/A')
+    student_mobile = data.get('mobile', 'N/A')
+    
+    # Extract quiz results
+    score = data.get('score', 0)
+    total_questions = data.get('totalQuestions', 30)
+    correct_answers = data.get('correctAnswers', 0)
+    time_taken = data.get('timeTaken', '0:00')
+    performance = data.get('performance', 'N/A')
+    
+    # Extract detailed answers
+    answers = data.get('answers', [])
+    category_scores = data.get('categoryScores', {})
+    
+    # Build email content
+    subject = f"📊 Quiz Report: {student_name} - Score: {score}%"
+    
+    # Create HTML email body
+    html_content = f"""
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .header {{ background: #7c3aed; color: white; padding: 20px; text-align: center; }}
+            .container {{ padding: 20px; max-width: 800px; margin: 0 auto; }}
+            .student-info {{ background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; }}
+            .stats {{ display: flex; justify-content: space-between; margin: 20px 0; }}
+            .stat-box {{ background: #fff; border: 2px solid #7c3aed; padding: 15px; text-align: center; border-radius: 8px; flex: 1; margin: 0 10px; }}
+            .score-high {{ color: #2ecc71; font-weight: bold; }}
+            .score-medium {{ color: #f39c12; font-weight: bold; }}
+            .score-low {{ color: #e74c3c; font-weight: bold; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }}
+            th {{ background: #7c3aed; color: white; }}
+            .correct {{ color: #2ecc71; }}
+            .wrong {{ color: #e74c3c; }}
+            .category {{ background: #f9fafb; padding: 10px; margin: 10px 0; border-radius: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🎯 Python & ML Quiz Report</h1>
+            <p>SeekhoWithRua LMS</p>
+        </div>
+        
+        <div class="container">
+            <div class="student-info">
+                <h2>👤 Student Information</h2>
+                <p><strong>Name:</strong> {student_name}</p>
+                <p><strong>Email:</strong> {student_email}</p>
+                <p><strong>Mobile:</strong> {student_mobile}</p>
+                <p><strong>Submitted:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </div>
+            
+            <h2>📈 Performance Summary</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3>Score</h3>
+                    <p class="{'score-high' if score >= 70 else 'score-medium' if score >= 50 else 'score-low'}">{score}%</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Correct</h3>
+                    <p>{correct_answers}/{total_questions}</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Time</h3>
+                    <p>{time_taken}</p>
+                </div>
+                <div class="stat-box">
+                    <h3>Rating</h3>
+                    <p>{performance}</p>
+                </div>
+            </div>
+    """
+    
+    # Add category breakdown
+    if category_scores:
+        html_content += "<h2>📊 Category Breakdown</h2>"
+        for category, stats in category_scores.items():
+            html_content += f"""
+            <div class="category">
+                <strong>{category}:</strong> {stats['correct']}/{stats['total']} correct ({stats['percentage']}%)
+            </div>
+            """
+    
+    # Add detailed answers
+    html_content += "<h2>📝 Detailed Answers</h2><table>"
+    html_content += "<tr><th>Q#</th><th>Category</th><th>Question</th><th>Status</th><th>Student Answer</th><th>Correct Answer</th></tr>"
+    
+    for ans in answers:
+        is_correct = ans.get('isCorrect', False)
+        status_class = 'correct' if is_correct else 'wrong'
+        status_text = '✓ Correct' if is_correct else '✗ Wrong'
+        
+        html_content += f"""
+        <tr>
+            <td>{ans.get('questionNumber', 'N/A')}</td>
+            <td>{ans.get('category', 'General')}</td>
+            <td>{ans.get('question', 'N/A')[:80]}...</td>
+            <td class="{status_class}">{status_text}</td>
+            <td>{ans.get('studentAnswer', 'N/A')}</td>
+            <td>{ans.get('correctAnswer', 'N/A') if not is_correct else '-'}</td>
+        </tr>
+        """
+    
+    html_content += """
+            </table>
+            
+            <div style="text-align: center; margin-top: 30px; color: #6b7280;">
+                <p>Generated by SeekhoWithRua LMS Quiz System</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Send email to trainer
+    try:
+        from django.conf import settings
+        
+        # Also send to student
+        recipients = ['seekhowithrua@gmail.com']
+        if student_email and '@' in student_email:
+            recipients.append(student_email)
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=strip_tags(html_content),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'seekhowithrua@gmail.com'),
+            to=recipients
+        )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        
+        return Response({
+            'success': True,
+            'message': 'Quiz report sent successfully to trainer'
+        })
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Failed to send email: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def strip_tags(html):
+    """Simple HTML tag stripper"""
+    import re
+    clean = re.compile('<.*?>')
+    return re.sub(clean, '', html)
