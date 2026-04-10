@@ -974,7 +974,8 @@ export default function VCRoom() {
   const { user, loading, login, register, logout, authErr, setAuthErr } = useCosmosAuth();
   const { notifs, push } = useNotifications();
 
-  const isAdmin = user?.email === "master@gmail.com";
+  const ADMIN_EMAILS = ["master@gmail.com", "sachinrua@gmail.com", "seekhowithrua@gmail.com"];
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 
   // ── Auth form state ──
   const [authMode,     setAuthMode]     = useState("login");

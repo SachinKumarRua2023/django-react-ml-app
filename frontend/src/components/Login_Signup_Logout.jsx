@@ -3,23 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TOKEN_KEY } from '../App';
 
+// Whitelist of allowed redirect domains
+const REDIRECT_WHITELIST = new Set([
+  'https://lms.seekhowithrua.com',
+  'https://gaming.seekhowithrua.com',
+  'https://animation.seekhowithrua.com',
+  'https://app.seekhowithrua.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+]);
+
 // Helper to handle LMS, Gaming, and Animation redirect after login
 function handleLMSRedirect(navigate, token, user) {
   const urlParams = new URLSearchParams(window.location.search);
-  const redirectUrl = urlParams.get('redirect');
+  let redirectUrl = urlParams.get('redirect');
   
   if (redirectUrl) {
-    // Support LMS, Gaming, and Animation domains
-    const isLMS = redirectUrl.includes('lms.seekhowithrua.com');
-    const isGaming = redirectUrl.includes('gaming.seekhowithrua.com');
-    const isAnimation = redirectUrl.includes('animation.seekhowithrua.com');
-    const isLocalhost = redirectUrl.includes('localhost');
-    
-    if (isLMS || isGaming || isAnimation || isLocalhost) {
-      // Redirect to external site with token
-      const userJson = encodeURIComponent(JSON.stringify(user));
-      window.location.href = `${decodeURIComponent(redirectUrl)}?token=${token}&user=${userJson}`;
-      return true;
+    try {
+      // Strict URL validation against whitelist
+      const url = new URL(decodeURIComponent(redirectUrl));
+      
+      // Only allow whitelisted domains for security
+      if (REDIRECT_WHITELIST.has(url.origin)) {
+        const userJson = encodeURIComponent(JSON.stringify(user));
+        window.location.href = `${url.origin}${url.pathname || ''}?token=${token}&user=${userJson}`;
+        return true;
+      } else {
+        console.warn('Redirect URL not whitelisted:', url.origin);
+      }
+    } catch (err) {
+      console.error('Invalid redirect URL:', err);
     }
   }
   return false;
@@ -262,11 +275,12 @@ function CosmosAuthCanvas() {
   return <canvas id="cosmos-auth-canvas" ref={ref} />;
 }
 
-const API_URL = 'https://django-react-ml-app.onrender.com' || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://api.seekhowithrua.com';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,  // Enable credentials for cross-domain requests
 });
 
 api.interceptors.request.use((config) => {
