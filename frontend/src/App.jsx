@@ -24,11 +24,29 @@ export const TOKEN_KEY = "cosmos_token";
 // handles its own auth internally via useCosmosAuth hook —
 // it shows its own login screen if no token is found.
 // This way Exit (which clears the token) doesn't cause a redirect loop.
-const PublicOnlyRoute = ({ children }) => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? <Navigate to="/live-voice" replace /> : children;
-};
 
+const PublicOnlyRoute = ({ children }) => {
+  const token    = localStorage.getItem(TOKEN_KEY);
+  const userData = localStorage.getItem("cosmos_user");
+
+  if (token && userData) {
+    const params     = new URLSearchParams(window.location.search);
+    const redirectTo = params.get("redirect");
+
+    if (redirectTo) {
+      const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animation.seekhowithrua.com"];
+      let isSafe = false;
+      try { isSafe = allowedDomains.some(d => new URL(redirectTo).hostname === d); } catch {}
+      if (isSafe) {
+        const separator = redirectTo.includes("?") ? "&" : "?";
+        window.location.href = `${redirectTo}${separator}token=${token}&user=${encodeURIComponent(userData)}`;
+        return null;
+      }
+    }
+    return <Navigate to="/live-voice" replace />;
+  }
+  return children;
+};
 function App() {
   const [user, setUser] = useState(null);
 
