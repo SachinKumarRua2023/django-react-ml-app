@@ -34,7 +34,7 @@ const PublicOnlyRoute = ({ children }) => {
     const redirectTo = params.get("redirect");
 
     if (redirectTo) {
-      const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
+      const allowedDomains = ["seekhowithrua.com", "lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
       let isSafe = false;
       try { isSafe = allowedDomains.some(d => new URL(redirectTo).hostname === d); } catch {}
       if (isSafe) {
@@ -57,7 +57,7 @@ function App() {
     const redirectTo = new URLSearchParams(window.location.search).get("redirect");
     if (!redirectTo) return;
 
-    const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
+    const allowedDomains = ["seekhowithrua.com", "lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
     let isSafe = false;
     try { isSafe = allowedDomains.some(d => new URL(redirectTo).hostname === d); } catch {}
 
