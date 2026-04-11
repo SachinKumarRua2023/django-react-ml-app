@@ -34,7 +34,7 @@ const PublicOnlyRoute = ({ children }) => {
     const redirectTo = params.get("redirect");
 
     if (redirectTo) {
-      const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animation.seekhowithrua.com"];
+      const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
       let isSafe = false;
       try { isSafe = allowedDomains.some(d => new URL(redirectTo).hostname === d); } catch {}
       if (isSafe) {
@@ -49,6 +49,23 @@ const PublicOnlyRoute = ({ children }) => {
 };
 function App() {
   const [user, setUser] = useState(null);
+  useEffect(() => {
+    const token    = localStorage.getItem(TOKEN_KEY);
+    const userData = localStorage.getItem("cosmos_user");
+    if (!token || !userData) return;
+
+    const redirectTo = new URLSearchParams(window.location.search).get("redirect");
+    if (!redirectTo) return;
+
+    const allowedDomains = ["lms.seekhowithrua.com", "gaming.seekhowithrua.com", "animationlab.seekhowithrua.com"];
+    let isSafe = false;
+    try { isSafe = allowedDomains.some(d => new URL(redirectTo).hostname === d); } catch {}
+
+    if (isSafe) {
+      const separator = redirectTo.includes("?") ? "&" : "?";
+      window.location.href = `${redirectTo}${separator}token=${token}&user=${encodeURIComponent(userData)}`;
+    }
+  }, []);
 
   useEffect(() => {
     const checkAuth = () => {
