@@ -64,8 +64,9 @@ const Navbar = () => {
   const navItems = useMemo(() => [
     { name: 'Home', path: getSSOUrl('https://seekhowithrua.com'), icon: '🏠', color: '#00ffff', external: true },
     { name: 'Courses', path: getSSOUrl('https://lms.seekhowithrua.com'), icon: '◉', color: '#ff00ff', external: true },
-    { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
-    { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
+    { name: 'Blog', path: 'https://seekhowithrua.com/blog', icon: '📝', color: '#f59e0b', external: true },
+    { name: 'Services', path: 'https://seekhowithrua.com/services', icon: '🛠️', color: '#10b981', external: true },
+    { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#a855f7' },
   ], [isAuthenticated]);
 
   // Check auth status immediately on mount
@@ -488,6 +489,38 @@ const Navbar = () => {
             </button>
 
             {/* Auth */}
+            {/* LMS Button */}
+            <a
+              href={getSSOUrl('https://lms.seekhowithrua.com')}
+              className="lms-btn"
+              style={{
+                padding: '8px 16px',
+                background: 'transparent',
+                border: '1px solid rgba(255, 0, 255, 0.5)',
+                borderRadius: '8px',
+                color: '#ff00ff',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 0, 255, 0.1)';
+                e.currentTarget.style.borderColor = '#ff00ff';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(255, 0, 255, 0.5)';
+              }}
+            >
+              <span>📚</span>
+              <span>LMS</span>
+            </a>
+
             {!isAuthenticated ? (
               <Link
                 to="/login"
