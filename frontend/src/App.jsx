@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
-import MasterRua from "./components/MasterRua";
+import AppHome from "./components/AppHome";
 import Employees from "./components/Employees";
 import MLPredictor from "./pages/MLPredictor";
 import SyllabusPage from "./pages/SyllabusPage";
@@ -96,7 +96,7 @@ function App() {
             {/* VCRoom handles its own auth — no ProtectedRoute wrapper needed */}
             <Route path="/live-voice" element={<VCRoom />} />
 
-            <Route path="/"                element={<MasterRua />} />
+            <Route path="/"                element={<AppHome />} />
             <Route path="/employees"       element={<Employees />} />
             <Route path="/ml"              element={<MLPredictor />} />
             <Route path="/syllabus"        element={<SyllabusPage />} />

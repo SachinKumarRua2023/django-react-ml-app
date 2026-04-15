@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -49,22 +49,27 @@ const Navbar = () => {
   // ── ONLY ADDITION: theme state ────────────────────────────────────────────
   const [dark, setDark] = useAppTheme();
 
-  // ALL PUBLIC NAV ITEMS - Trainer KPI is public
-  const navItems = [
-    { name: 'Master Rua', path: '/', icon: '◈', color: '#00ffff' },
-    { name: 'Courses', path: '/syllabus', icon: '◉', color: '#ff00ff' },
+  // Helper to generate SSO URL for external portals
+  const getSSOUrl = (baseUrl) => {
+    if (!isAuthenticated) return baseUrl;
+    const token = localStorage.getItem(TOKEN_KEY);
+    const user = localStorage.getItem(USER_KEY);
+    if (!token || !user) return baseUrl;
+    const userJson = encodeURIComponent(user);
+    return `${baseUrl}?token=${token}&user=${userJson}`;
+  };
+
+  // ALL PUBLIC NAV ITEMS - Simplified navigation
+  // useMemo ensures LMS URL updates when auth state changes
+  const navItems = useMemo(() => [
+    { name: 'Home', path: getSSOUrl('https://seekhowithrua.com'), icon: '🏠', color: '#00ffff', external: true },
+    { name: 'Courses', path: getSSOUrl('https://lms.seekhowithrua.com'), icon: '◉', color: '#ff00ff', external: true },
     { name: 'ML Predictor', path: '/ml', icon: '◆', color: '#00ff88' },
     { name: 'Employees', path: '/employees', icon: '◊', color: '#ffaa00' },
     { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' },
     { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
     { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
-    { name: 'Builder Tools', path: '/builder-tools', icon: '🛠️', color: '#00d4ff', dropdown: [
-      { name: 'AI Agent Builder', path: '/ai-agent-builder', icon: '🤖', desc: 'Build AI workflows like n8n' },
-      { name: 'App Builder', path: '/app-builder', icon: '📱', desc: 'Create mobile apps visually' },
-      { name: 'Website Builder', path: '/website-builder', icon: '🌐', desc: 'Design websites with Next.js' },
-    ]},
-    { name: 'LMS', path: 'https://lms.seekhowithrua.com', icon: '📚', color: '#7c3aed', external: true },
-  ];
+  ], [isAuthenticated]);
 
   // Check auth status immediately on mount
   useEffect(() => {
@@ -349,7 +354,7 @@ const Navbar = () => {
             </div>
             <div className="logo-text">
               <span className="logo-main">Seekhowithrua</span>
-              <span className="logo-sub"><span className="sub-gradient">Master Rua</span></span>
+              <span className="logo-sub"><span className="sub-gradient">App Portal</span></span>
             </div>
           </Link>
           <div className="desktop-nav">
@@ -383,7 +388,7 @@ const Navbar = () => {
                 ))}
               </span>
               <span className="logo-sub">
-                <span className="sub-gradient">Master Rua</span>
+                <span className="sub-gradient">App Portal</span>
                 <span className="sub-line" />
               </span>
             </div>

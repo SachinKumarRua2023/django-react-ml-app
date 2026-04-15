@@ -603,7 +603,8 @@ def kick_member(request, panel_id, user_id):
 def delete_panel(request, panel_id):
     """Delete a panel — host or admin only."""
     panel = get_object_or_404(VoicePanel, id=panel_id)
-    if panel.host == request.user or request.user.email == 'master@gmail.com':
+    ADMIN_EMAILS = ['master@gmail.com', 'sachinrua@gmail.com', 'seekhowithrua@gmail.com']
+    if panel.host == request.user or request.user.email in ADMIN_EMAILS:
         panel.delete()
         return Response({'status': 'deleted'})
     return Response({'error': 'Not authorized'}, status=403)
