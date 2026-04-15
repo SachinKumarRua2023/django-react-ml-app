@@ -64,9 +64,6 @@ const Navbar = () => {
   const navItems = useMemo(() => [
     { name: 'Home', path: getSSOUrl('https://seekhowithrua.com'), icon: '🏠', color: '#00ffff', external: true },
     { name: 'Courses', path: getSSOUrl('https://lms.seekhowithrua.com'), icon: '◉', color: '#ff00ff', external: true },
-    { name: 'ML Predictor', path: '/ml', icon: '◆', color: '#00ff88' },
-    { name: 'Employees', path: '/employees', icon: '◊', color: '#ffaa00' },
-    { name: 'Trainer KPI', path: '/trainer-kpi', icon: '★', color: '#fbbf24' },
     { name: 'Mnemonic System', path: '/mnemonic-system', icon: '🧠', color: '#a855f7' },
     { name: 'Talk with Rua', path: '/talk-with-rua', icon: '🧘', color: '#f59e0b' },
   ], [isAuthenticated]);
