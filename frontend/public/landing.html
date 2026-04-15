@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seekhowithrua App Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-cyan: #00d4ff;
+      --primary-purple: #7c3aed;
+      --primary-orange: #f59e0b;
+      --bg-dark: #0a0a1a;
+      --bg-card: rgba(255,255,255,0.03);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255,255,255,0.7);
+      --border: rgba(255,255,255,0.1);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Simple Navbar */
+    .navbar {
+      background: rgba(10,10,26,0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-main {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 0.7rem;
+      color: var(--primary-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-cyan);
+    }
+
+    .nav-auth {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,212,255,0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: var(--primary-cyan);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 4rem 0 5rem;
+    }
+
+    .hero-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple), var(--primary-orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+
+    .hero-actions .btn {
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+    }
+
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--primary-cyan);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+      border-color: transparent;
+      color: white;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Feature Cards */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-4px);
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-color, var(--primary-cyan));
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-benefits {
+      list-style: none;
+    }
+
+    .feature-benefits li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .feature-benefits li:last-child {
+      border-bottom: none;
+    }
+
+    .feature-benefits li::before {
+      content: '✓';
+      color: var(--card-color, var(--primary-cyan));
+      font-weight: bold;
+    }
+
+    /* Guidelines & Restrictions */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .info-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-card-header h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .info-card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .info-list {
+      list-style: none;
+    }
+
+    .info-list li {
+      padding: 0.5rem 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .info-list li:last-child {
+      border-bottom: none;
+    }
+
+    /* Mobile Menu Toggle */
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .hero-actions .btn {
+        width: 100%;
+        max-width: 280px;
+        justify-content: center;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .main-content {
+        padding: 2rem 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 1rem;
+      }
+
+      .hero {
+        padding: 2rem 0 3rem;
+      }
+
+      .hero h1 {
+        font-size: 1.6rem;
+      }
+
+      .hero-icon {
+        font-size: 3rem;
+      }
+
+      .tabs {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .tab-btn {
+        width: 100%;
+        max-width: 200px;
+      }
+
+      .feature-card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Simple Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <div class="logo-icon">🚀</div>
+        <div class="logo-text">
+          <span class="logo-main">Seekhowithrua</span>
+          <span class="logo-sub">App Portal</span>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="https://seekhowithrua.com">Home</a></li>
+        <li><a href="https://lms.seekhowithrua.com">Courses</a></li>
+        <li><a href="/app">ML Predictor</a></li>
+        <li><a href="/app">Employees</a></li>
+        <li><a href="/app">Talk with Rua</a></li>
+      </ul>
+
+      <div class="nav-auth">
+        <a href="/app" class="btn btn-primary">Enter App</a>
+        <button class="mobile-toggle">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-icon">🚀</div>
+      <h1>Seekhowithrua App Portal</h1>
+      <p>Your gateway to AI-powered learning, live voice collaboration, and memory mastery. Join the future of education.</p>
+      <div class="hero-actions">
+        <a href="/app" class="btn btn-primary">Enter App Portal</a>
+        <a href="https://seekhowithrua.com" class="btn btn-secondary">🏠 Visit Main Site</a>
+      </div>
+    </section>
+
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('features')">✨ Features</button>
+      <button class="tab-btn" onclick="showTab('guidelines')">📋 Guidelines</button>
+      <button class="tab-btn" onclick="showTab('restrictions')">⚠️ Rules</button>
+    </div>
+
+    <!-- Features Tab -->
+    <div id="features" class="tab-content active">
+      <div class="feature-grid">
+        <div class="feature-card" style="--card-color: #ef4444;">
+          <div class="feature-icon">🔴</div>
+          <h3>Live Voice Chat Rooms</h3>
+          <p>WebRTC-powered real-time voice communication rooms for learning, debates, hiring, and earning.</p>
+          <ul class="feature-benefits">
+            <li>Join knowledge-sharing rooms instantly</li>
+            <li>Host your own learning sessions</li>
+            <li>Participate in live debates & discussions</li>
+            <li>Get discovered by hiring companies</li>
+            <li>Build your audience & monetize at 1K followers</li>
+          </ul>
+        </div>
+
+        <div class="feature-card" style="--card-color: #10b981;">
+          <div class="feature-icon">🧠</div>
+          <h3>ML Predictor</h3>
+          <p>Machine learning prediction tools powered by advanced algorithms.</p>
+          <ul class="feature-benefits">
+            <li>YouTube Growth Predictor</li>
+            <li>Data analysis & visualization</li>
+            <li>Multiple ML algorithms support</li>
+            <li>Real-time predictions</li>
+            <li>Export results for reports</li>
+          </ul>
+        </div>
+
+        <div class="feature-card" style="--card-color: #f59e0b;">
+          <div class="feature-icon">🧘</div>
+          <h3>Talk with Rua (Bodhi AI)</h3>
+          <p>Ancient wisdom meets modern AI. Get mentorship from our enlightened monk AI.</p>
+          <ul class="feature-benefits">
+            <li>Voice-enabled AI conversations</li>
+            <li>Learn AI, ML, and life wisdom</li>
+            <li>Memory enhancement techniques</li>
+            <li>Career guidance & strategy</li>
+            <li>Available 24/7</li>
+          </ul>
+        </div>
+
+        <div class="feature-card" style="--card-color: #fbbf24;">
+          <div class="feature-icon">🎓</div>
+          <h3>Trainer KPI Dashboard</h3>
+          <p>Comprehensive performance tracking for educators and trainers.</p>
+          <ul class="feature-benefits">
+            <li>Student progress analytics</li>
+            <li>Engagement metrics</li>
+            <li>Course completion rates</li>
+            <li>Performance insights</li>
+            <li>Data-driven improvements</li>
+          </ul>
+        </div>
+
+        <div class="feature-card" style="--card-color: #a855f7;">
+          <div class="feature-icon">🧮</div>
+          <h3>Mnemonic Memory System</h3>
+          <p>Science-backed memory techniques based on WMSC methods.</p>
+          <ul class="feature-benefits">
+            <li>Memory palace training</li>
+            <li>Number memorization systems</li>
+            <li>Card deck memorization</li>
+            <li>Speed memory exercises</li>
+            <li>Competition-level training</li>
+          </ul>
+        </div>
+
+        <div class="feature-card" style="--card-color: #ffaa00;">
+          <div class="feature-icon">👥</div>
+          <h3>Employee Management</h3>
+          <p>Complete employee data management and analytics system.</p>
+          <ul class="feature-benefits">
+            <li>Employee directory</li>
+            <li>Performance tracking</li>
+            <li>Department analytics</li>
+            <li>Export capabilities</li>
+            <li>Search & filter tools</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guidelines Tab -->
+    <div id="guidelines" class="tab-content">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">🎙️</span>
+            <h3>Respectful Communication</h3>
+          </div>
+          <p>Maintain professional and respectful discourse in all voice rooms.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">⏰</span>
+            <h3>Punctuality</h3>
+          </div>
+          <p>Join scheduled rooms on time. If hosting, start within 5 minutes of scheduled time.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">🎯</span>
+            <h3>Stay On Topic</h3>
+          </div>
+          <p>Keep discussions relevant to the room topic. Off-topic conversations should move to general rooms.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">📵</span>
+            <h3>No Recording Without Consent</h3>
+          </div>
+          <p>Recording voice rooms without explicit permission from all participants is prohibited.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">🤝</span>
+            <h3>Constructive Engagement</h3>
+          </div>
+          <p>Provide constructive feedback. Debates are welcome, personal attacks are not.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Restrictions Tab -->
+    <div id="restrictions" class="tab-content">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">🚫</span>
+            <h3>Prohibited Content</h3>
+          </div>
+          <ul class="info-list">
+            <li>Hate speech or discrimination</li>
+            <li>Harassment or bullying</li>
+            <li>Explicit or adult content</li>
+            <li>Illegal activities discussion</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">🔇</span>
+            <h3>Audio Quality</h3>
+          </div>
+          <ul class="info-list">
+            <li>Use headphones to prevent echo</li>
+            <li>Mute when not speaking</li>
+            <li>Stable internet required</li>
+            <li>No background noise/music</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">👤</span>
+            <h3>Account Requirements</h3>
+          </div>
+          <ul class="info-list">
+            <li>Valid email required</li>
+            <li>One account per person</li>
+            <li>Real name recommended for hiring rooms</li>
+            <li>Profile completion required for hosting</li>
+          </ul>
+        </div>
+
+        <div class="info-card">
+          <div class="info-card-header">
+            <span style="font-size: 1.5rem;">⚠️</span>
+            <h3>Consequences</h3>
+          </div>
+          <ul class="info-list">
+            <li>First violation: Warning</li>
+            <li>Second violation: 24h mute</li>
+            <li>Third violation: 7-day suspension</li>
+            <li>Severe violations: Permanent ban</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Simple tab switching
+    function showTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Remove active class from buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(tabId).classList.add('active');
+
+      // Add active class to clicked button
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
