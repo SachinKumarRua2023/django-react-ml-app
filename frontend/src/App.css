@@ -72,22 +72,26 @@ body {
   text-align: left;
 }
 
-/* ===== GLOBAL DESKTOP SCROLL FIX ===== */
-html, body, #root {
-  height: 100%;
-  overflow-y: auto !important;
-  overflow-x: hidden;
-}
-
-/* ===== MAIN LAYOUT ===== */
+/* ===== MAIN LAYOUT - FULL WIDTH & HEIGHT ===== */
 .main-wrapper {
   padding-top: 80px; /* Space for fixed navbar */
   min-height: 100vh;
-  overflow-y: auto !important;
-  background: 
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background:
     radial-gradient(ellipse at top, rgba(0, 255, 255, 0.05) 0%, transparent 50%),
     radial-gradient(ellipse at bottom right, rgba(255, 0, 255, 0.05) 0%, transparent 50%),
     var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure all direct children fill width */
+.main-wrapper > * {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ===== SCROLLBAR STYLING ===== */
@@ -3630,4 +3634,299 @@ html, body, #root {
   }
   .quiz-sidebar { height: 180px !important; }
   .quiz-platform { height: auto !important; min-height: calc(100vh - 52px) !important; }
+}
+
+/* ===== COMPREHENSIVE RESPONSIVE FIXES ===== */
+/* Ensure all page content fills viewport width */
+
+/* Extra Large Screens (1400px+) */
+@media (min-width: 1400px) {
+  .main-wrapper > * {
+    max-width: 100%;
+  }
+  .page-container {
+    max-width: 1400px;
+    padding: var(--spacing-xl);
+  }
+}
+
+/* Large Screens (1200px - 1399px) */
+@media (max-width: 1399px) and (min-width: 1200px) {
+  .page-container {
+    max-width: 1200px;
+  }
+}
+
+/* Medium Screens (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+  .page-container {
+    max-width: 100%;
+    padding: var(--spacing-lg);
+  }
+  .predictor-grid,
+  .employees-layout {
+    gap: 1.5rem;
+  }
+}
+
+/* Tablets (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+  .main-wrapper {
+    padding-top: 70px;
+  }
+  .page-container {
+    padding: var(--spacing-md);
+    max-width: 100%;
+  }
+  .predictor-grid,
+  .employees-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .predictor-card,
+  .employee-form-card {
+    position: static;
+  }
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .mission-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .feedback-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Large Mobile (576px - 767px) */
+@media (max-width: 767px) and (min-width: 576px) {
+  .main-wrapper {
+    padding-top: 60px;
+  }
+  .page-container {
+    padding: var(--spacing-sm);
+  }
+  .page-title {
+    font-size: 1.8rem;
+  }
+  .predictor-grid,
+  .employees-layout {
+    grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .prediction-cards {
+    grid-template-columns: 1fr;
+  }
+  .channel-stats {
+    grid-template-columns: 1fr;
+  }
+  .hero-section {
+    padding: 4rem 1rem;
+  }
+  .hero-title {
+    font-size: 2rem;
+  }
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .mission-grid {
+    grid-template-columns: 1fr;
+  }
+  .projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .section-container {
+    padding: 2rem 1rem;
+  }
+}
+
+/* Small Mobile (< 576px) */
+@media (max-width: 575px) {
+  .main-wrapper {
+    padding-top: 60px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .page-container {
+    padding: var(--spacing-xs);
+    width: 100%;
+    max-width: 100%;
+  }
+  .page-title {
+    font-size: 1.5rem;
+  }
+  .page-subtitle {
+    font-size: 0.95rem;
+  }
+  .predictor-grid,
+  .employees-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .predictor-card,
+  .employee-form-card,
+  .employees-list {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .prediction-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .prediction-card {
+    padding: 1.5rem;
+  }
+  .prediction-value {
+    font-size: 1.5rem;
+  }
+  .channel-stats {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .similar-channels {
+    padding: 1rem;
+  }
+  .employee-card {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    padding: 1rem;
+  }
+  .employee-info {
+    flex-direction: column;
+  }
+  .employee-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-section {
+    min-height: auto;
+    padding: 3rem 1rem;
+  }
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .hero-title {
+    font-size: 1.6rem;
+  }
+  .typewriter {
+    font-size: 1rem;
+  }
+  .hero-description {
+    font-size: 0.95rem;
+  }
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .character-placeholder {
+    width: 200px;
+    height: 280px;
+  }
+  .mission-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .mission-card {
+    padding: 1.5rem;
+  }
+  .mission-icon {
+    font-size: 2rem;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .project-card {
+    padding: 1.5rem;
+  }
+  .section-container {
+    padding: 2rem 1rem;
+  }
+  .feedback-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .card {
+    padding: var(--spacing-sm);
+  }
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  .input-field {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* Extra Small Mobile (< 360px) */
+@media (max-width: 359px) {
+  .page-title {
+    font-size: 1.3rem;
+  }
+  .hero-title {
+    font-size: 1.4rem;
+  }
+  .logo-main {
+    font-size: 0.9rem;
+  }
+  .logo-sub {
+    font-size: 0.6rem;
+  }
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Ensure images and iframes are responsive */
+img, iframe, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent horizontal scroll on all pages */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Ensure tables are responsive */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }

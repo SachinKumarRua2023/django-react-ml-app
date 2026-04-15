@@ -140,11 +140,16 @@ export default function AppHome() {
   return (
     <div style={{
       minHeight: '100vh',
+      minHeight: '100dvh',
+      width: '100%',
+      maxWidth: '100%',
       background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2a 100%)',
       padding: '40px 20px',
-      fontFamily: 'Inter, sans-serif'
+      fontFamily: 'Inter, sans-serif',
+      boxSizing: 'border-box',
+      flex: '1'
     }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
         
         {/* Hero Section */}
         <div style={{ textAlign: 'center', marginBottom: '60px' }}>
